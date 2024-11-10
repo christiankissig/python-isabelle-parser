@@ -64,6 +64,7 @@ def p_content(p):
 def p_statement(p):
     '''statement : axiomatization_block
                  | fun_block
+                 | interpretation_block
                  | lemma_block
                  | locale_block
                  | method_block
@@ -573,29 +574,36 @@ def p_arg(p):
 #
 
 def p_for_fixes(p):
-    '''for_fixes : empty
-                 | FOR vars'''
-    if len(p) == 2:
-        p[0] = []
-    else:
-        p[0] = ('for', p[2])
+    '''for_fixes : FOR vars'''
+    p[0] = ('for', p[2])
 
 
 def p_multi_specs(p):
     '''multi_specs : structured_spec
-                   | structured_spec multi_specs'''
+                   | structured_spec PIPE multi_specs'''
     if len(p) == 2:
         p[0] = [p[1]]
     else:
-        p[0] = [p[1]] + p[2]
+        p[0] = [p[1]] + p[3]
 
 
 def p_structured_spec(p):
-    '''structured_spec : ID spec_prems for_fixes
+    '''structured_spec : ID spec_prems
+                       | ID spec_prems for_fixes
+                       | QUOTED_STRING spec_prems
                        | QUOTED_STRING spec_prems for_fixes
                        | thmdecl ID spec_prems for_fixes
                        | thmdecl QUOTED_STRING spec_prems for_fixes'''
-    if len(p) == 4:
+    if len(p) == 3:
+        p[0] = ('structured_spec', {
+            'thmdecl': None,
+            'prop': p[1],
+            'spec_prems': p[2],
+            'for_fixes': [],
+            'line': p.lineno(1),
+            'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+    elif len(p) == 4:
         p[0] = ('structured_spec', {
             'thmdecl': None,
             'prop': p[1],
@@ -705,11 +713,13 @@ def p_axiomatization_header(p):
 #
 
 
+# move empty case of for_fixes here to avoid parsing error
 def p_locale_expr(p):
-    '''locale_expr : instance_list for_fixes'''
+    '''locale_expr : instance_list
+                   | instance_list for_fixes'''
     p[0] = ('locale_expr', {
         'instances': p[1],
-        'for_fixes': p[2],
+        'for_fixes': p[2] if len(p) == 3 else [],
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
@@ -764,20 +774,25 @@ def p_qualifier(p):
 
 def p_pos_insts(p):
     '''pos_insts : UNDERSCORE
+                 | DOT
                  | ID
                  | QUOTED_STRING
+                 | GREEK
                  | UNDERSCORE pos_insts
+                 | DOT pos_insts
                  | ID pos_insts
-                 | QUOTED_STRING pos_insts'''
+                 | QUOTED_STRING pos_insts
+                 | GREEK pos_insts'''
     if len(p) == 2:
         p[0] = ('pos_insts', [p[1]])
     else:
-        p[0] = ('pos_insts', [p[1]] + p[2][2])
+        p[0] = ('pos_insts', [p[1]] + p[2][1])
 
 
 def p_name_insts(p):
     '''name_insts : WHERE name_insts_list'''
     p[0] = ('name_insts', p[2])
+
 
 def p_name_insts_list(p):
     '''name_insts_list : ID EQUALS ID
@@ -953,6 +968,14 @@ def p_notes_list_element(p):
                     })
 
 
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.7.3
+#
+
+
+def p_interpretation_block(p):
+    '''interpretation_block : INTERPRETATION locale_expr'''
+    p[0] = ('interpretation', p[2])
 
 
 #

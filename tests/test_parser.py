@@ -53,6 +53,15 @@ fun \\<delta>::"val option \\<Rightarrow> (proc \\<times> val) \\<Rightarrow> va
 
 end
 """, True),
+('parse_theory_interpretation', """
+theory Consensus
+imports RDR
+begin
+
+interpretation pre_RDR \\<delta> \\<gamma> None .
+
+end
+""", True),
 ])
 def test_parse(name, test_input, expected):
     source_code = test_input.strip()
@@ -60,9 +69,9 @@ def test_parse(name, test_input, expected):
         reset_lexer(thy_lexer)
         ast = parse(source_code)
         print(json.dumps(ast, indent=2))
-        assert expected
-        assert ast is not None
+        assert expected, f"{name}: Expected {expected}, got True"
+        assert ast is not None, f"{name}: Expected AST, got None"
     except ParsingError as e:
         print(e.with_source_code(source_code))
-        assert not expected
+        assert not expected, f"{name}: Expected {expected}, got False"
 

@@ -29,6 +29,9 @@ tokens = (
     'EQUALS',
     'FIXES',
     'FOR',
+    'FUN',
+    'FUNCTION',
+    'GLOBAL_INTERPRETATION',
     'GT',
     'HAT',
     'HAVE',
@@ -37,6 +40,8 @@ tokens = (
     'INFIX',
     'INFIXL',
     'INFIXR',
+    'INTERPRET',
+    'INTERPRETATION',
     'IS',
     'LEFT_BRACKET',
     'LEFT_PAREN',
@@ -47,6 +52,7 @@ tokens = (
     'NOTES',
     'OPENING',
     'PLUS',
+    'PRIMREC',
     'PROOF',
     'QUESTION_MARK',
     'RIGHT_BRACKET',
@@ -59,6 +65,7 @@ tokens = (
     'STAR',
     'STRUCTURE',
     'SUBGOAL',
+    'SUBLOCALE',
     'TEXT',
     'THEN',
     'THEORY',
@@ -66,9 +73,7 @@ tokens = (
     'TYPE_SYNONYM',
     'USING',
     'WHERE',
-    'FUN',
-    'FUNCTION',
-    'PRIMREC',
+    'PIPE',
 
     'ALTSTRING',
     'GREEK',
@@ -143,19 +148,22 @@ reserved = {
         'for': 'FOR',
         'fun': 'FUN',
         'function': 'FUNCTION',
-        'primrec': 'PRIMREC',
+        'global_interpretation': 'GLOBAL_INTERPRETATION',
         'have': 'HAVE',
         'if': 'IF',
         'imports': 'IMPORTS',
         'infix': 'INFIX',
         'infixl': 'INFIXL',
         'infixr': 'INFIXR',
+        'interpret': 'INTERPRET',
+        'interpretation': 'INTERPRETATION',
         'is': 'IS',
         'lemma': 'LEMMA',
         'locale': 'LOCALE',
         'method': 'METHOD',
         'notes': 'NOTES',
         'opening': 'OPENING',
+        'primrec': 'PRIMREC',
         'proof': 'PROOF',
         'section': 'SECTION',
         'show': 'SHOW',
@@ -163,6 +171,7 @@ reserved = {
         'sorry': 'SORRY',
         'structure': 'STRUCTURE',
         'subgoal': 'SUBGOAL',
+        'sublocale': 'SUBLOCALE',
         'text': 'TEXT',
         'then': 'THEN',
         'theory': 'THEORY',
@@ -171,6 +180,13 @@ reserved = {
         'using': 'USING',
         'where': 'WHERE',
 }
+
+
+def t_PIPE(t):
+    r'\|'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
 
 
 def t_STAR(t):
