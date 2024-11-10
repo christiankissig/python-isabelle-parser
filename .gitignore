@@ -43,3 +43,5 @@ lib/
 pip-wheel-metadata/
 pytestdebug.log
 src/_pytest/_version.py
+*/parser.out
+*/parsetab.py
