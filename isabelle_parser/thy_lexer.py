@@ -5,75 +5,118 @@ tokens = (
     'OUTER_COMMENT',
     'CARTOUCHE',
 
+    'VAR_CASE',
+    'VAR_THESIS',
+
     'AND',
     'APPLY',
+    'APPLY_END',
+    'ARBITRARY',
     'ASSMS',
     'ASSUME',
     'ASSUMES',
+    'AT',
     'AXIOMATIZATION',
     'BACKSLASH',
     'BANG',
     'BEGIN',
     'BINDER',
     'BY',
+    'CASE',
+    'COINDUCT',
     'COLON',
     'COMMA',
     'COMMENT_CARTOUCHE',
     'CONSTRAINS',
+    'COROLLARY',
     'DASH',
+    'DEFER',
+    'DEFINE',
     'DEFINES',
     'DONE',
     'DOT',
     'END',
     'EQ',
     'EQUALS',
+    'EQUIV',
+    'FALSE',
+    'FIX',
     'FIXES',
     'FOR',
+    'FROM',
     'FUN',
     'FUNCTION',
     'GLOBAL_INTERPRETATION',
     'GT',
     'HAT',
     'HAVE',
+    'HENCE',
     'IF',
     'IMPORTS',
+    'INCLUDES',
+    'INDUCT',
+    'INDUCTION',
     'INFIX',
     'INFIXL',
     'INFIXR',
     'INTERPRET',
     'INTERPRETATION',
     'IS',
+    'LEFT_BRACE',
     'LEFT_BRACKET',
     'LEFT_PAREN',
     'LEMMA',
+    'LET',
     'LOCALE',
     'LT',
     'METHOD',
+    'NEWLINE',
+    'NEXT',
+    'NOTATION',
+    'NOTE',
     'NOTES',
+    'NO_SIMP',
+    'OBTAIN',
+    'OBTAINS',
     'OPENING',
+    'PIPE',
     'PLUS',
+    'PREFER',
+    'PRESUME',
     'PRIMREC',
     'PROOF',
+    'PROPOSITION',
+    'QED',
     'QUESTION_MARK',
+    'RIGHT_BRACE',
     'RIGHT_BRACKET',
     'RIGHT_PAREN',
+    'SCHEMATIC_GOAL',
     'SECTION',
     'SEMICOLON',
     'SHOW',
     'SHOWS',
+    'SLASH',
     'SORRY',
     'STAR',
     'STRUCTURE',
     'SUBGOAL',
     'SUBLOCALE',
+    'SUPPLY',
+    'TAKING',
     'TEXT',
     'THEN',
+    'THEOREM',
     'THEORY',
+    'THUS',
+    'TRUE',
     'TYPEDECL',
     'TYPE_SYNONYM',
+    'UNFOLDING',
     'USING',
+    'WHEN',
     'WHERE',
-    'PIPE',
+    'WITH',
 
     'ALTSTRING',
     'GREEK',
@@ -103,6 +146,20 @@ def t_OUTER_COMMENT(t):
     pass  # Ignore comments
 
 
+def t_EQUIV(t):
+    r'\\<equiv>'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_NEWLINE(t):
+    r'\\<newline>'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
 def t_CARTOUCHE(t):
     r'\\<open>[\s\S]*?\\<close>'
     t.lexer.lineno += t.value.count('\n')
@@ -113,6 +170,20 @@ def t_CARTOUCHE(t):
 
 def t_COMMENT_CARTOUCHE(t):
     r'\\<comment>'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_VAR_CASE(t):
+    r'\?case'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_VAR_THESIS(t):
+    r'\?thesis'
     t.lineno = t.lexer.lineno
     t.column = find_column(t.lexer.lexdata, t)
     return t
@@ -130,8 +201,12 @@ def t_GREEK(t):
 
 
 reserved = {
+        'False': 'FALSE',
+        'True': 'TRUE',
         'and': 'AND',
         'apply': 'APPLY',
+        'apply_end': 'APPLY_END',
+        'arbitrary': 'ARBITRARY',
         'assms': 'ASSMS',
         'assume': 'ASSUME',
         'assumes': 'ASSUMES',
@@ -139,19 +214,29 @@ reserved = {
         'begin': 'BEGIN',
         'binder': 'BINDER',
         'by': 'BY',
+        'coinduct': 'COINDUCT',
         'constrains': 'CONSTRAINS',
+        'corollary': 'COROLLARY',
+        'defer': 'DEFER',
+        'define': 'DEFINE',
         'defines': 'DEFINES',
         'done': 'DONE',
         'end': 'END',
         'eq': 'EQ',
+        'fix': 'FIX',
         'fixes': 'FIXES',
         'for': 'FOR',
+        'from': 'FROM',
         'fun': 'FUN',
         'function': 'FUNCTION',
         'global_interpretation': 'GLOBAL_INTERPRETATION',
         'have': 'HAVE',
+        'hence': 'HENCE',
         'if': 'IF',
         'imports': 'IMPORTS',
+        'includes': 'INCLUDES',
+        'induct': 'INDUCT',
+        'induction': 'INDUCTION',
         'infix': 'INFIX',
         'infixl': 'INFIXL',
         'infixr': 'INFIXR',
@@ -159,12 +244,23 @@ reserved = {
         'interpretation': 'INTERPRETATION',
         'is': 'IS',
         'lemma': 'LEMMA',
+        'let': 'LET',
         'locale': 'LOCALE',
         'method': 'METHOD',
+        'no_simp': 'NO_SIMP',
+        'notation': 'NOTATION',
+        'note': 'NOTE',
         'notes': 'NOTES',
+        'obtain': 'OBTAIN',
+        'obtains': 'OBTAINS',
         'opening': 'OPENING',
+        'prefer': 'PREFER',
+        'presume': 'PRESUME',
         'primrec': 'PRIMREC',
         'proof': 'PROOF',
+        'proposition': 'PROPOSITION',
+        'qed': 'QED',
+        'schematic_goal': 'SCHEMATIC_GOAL',
         'section': 'SECTION',
         'show': 'SHOW',
         'shows': 'SHOWS',
@@ -172,13 +268,24 @@ reserved = {
         'structure': 'STRUCTURE',
         'subgoal': 'SUBGOAL',
         'sublocale': 'SUBLOCALE',
+        'supply': 'SUPPLY',
+        'taking': 'TAKING',
         'text': 'TEXT',
         'then': 'THEN',
+        'theorem': 'THEOREM',
         'theory': 'THEORY',
+        'thus': 'THUS',
         'type_synonym': 'TYPE_SYNONYM',
         'typedecl': 'TYPEDECL',
+        'unfolding': 'UNFOLDING',
         'using': 'USING',
+        'when': 'WHEN',
         'where': 'WHERE',
+
+        'with': 'WITH',
+        'at': 'AT',
+        'case': 'CASE',
+        'next': 'NEXT',
 }
 
 
@@ -295,34 +402,37 @@ def t_LATIN(t):
     return t
 
 
+def t_LEFT_BRACE(t):
+    r'\{'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_RIGHT_BRACE(t):
+    r'\}'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_SLASH(t):
+    r'/'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
 
 
 t_BANG = r'!'
-t_AND = r'and'
-t_APPLY = r'apply'
-t_ASSMS = r'assms'
-t_ASSUME = r'assume'
-t_ASSUMES = r'assumes'
-t_BEGIN = r'begin'
-t_BY = r'by'
 t_COLON = r':'
 t_COMMA = r','
 t_DASH = r'-'
-t_DONE = r'done'
 t_DOT = r'\.'
-t_END = r'end'
 t_EQUALS = r'='
-t_HAVE = r'have'
-t_IMPORTS = r'imports'
-t_UNDERSCORE = r'_'
-
-t_LEMMA = r'lemma'
-t_METHOD = r'method'
 t_PLUS = r'\+'
-t_PROOF = r'proof'
 t_QUESTION_MARK = r'\?'
 t_SEMICOLON = r';'
-t_SHOW = r'show'
+t_UNDERSCORE = r'_'
 
 
 def t_LEFT_PAREN(t):
