@@ -21,6 +21,7 @@ tokens = (
     'BANG',
     'BEGIN',
     'BINDER',
+    'BOTTOM',
     'BY',
     'CASE',
     'COINDUCT',
@@ -123,7 +124,6 @@ tokens = (
     'LATIN',
     'LETTER',
     'LONG_IDENT',
-    'NAT',
     'SHORT_IDENT',
     'STRING',
     'SUBSCRIPT',
@@ -135,6 +135,7 @@ tokens = (
     'VERBATIM',
     'UNDERSCORE',
 
+    'NAT',
     'QUOTED_STRING',
     'ID',
 )
@@ -144,6 +145,13 @@ def t_OUTER_COMMENT(t):
     r'\(\*[\s\S]*?\*\)'  # Match multiline comments
     t.lexer.lineno += t.value.count('\n')
     pass  # Ignore comments
+
+
+def t_BOTTOM(t):
+    r'\\<bottom>'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
 
 
 def t_EQUIV(t):

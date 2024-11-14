@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 #
 
 def p_theory_file(p):
-    '''theory_file : theory
+    '''theory_file : theory_block
                    | section_block theory_file
                    | text_block theory_file'''
     if len(p) == 2:
@@ -24,8 +24,8 @@ def p_theory_file(p):
         p[0] = [p[1]] + p[2]
 
 
-def p_theory(p):
-    '''theory : THEORY ID imports_opt BEGIN content END'''
+def p_theory_block(p):
+    '''theory_block : THEORY ID imports_opt BEGIN content END'''
     global source
     imports = p[3]
     p[0] = (
@@ -64,6 +64,10 @@ def p_content(p):
     else:
         p[0] = []
 
+
+def p_theory(p):
+    '''theory : statement'''
+    p[0] = p[1]
 
 def p_statement(p):
     '''statement : axiomatization_block
@@ -160,12 +164,15 @@ def p_single_instruction(p):
 
 
 def p_method_args(p):
-    '''method_args : ID COLON method_arg method_args
+    '''method_args : ID COLON method_args
                    | method_arg method_args
+                   | method_arg COMMA method_args
                    | method_arg
                    | empty'''
     if len(p) == 3:
         p[0] = [p[1]] + p[2]
+    elif len(p) == 4:
+        p[0] = [p[1]] + p[3]
     elif len(p) == 5:
         p[0] = [p[1], p[2], p[3]] + p[4]
     else:
@@ -175,7 +182,9 @@ def p_method_args(p):
 def p_method_arg(p):
     '''method_arg : ID LEFT_PAREN NAT RIGHT_PAREN
                   | ID DOT ID
+                  | GREEK DOT ID
                   | ID DOT ID LEFT_PAREN NAT RIGHT_PAREN
+                  | GREEK DOT ID LEFT_PAREN NAT RIGHT_PAREN
                   | ID DOT ID DOT ID LEFT_PAREN NAT RIGHT_PAREN
                   | QUOTED_STRING
                   | ID'''
@@ -501,6 +510,7 @@ def p_thm(p):
     '''thm : NAT
            | ID attributes
            | ID
+           | CARTOUCHE
            | assms
            | attributes'''
     if len(p) == 2:
@@ -898,11 +908,10 @@ def p_axiomatization_header(p):
 
 # move empty case of for_fixes here to avoid parsing error
 def p_locale_expr(p):
-    '''locale_expr : instance_list
-                   | instance_list for_fixes'''
+    '''locale_expr : instance_list for_fixes'''
     p[0] = ('locale_expr', {
         'instances': p[1],
-        'for_fixes': p[2] if len(p) == 3 else [],
+        'for_fixes': p[2],
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
@@ -957,12 +966,11 @@ def p_qualifier(p):
 
 def p_pos_insts(p):
     '''pos_insts : UNDERSCORE
-                 | DOT
+                 | BOTTOM
                  | ID
                  | QUOTED_STRING
                  | GREEK
                  | UNDERSCORE pos_insts
-                 | DOT pos_insts
                  | ID pos_insts
                  | QUOTED_STRING pos_insts
                  | GREEK pos_insts'''
@@ -1157,8 +1165,13 @@ def p_notes_list_element(p):
 
 
 def p_interpretation_block(p):
-    '''interpretation_block : INTERPRETATION locale_expr'''
-    p[0] = ('interpretation', p[2])
+    '''interpretation_block : INTERPRETATION locale_expr proof_prove'''
+    p[0] = ('interpretation', {
+        'locale_expr': p[2],
+        'proof_prove': p[3],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
 
 
 #
@@ -1193,8 +1206,8 @@ def p_type_synonym(p):
 #
 
 
-def p_fix_block(p):
-    '''fix_block : FIX vars'''
+def p_fix(p):
+    '''fix : FIX vars'''
     p[0] = ('fix', p[2])
 
 
@@ -1321,6 +1334,7 @@ def p_proof_state(p):
                    | assume proof_state
                    | case proof_state
                    | have proof_prove
+                   | show proof_prove
                    | proof proof_state
                    | qed proof_state
                    | qed local_theory
@@ -1330,7 +1344,8 @@ def p_proof_state(p):
                    | hence proof_prove
                    | thus proof_prove
                    | obtain proof_prove
-                   | with proof_chain'''
+                   | with proof_chain
+                   | fix proof_state'''
     if len(p) == 3:
         p[0] = ('proof_state', {
             'kind': p[1] if p[1] in ['note', 'next'] else None,
@@ -1366,7 +1381,8 @@ def p_proof_state_statement(p):
 
 
 def p_proof_chain(p):
-    '''proof_chain : have proof_prove'''
+    '''proof_chain : have proof_prove
+                   | show proof_prove'''
     p[0] = (p[1], p[2])
 
 
@@ -1431,7 +1447,10 @@ def p_proof_prove(p):
                    | using
                    | with proof_chain
                    | proof proof_state
-                   | proof'''
+                   | proof
+                   | terminal_proof_steps proof_state
+                   | terminal_proof_steps local_theory
+                   | terminal_proof_steps theory'''
     p[0] = p[1:]
 
 
@@ -1584,6 +1603,17 @@ def p_assms(p):
 def p_have(p):
     '''have : HAVE stmt cond_stmt for_fixes'''
     p[0] = ('have', {
+        'stmt': p[2],
+        'cond_stmt': p[3],
+        'for_fixes': p[4],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+def p_show(p):
+    '''show : SHOW stmt cond_stmt for_fixes'''
+    p[0] = ('show', {
         'stmt': p[2],
         'cond_stmt': p[3],
         'for_fixes': p[4],
