@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 def p_theory_file(p):
     '''theory_file : theory_block
+                   | chapter_block theory_file
                    | section_block theory_file
                    | text_block theory_file'''
     if len(p) == 2:
@@ -49,11 +50,17 @@ def p_imports_opt(p):
 def p_import_list(p):
     '''import_list : QUOTED_STRING import_list
                    | ID import_list
+                   | ID DOT ID import_list
+                   | ID DOT ID
                    | ID'''
-    if len(p) == 3:
-        p[0] = [p[1]] + p[2]
-    else:
+    if len(p) == 2:
         p[0] = [p[1]]
+    elif p[2] == '.':
+        p[0] = ["".join(p[1:3])]
+        if len(p) > 4:
+            p[0] += p[4]
+    else:
+        p[0] = [p[1]] + p[2]
 
 
 def p_content(p):
@@ -66,18 +73,27 @@ def p_content(p):
 
 
 def p_theory(p):
-    '''theory : statement'''
-    p[0] = p[1]
+    '''theory : statement theory
+              | empty'''
+    if len(p) == 3:
+        p[0] = [p[1]] + p[2]
+    else:
+        p[0] = []
+
 
 def p_statement(p):
     '''statement : axiomatization_block
+                 | declare
+                 | definition
                  | fun_block
                  | interpretation_block
                  | lemma_block
+                 | lemmas
                  | locale_block
                  | method_block
                  | notation_block
                  | section_block
+                 | subsection_block
                  | text_block
                  | type_synonym
                  | typedecl'''
@@ -181,9 +197,15 @@ def p_method_args(p):
 
 def p_method_arg(p):
     '''method_arg : ID LEFT_PAREN NAT RIGHT_PAREN
+                  | LEFT_PAREN ID COMMA ID RIGHT_PAREN
+                  | LEFT_PAREN ID ID RIGHT_PAREN
+                  | LEFT_PAREN ID ID DOT ID RIGHT_PAREN
+                  | LEFT_PAREN ID ID ID RIGHT_PAREN
+                  | LEFT_PAREN ID ID ID ID RIGHT_PAREN
                   | ID DOT ID
                   | GREEK DOT ID
                   | ID DOT ID LEFT_PAREN NAT RIGHT_PAREN
+                  | ID DOT ID LEFT_PAREN NAT COMMA NAT RIGHT_PAREN
                   | GREEK DOT ID LEFT_PAREN NAT RIGHT_PAREN
                   | ID DOT ID DOT ID LEFT_PAREN NAT RIGHT_PAREN
                   | QUOTED_STRING
@@ -193,13 +215,15 @@ def p_method_arg(p):
 
 def p_lemma_block(p):
     '''lemma_block : LEMMA ID COLON QUOTED_STRING proof_prove
-                   | LEMMA ID COLON fixes assumes shows proof_prove'''
-    p[0] = ('lemma', {
+                   | LEMMA ID COLON fixes assumes conclusion proof_prove
+                   | THEOREM ID COLON QUOTED_STRING proof_prove
+                   | THEOREM ID COLON fixes assumes conclusion proof_prove'''
+    p[0] = (p[1], {
         'name': p[2],
         'statement': p[4] if len(p) == 6 else None,
         'fixes': p[4] if len(p) == 8 else None,
         'assumes': p[5] if len(p) == 8 else None,
-        'shows': p[6] if len(p) == 8 else None,
+        'conclusion': p[6] if len(p) == 8 else None,
         'proof': p[7] if len(p) == 8 else p[5],
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
@@ -293,8 +317,11 @@ def p_type(p):
 def p_term(p):
     '''term : QUOTED_STRING
             | GREEK
-            | ID'''
-    p[0] = ('term', p[1])
+            | ID
+            | TERM_VAR
+            | SYM_IDENT'''
+    term = p[1]
+    p[0] = ('term', term)
 
 
 def p_prop(p):
@@ -302,8 +329,15 @@ def p_prop(p):
             | VAR_CASE
             | VAR_THESIS
             | FALSE
-            | TRUE'''
-    p[0] = ('prop', p[1])
+            | TRUE
+            | NAT COLON QUOTED_STRING
+            | ID COLON QUOTED_STRING'''
+    p[0] = ('prop', {
+        'value': p[1] if len(p) > 2 else None,
+        'prop': p[len(p)-1],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
 
 
 def p_inst(p):
@@ -502,7 +536,7 @@ def p_thmdecl(p):
 
 
 def p_thmdef(p):
-    '''thmdef : thmbind EQ'''
+    '''thmdef : thmbind EQUALS'''
     p[0] = ('thmdef', p[1])
 
 
@@ -510,12 +544,27 @@ def p_thm(p):
     '''thm : NAT
            | ID attributes
            | ID
+           | SYM_IDENT
+           | TRUE
+           | FALSE
+           | ID LEFT_PAREN NAT COMMA NAT RIGHT_PAREN
+           | ID LEFT_PAREN NAT RIGHT_PAREN
            | CARTOUCHE
+           | ID EQUALS ID
+           | NAT EQUALS ID
            | assms
            | attributes'''
     if len(p) == 2:
+        thm = p[1]
+    elif len(p) == 4 and p[2] == '(' and p[4] == ')':
+        thm = "".join(p[1:4])
+    elif len(p) == 3:
+        thm = p[1]
+    else:
+        thm = None
+    if len(p) == 2:
         p[0] = ('thm', {
-            'name': p[1] if isinstance(p[1], str) else None,
+            'name': thm,
             'attributes': None if isinstance(p[1], str) else p[1],
             'line': p.lineno(1),
             'column': get_column(source, p.lexpos(1)) if source else -1,
@@ -524,6 +573,13 @@ def p_thm(p):
         p[0] = ('thm', {
             'name': p[1],
             'attributes': p[2],
+            'line': p.lineno(1),
+            'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+    else:
+        p[0] = ('thm', {
+            'name': thm,
+            'attributes': None,
             'line': p.lineno(1),
             'column': get_column(source, p.lexpos(1)) if source else -1,
         })
@@ -572,7 +628,7 @@ def p_attributes_list(p):
         else:
             p[0] = [p[1]]
     else:
-        p[0] = [p[1]] + p[3]
+        p[0] = [p[1]] + p[len(p) - 1]
 
 
 def p_attribute(p):
@@ -595,6 +651,8 @@ def p_args(p):
 
 def p_arg(p):
     '''arg : ID
+           | QUOTED_STRING
+           | SYM_IDENT
            | LEFT_PAREN args RIGHT_PAREN
            | LEFT_BRACKET args RIGHT_BRACKET'''
     if len(p) == 2:
@@ -670,8 +728,8 @@ def p_structured_spec(p):
 
 
 def p_spec_prems(p):
-    '''spec_prems : empty
-                  | IF prop_list'''
+    '''spec_prems : IF prop_list
+                  | empty'''
     if len(p) == 2:
         p[0] = []
     else:
@@ -680,15 +738,17 @@ def p_spec_prems(p):
 
 def p_prop_list(p):
     '''prop_list : prop
+                 | prop AND prop_list
                  | prop prop_list'''
-    p[0] = [p[1]] + p[2] if len(p) == 3 else [p[1]]
+    p[0] = [p[1]] + p[len(p)-1] if len(p) > 2 else [p[1]]
 
 
 def p_specification(p):
-    '''specification : vars WHERE multi_specs'''
+    '''specification : vars WHERE multi_specs
+                     | vars WHERE comment_block multi_specs'''
     p[0] = ('specification', {
         'vars': p[1],
-        'multi_specs': p[3],
+        'multi_specs': p[len(p)-1],
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
@@ -724,13 +784,24 @@ def p_antiquotation(p):
 #
 
 
+def p_chapter_block(p):
+    '''chapter_block : CHAPTER CARTOUCHE'''
+    p[0] = ('section', p[2])
+
+
 def p_section_block(p):
     '''section_block : SECTION CARTOUCHE'''
     p[0] = ('section', p[2])
 
 
+def p_subsection_block(p):
+    '''subsection_block : SUBSECTION CARTOUCHE'''
+    p[0] = ('subsection', p[2])
+
+
 def p_text_block(p):
-    '''text_block : TEXT CARTOUCHE'''
+    '''text_block : TEXT CARTOUCHE
+                  | TXT CARTOUCHE'''
     p[0] = ('text', p[2])
 
 
@@ -795,6 +866,7 @@ def p_concatenation(p):
         'column': get_column(source, p.lexpos(1)) if source else -1,
     })
 
+
 def p_atom_list(p):
     '''atom_list : atom
                  | atom QUESTION_MARK
@@ -856,6 +928,46 @@ def p_opening(p):
 
 
 #
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.4
+#
+
+
+def p_decl(p):
+    '''decl : ID WHERE
+            | ID COLON COLON ID WHERE
+            | ID COLON COLON ID mixfix WHERE'''
+    if len(p) == 3:
+        p[0] = ('decl', {
+            'name': p[1],
+            'mixfix': None,
+            'line': p.lineno(1),
+            'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+    else:
+        p[0] = ('decl', {
+            'name': p[1],
+            'type': p[4],
+            'mixfix': p[5] if len(p) == 7 else None,
+            'line': p.lineno(1),
+            'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+def p_definition(p):
+    '''definition : DEFINITION decl thmdecl prop spec_prems for_fixes
+                  | DEFINITION decl prop spec_prems for_fixes'''
+    p[0] = ('definition', {
+        'decl': p[2],
+        'thmdecl': p[3] if len(p) == 8 else None,
+        'prop': p[4] if len(p) == 8 else p[3],
+        'spec_prems': p[5] if len(p) == 8 else p[4],
+        'for_fixes': p[6] if len(p) == 8 else p[5],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+#
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.5
 #
 
@@ -902,6 +1014,20 @@ def p_axiomatization_header(p):
 
 
 #
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.6
+#
+
+
+def p_declare(p):
+    '''declare : DECLARE thms_list_and_sep'''
+    p[0] = ('declare', {
+        'thms': p[2],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+#
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.7.1
 #
 
@@ -918,8 +1044,8 @@ def p_locale_expr(p):
 
 
 def p_instance_list(p):
-    '''instance_list : instance
-                     | instance PLUS instance_list'''
+    '''instance_list : instance PLUS instance_list
+                     | instance'''
     if len(p) == 2:
         p[0] = [p[1]]
     else:
@@ -1002,11 +1128,11 @@ def p_name_insts_list(p):
 
 
 def p_locale_block(p):
-    '''locale_block : LOCALE ID
+    '''locale_block : LOCALE ID comment_block BEGIN content END
                     | LOCALE ID BEGIN content END
-                    | LOCALE ID comment_block BEGIN content END
-                    | LOCALE ID EQ locale
-                    | LOCALE ID EQ locale BEGIN content END'''
+                    | LOCALE ID EQUALS locale BEGIN content END
+                    | LOCALE ID EQUALS locale
+                    | LOCALE ID'''
     global source
     if len(p) == 3:
         p[0] = ('locale', {
@@ -1046,14 +1172,17 @@ def p_locale_block(p):
             })
 
 
+# flattened locale_expr to avoid parsing conflict between instance_list
+# and PLUS below due to PLY using LALR(1)
 def p_locale(p):
-    '''locale : context_elem_list
+    '''locale : opening PLUS context_elem_list
               | opening
-              | opening PLUS context_elem_list
-              | locale_expr
-              | locale opening
-              | locale opening PLUS context_elem_list
-              | locale_expr opening PLUS context_elem_list'''
+              | instance for_fixes PLUS context_elem_list
+              | instance for_fixes opening
+              | instance for_fixes opening PLUS context_elem_list
+              | instance for_fixes
+              | context_elem_list
+              '''
     p[0] = ('locale', p[1:])
 
 
@@ -1202,6 +1331,24 @@ def p_type_synonym(p):
 
 
 #
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.13
+#
+
+
+# TODO complete
+def p_lemmas(p):
+    '''lemmas : LEMMAS thms for_fixes
+              | LEMMAS thmdef thms for_fixes'''
+    p[0] = ('lemmas', {
+        'thmdef': p[2] if len(p) == 5 else None,
+        'thms': p[len(p)-2],
+        'for_fixes': p[len(p)-1],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+#
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.2.1
 #
 
@@ -1289,8 +1436,8 @@ def p_prems(p):
 #
 
 
-def p_let_block(p):
-    '''let_block : LET let_statements'''
+def p_let(p):
+    '''let : LET let_statements'''
     p[0] = p[2]
 
 
@@ -1331,8 +1478,10 @@ def p_proof_state(p):
     '''proof_state : NOTE proof_state
                    | NEXT proof_state
                    | LEFT_BRACE proof_state RIGHT_BRACE proof_state
+                   | let proof_state
                    | assume proof_state
                    | case proof_state
+                   | from proof_chain
                    | have proof_prove
                    | show proof_prove
                    | proof proof_state
@@ -1344,8 +1493,14 @@ def p_proof_state(p):
                    | hence proof_prove
                    | thus proof_prove
                    | obtain proof_prove
+                   | note proof_state
                    | with proof_chain
-                   | fix proof_state'''
+                   | prems proof_state
+                   | fix proof_state
+                   | moreover proof_state
+                   | ultimately proof_chain
+                   | comment_block proof_state
+                   | text_block proof_state'''
     if len(p) == 3:
         p[0] = ('proof_state', {
             'kind': p[1] if p[1] in ['note', 'next'] else None,
@@ -1382,8 +1537,18 @@ def p_proof_state_statement(p):
 
 def p_proof_chain(p):
     '''proof_chain : have proof_prove
+                   | obtain proof_prove
                    | show proof_prove'''
     p[0] = (p[1], p[2])
+
+
+def p_note(p):
+    '''note : NOTE thms_list_and_sep'''
+    p[0] = ('note', {
+        'thms': p[2],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
 
 
 def p_with(p):
@@ -1408,6 +1573,10 @@ def p_local_theory(p):
                     | PROPOSITION short_statement proof_prove
                     | SCHEMATIC_GOAL long_statement proof_prove
                     | SCHEMATIC_GOAL short_statement proof_prove
+                    | definition local_theory
+                    | declare local_theory
+                    | comment_block local_theory
+                    | text_block local_theory
         '''
     if len(p) == 5 and p[1] == 'lemma':
         lemma = ('lemma', {
@@ -1450,7 +1619,10 @@ def p_proof_prove(p):
                    | proof
                    | terminal_proof_steps proof_state
                    | terminal_proof_steps local_theory
-                   | terminal_proof_steps theory'''
+                   | terminal_proof_steps theory
+                   | terminal_proof_steps
+                   | comment_block proof_prove
+                   | text_block proof_prove'''
     p[0] = p[1:]
 
 
@@ -1524,10 +1696,38 @@ def p_conclusion(p):
 
 
 def p_obtain_clauses(p):
-    '''obtain_clauses : obtain_clause
-                      | obtain_clause AND obtain_clauses'''
-    p[0] = [p[1]] + p[3] if len(p) == 4 else [p[1]]
-
+    '''obtain_clauses : obtain_case
+                      | par_name obtain_case
+                      | par_name obtain_case PIPE obtain_clauses
+                      | obtain_case PIPE obtain_clauses'''
+    if len(p) == 2:
+        p[0] = [('obtain_clause', {
+            'par_name': None,
+            'obtain_case': p[1],
+            'line': p.lineno(1),
+            'column': get_column(source, p.lexpos(1)) if source else -1,
+            })]
+    elif len(p) == 3:
+        p[0] = [('obtain_clause', {
+            'par_name': p[1],
+            'obtain_case': p[2],
+            'line': p.lineno(1),
+            'column': get_column(source, p.lexpos(1)) if source else -1,
+            })]
+    elif len(p) == 4:
+        p[0] = [('obtain_clause', {
+            'par_name': None,
+            'obtain_case': p[1],
+            'line': p.lineno(1),
+            'column': get_column(source, p.lexpos(1)) if source else -1,
+            })] + p[3]
+    else:
+        p[0] = [('obtain_clause', {
+            'par_name': p[1],
+            'obtain_case': p[2],
+            'line': p.lineno(1),
+            'column': get_column(source, p.lexpos(1)) if source else -1,
+            })] + p[4]
 
 def p_obtain_clause(p):
     '''obtain_clause : obtain_case
@@ -1562,10 +1762,19 @@ def p_obtain_case_statement(p):
                              | thmdecl prop_list'''
     p[0] = ('obtain_case_statement', {
         'thmdecl': p[1] if len(p) == 3 else None,
-        'prop_list': p[2] if len(p) == 2 else p[1],
+        'prop_list': p[len(p)-1],
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
     })
+
+
+def p_from(p):
+    '''from : FROM thms_list_and_sep'''
+    p[0] = ('from', {
+        'thms': p[2],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
 
 
 def p_using(p):
@@ -1645,17 +1854,43 @@ def p_thus(p):
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
 
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.3
+#
+
+
+# TODO complete
+def p_moreover(p):
+    '''moreover : MOREOVER'''
+    p[0] = ('moreover', {
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+def p_ultimately(p):
+    '''ultimately : ULTIMATELY'''
+    p[0] = ('ultimately', {
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.4.1
 #
 
 
+# TODO missing induct, induction, and coinduct
 def p_method(p):
-    '''method : method_name
+    '''method : cases
+              | method method_modifier
+              | method_name method_args
               | LEFT_PAREN method_name method_args RIGHT_PAREN
               | LEFT_PAREN methods RIGHT_PAREN
-              | method_name method_modifier
-              | LEFT_PAREN method_name method_args RIGHT_PAREN method_modifier'''
+              | LEFT_PAREN cases RIGHT_PAREN
+              | method_name'''
     if len(p) == 2:
         p[0] = ('method', {
             'name': p[1],
@@ -1715,7 +1950,6 @@ def p_method_modifier(p):
 # TODO this seems to overlap with p_method
 def p_methods(p):
     '''methods : method
-               | method methods
                | method COMMA methods
                | method SEMICOLON methods
                | method PIPE methods'''
@@ -1785,19 +2019,21 @@ def p_goal_spec(p):
 
 
 def p_proof(p):
-    '''proof : PROOF method
+    '''proof : PROOF SYM_IDENT method
+             | PROOF method
              | PROOF DASH
              | PROOF'''
     p[0] = ('proof', {
-        'method': p[2] if len(p) == 3 else None,
+        'method': p[len(p)-1] if len(p) > 2 else None,
+        'ident': p[2] if len(p) == 4 else None,
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
 
 
 def p_qed(p):
-    '''qed : QED
-           | QED method'''
+    '''qed : QED method
+           | QED'''
     p[0] = ('qed', {
         'method': p[2] if len(p) == 3 else None,
         'line': p.lineno(1),
@@ -1835,6 +2071,8 @@ def p_terminal_proof_steps(p):
 # TODO complete
 def p_case(p):
     '''case : CASE ID
+            | CASE TRUE
+            | CASE FALSE
             | CASE LEFT_PAREN name_underscore_list RIGHT_PAREN'''
     p[0] = ('case', {
         'names': [p[2]] if len(p) == 3 else p[3],
@@ -1854,6 +2092,38 @@ def p_name_underscore_list(p):
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.5.2
 #
+
+
+def p_cases(p):
+    '''cases : CASES no_simp_block rule
+             | CASES no_simp_block insts_list_and_sep
+             | CASES no_simp_block insts_list_and_sep rule'''
+    if len(p) == 4 and p[3] and p[3][0] == 'rule':
+        rule = p[3]
+        insts = None
+    elif len(p) == 5 and p[4][0] == 'rule':
+        rule = p[4]
+        insts = p[3]
+    else:
+        rule = None
+        insts = p[3]
+    p[0] = ('cases', {
+        'no_simp': p[2],
+        'insts': insts,
+        'rule': rule,
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+def p_insts_list_and_sep(p):
+    '''insts_list_and_sep : insts AND insts_list_and_sep
+                          | insts
+                          | empty'''
+    if len(p) == 2:
+        p[0] = [p[1]] if p[1] else []
+    else:
+        p[0] = [p[1]] + p[3]
 
 
 def p_induct_block(p):
@@ -2169,6 +2439,7 @@ def p_notation(p):
         'column': get_column(source, p.lexpos(1)) if source else -1,
     })
 
+
 # TODO
 def p_mode(p):
     '''mode : ID'''
@@ -2177,6 +2448,7 @@ def p_mode(p):
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.2
 #
+
 
 def p_primrec_block(p):
     '''primrec_block : PRIMREC specification'''
@@ -2285,13 +2557,15 @@ def p_error(p):
 
     if p:
         value = p.value
+        type = p.type
         column = get_column(source, p.lexpos) if source else -1
         lineno = p.lineno
     else:
         value = "NONE"
+        type = "NONE"
         column = -1
         lineno = -1
-    raise ParsingError(f"Syntax error at '{value}'",
+    raise ParsingError(f"Syntax error at '{value}' with type '{type}'",
                        line=lineno,
                        column=column,
                        token=value)

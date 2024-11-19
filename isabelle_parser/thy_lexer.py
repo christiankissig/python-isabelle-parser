@@ -24,6 +24,8 @@ tokens = (
     'BOTTOM',
     'BY',
     'CASE',
+    'CASES',
+    'CHAPTER',
     'COINDUCT',
     'COLON',
     'COMMA',
@@ -31,13 +33,14 @@ tokens = (
     'CONSTRAINS',
     'COROLLARY',
     'DASH',
+    'DECLARE',
     'DEFER',
     'DEFINE',
     'DEFINES',
+    'DEFINITION',
     'DONE',
     'DOT',
     'END',
-    'EQ',
     'EQUALS',
     'EQUIV',
     'FALSE',
@@ -67,10 +70,12 @@ tokens = (
     'LEFT_BRACKET',
     'LEFT_PAREN',
     'LEMMA',
+    'LEMMAS',
     'LET',
     'LOCALE',
     'LT',
     'METHOD',
+    'MOREOVER',
     'NEWLINE',
     'NEXT',
     'NOTATION',
@@ -103,6 +108,7 @@ tokens = (
     'STRUCTURE',
     'SUBGOAL',
     'SUBLOCALE',
+    'SUBSECTION',
     'SUPPLY',
     'TAKING',
     'TEXT',
@@ -111,8 +117,10 @@ tokens = (
     'THEORY',
     'THUS',
     'TRUE',
+    'TXT',
     'TYPEDECL',
     'TYPE_SYNONYM',
+    'ULTIMATELY',
     'UNFOLDING',
     'USING',
     'WHEN',
@@ -123,8 +131,6 @@ tokens = (
     'GREEK',
     'LATIN',
     'LETTER',
-    'LONG_IDENT',
-    'SHORT_IDENT',
     'STRING',
     'SUBSCRIPT',
     'SYM_FLOAT',
@@ -138,6 +144,8 @@ tokens = (
     'NAT',
     'QUOTED_STRING',
     'ID',
+    'LONG_IDENT',
+    'SHORT_IDENT',
 )
 
 
@@ -218,19 +226,24 @@ reserved = {
         'assms': 'ASSMS',
         'assume': 'ASSUME',
         'assumes': 'ASSUMES',
+        'at': 'AT',
         'axiomatization': 'AXIOMATIZATION',
         'begin': 'BEGIN',
         'binder': 'BINDER',
         'by': 'BY',
+        'case': 'CASE',
+        'cases': 'CASES',
+        'chapter': 'CHAPTER',
         'coinduct': 'COINDUCT',
         'constrains': 'CONSTRAINS',
         'corollary': 'COROLLARY',
+        'declare': 'DECLARE',
         'defer': 'DEFER',
         'define': 'DEFINE',
         'defines': 'DEFINES',
+        'definition': 'DEFINITION',
         'done': 'DONE',
         'end': 'END',
-        'eq': 'EQ',
         'fix': 'FIX',
         'fixes': 'FIXES',
         'for': 'FOR',
@@ -252,9 +265,12 @@ reserved = {
         'interpretation': 'INTERPRETATION',
         'is': 'IS',
         'lemma': 'LEMMA',
+        'lemmas': 'LEMMAS',
         'let': 'LET',
         'locale': 'LOCALE',
         'method': 'METHOD',
+        'moreover': 'MOREOVER',
+        'next': 'NEXT',
         'no_simp': 'NO_SIMP',
         'notation': 'NOTATION',
         'note': 'NOTE',
@@ -276,6 +292,7 @@ reserved = {
         'structure': 'STRUCTURE',
         'subgoal': 'SUBGOAL',
         'sublocale': 'SUBLOCALE',
+        'subsection': 'SUBSECTION',
         'supply': 'SUPPLY',
         'taking': 'TAKING',
         'text': 'TEXT',
@@ -283,17 +300,15 @@ reserved = {
         'theorem': 'THEOREM',
         'theory': 'THEORY',
         'thus': 'THUS',
+        'txt': 'TXT',
         'type_synonym': 'TYPE_SYNONYM',
         'typedecl': 'TYPEDECL',
+        'ultimately': 'ULTIMATELY',
         'unfolding': 'UNFOLDING',
         'using': 'USING',
         'when': 'WHEN',
         'where': 'WHERE',
-
         'with': 'WITH',
-        'at': 'AT',
-        'case': 'CASE',
-        'next': 'NEXT',
 }
 
 
@@ -340,7 +355,7 @@ def t_GT(t):
 
 
 def t_SHORT_IDENT(t):
-    r'[a-zA-Z](_?\d*[a-zA-Z]*)*'
+    r'[a-zA-Z](_?\d*[a-zA-Z_\']*)*'
     if t.value in reserved:
         t.type = reserved[t.value]
     else:
@@ -351,7 +366,7 @@ def t_SHORT_IDENT(t):
 
 
 def t_LONG_IDENT(t):
-    r'([a-zA-Z](_?\d*[a-zA-Z]*)*)(\.([a-zA-Z](_?\d*[a-zA-Z]*)*))+'
+    r'([a-zA-Z](_?\d*[a-zA-Z\']*)*)(\.([a-zA-Z\'](_?\d*[a-zA-Z\']*)*))+'
     if t.value in reserved:
         t.type = reserved[t.value]
     else:
@@ -361,15 +376,9 @@ def t_LONG_IDENT(t):
     return t
 
 
-def t_SYM_IDENT(t):
-    r'[!#$%&*+\-/<=>?@^_`|~]+<([a-zA-Z](_?\d*[a-zA-Z]*)*)>'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
 def t_QUOTED_STRING(t):
     r'"[^"]*"'
+    t.lexer.lineno += t.value.count('\n')
     t.lineno = t.lexer.lineno
     t.column = find_column(t.lexer.lexdata, t)
     return t
@@ -471,33 +480,6 @@ def t_RIGHT_BRACKET(t):
     return t
 
 
-def t_SHOWS(t):
-    r'shows'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
-def t_SORRY(t):
-    r'sorry'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
-t_SUBGOAL = r'subgoal'
-t_THEN = r'then'
-
-
-def t_THEORY(t):
-    r'theory'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
-t_USING = r'using'
-
 # Token definitions
 t_NAT = r'\d+'
 t_SYM_FLOAT = r'(\d+(\.\d+)+|\.\d+)'
@@ -515,8 +497,15 @@ subscript = r'\\<\^sub>'
 #
 
 
+def t_SYM_IDENT(t):
+    r'[!#$%&*+\-/<=>?@^_`|~]+[a-zA-Z][a-zA-Z]*'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
 def t_ID(t):
-    r'[a-zA-Z_][a-zA-Z_0-9]*'
+    r'[a-zA-Z_][a-zA-Z_0-9\']*'
     t.type = reserved.get(t.value, 'ID')    # Check for reserved words
     t.lineno = t.lexer.lineno
     t.column = find_column(t.lexer.lexdata, t)
