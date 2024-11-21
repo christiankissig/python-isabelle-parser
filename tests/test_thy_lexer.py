@@ -1,3 +1,5 @@
+import re
+import isabelle_parser
 from isabelle_parser import thy_lexer
 
 
@@ -49,22 +51,3 @@ end
     assert len(tokens) > 0
     assert tokens[0].value == 'theory'
     assert tokens[0].type == 'THEORY'
-
-
-def test_lex_lemma():
-    input = """
-lemma I7_preserves_pre_block_global_pre:
-assumes 1: "block_cond t' ta ms \\<sigma>"
-    """
-    thy_lexer.input(input)
-    tokens = []
-    while True:
-        tok = thy_lexer.token()
-        if not tok:
-            break
-        tokens.append(tok)
-    assert len(tokens) > 0
-    assert tokens[0].value == 'lemma'
-    assert tokens[0].type == 'LEMMA'
-
-

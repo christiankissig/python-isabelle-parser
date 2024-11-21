@@ -63,7 +63,8 @@ begin
 
 interpretation pre_RDR \\<delta> \\<gamma> None .
 
-end""", True),
+end""",
+     True),
     ('parse_theory_notation', """
 theory Consensus
 imports RDR

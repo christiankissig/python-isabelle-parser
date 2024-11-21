@@ -8,6 +8,7 @@ tokens = (
     'VAR_CASE',
     'VAR_THESIS',
 
+    'ABBREVIATION',
     'AND',
     'APPLY',
     'APPLY_END',
@@ -31,6 +32,7 @@ tokens = (
     'COMMA',
     'COMMENT_CARTOUCHE',
     'CONSTRAINS',
+    'CONTEXT',
     'COROLLARY',
     'DASH',
     'DECLARE',
@@ -60,6 +62,7 @@ tokens = (
     'INCLUDES',
     'INDUCT',
     'INDUCTION',
+    'INDUCTIVE',
     'INFIX',
     'INFIXL',
     'INFIXR',
@@ -75,16 +78,20 @@ tokens = (
     'LOCALE',
     'LT',
     'METHOD',
+    'MONOS',
     'MOREOVER',
     'NEWLINE',
     'NEXT',
+    'NITPICK',
     'NOTATION',
     'NOTE',
     'NOTES',
     'NO_SIMP',
     'OBTAIN',
     'OBTAINS',
+    'OOPS',
     'OPENING',
+    'OVERLOADED',
     'PIPE',
     'PLUS',
     'PREFER',
@@ -94,6 +101,7 @@ tokens = (
     'PROPOSITION',
     'QED',
     'QUESTION_MARK',
+    'RECORD',
     'RIGHT_BRACE',
     'RIGHT_BRACKET',
     'RIGHT_PAREN',
@@ -136,7 +144,6 @@ tokens = (
     'SYM_FLOAT',
     'SYM_IDENT',
     'TERM_VAR',
-    'TYPE_IDENT',
     'TYPE_VAR',
     'VERBATIM',
     'UNDERSCORE',
@@ -146,6 +153,7 @@ tokens = (
     'ID',
     'LONG_IDENT',
     'SHORT_IDENT',
+    'TYPE_IDENT',
 )
 
 
@@ -219,6 +227,7 @@ def t_GREEK(t):
 reserved = {
         'False': 'FALSE',
         'True': 'TRUE',
+        'abbreviation': 'ABBREVIATION',
         'and': 'AND',
         'apply': 'APPLY',
         'apply_end': 'APPLY_END',
@@ -236,6 +245,7 @@ reserved = {
         'chapter': 'CHAPTER',
         'coinduct': 'COINDUCT',
         'constrains': 'CONSTRAINS',
+        'context': 'CONTEXT',
         'corollary': 'COROLLARY',
         'declare': 'DECLARE',
         'defer': 'DEFER',
@@ -258,6 +268,7 @@ reserved = {
         'includes': 'INCLUDES',
         'induct': 'INDUCT',
         'induction': 'INDUCTION',
+        'inductive': 'INDUCTIVE',
         'infix': 'INFIX',
         'infixl': 'INFIXL',
         'infixr': 'INFIXR',
@@ -269,21 +280,26 @@ reserved = {
         'let': 'LET',
         'locale': 'LOCALE',
         'method': 'METHOD',
+        'monos': 'MONOS',
         'moreover': 'MOREOVER',
         'next': 'NEXT',
+        'nitpick': 'NITPICK',
         'no_simp': 'NO_SIMP',
         'notation': 'NOTATION',
         'note': 'NOTE',
         'notes': 'NOTES',
         'obtain': 'OBTAIN',
         'obtains': 'OBTAINS',
+        'oops': 'OOPS',
         'opening': 'OPENING',
+        'overloaded': 'OVERLOADED',
         'prefer': 'PREFER',
         'presume': 'PRESUME',
         'primrec': 'PRIMREC',
         'proof': 'PROOF',
         'proposition': 'PROPOSITION',
         'qed': 'QED',
+        'record': 'RECORD',
         'schematic_goal': 'SCHEMATIC_GOAL',
         'section': 'SECTION',
         'show': 'SHOW',
@@ -349,6 +365,14 @@ def t_HAT(t):
 
 def t_GT(t):
     r'>'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_TYPE_IDENT(t):
+    r'\'[a-zA-Z](_?\d*[a-zA-Z_\']*)*'
+    t.type = 'TYPE_IDENT'
     t.lineno = t.lexer.lineno
     t.column = find_column(t.lexer.lexdata, t)
     return t
@@ -484,7 +508,6 @@ def t_RIGHT_BRACKET(t):
 t_NAT = r'\d+'
 t_SYM_FLOAT = r'(\d+(\.\d+)+|\.\d+)'
 t_TERM_VAR = r'\?[a-zA-Z](_?\d*[a-zA-Z]*)*\.?\d*'
-t_TYPE_IDENT = r"'\w+"
 t_TYPE_VAR = r"'[a-zA-Z](_?\d*[a-zA-Z]*)*\.?\d*"
 t_STRING = r'"[^"]*"'
 
