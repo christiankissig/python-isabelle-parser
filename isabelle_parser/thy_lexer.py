@@ -59,6 +59,7 @@ tokens = (
     'HENCE',
     'IF',
     'IMPORTS',
+    'IN',
     'INCLUDES',
     'INDUCT',
     'INDUCTION',
@@ -77,7 +78,9 @@ tokens = (
     'LET',
     'LOCALE',
     'LT',
+    'MARKER',
     'METHOD',
+    'MODULE_NAME',
     'MONOS',
     'MOREOVER',
     'NEWLINE',
@@ -135,8 +138,6 @@ tokens = (
     'WHEN',
     'WHERE',
     'WITH',
-    'IN',
-    'MODULE_NAME',
 
     'SML',
     'OCAML',
@@ -209,6 +210,13 @@ def t_COMMENT_CARTOUCHE(t):
     return t
 
 
+def t_MARKER(t):
+    r'\\<\^marker>'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
 def t_VAR_CASE(t):
     r'\?case'
     t.lineno = t.lexer.lineno
@@ -235,7 +243,12 @@ def t_GREEK(t):
 
 
 reserved = {
+        'Eval': 'EVAL',
         'False': 'FALSE',
+        'Haskell': 'HASKELL',
+        'OCaml': 'OCAML',
+        'SML': 'SML',
+        'Scala': 'SCALA',
         'True': 'TRUE',
         'abbreviation': 'ABBREVIATION',
         'and': 'AND',
@@ -264,6 +277,7 @@ reserved = {
         'definition': 'DEFINITION',
         'done': 'DONE',
         'end': 'END',
+        'file_prefix': 'FILE_PREFIX',
         'fix': 'FIX',
         'fixes': 'FIXES',
         'for': 'FOR',
@@ -275,6 +289,7 @@ reserved = {
         'hence': 'HENCE',
         'if': 'IF',
         'imports': 'IMPORTS',
+        'in': 'IN',
         'includes': 'INCLUDES',
         'induct': 'INDUCT',
         'induction': 'INDUCTION',
@@ -290,6 +305,7 @@ reserved = {
         'let': 'LET',
         'locale': 'LOCALE',
         'method': 'METHOD',
+        'module_name': 'MODULE_NAME',
         'monos': 'MONOS',
         'moreover': 'MOREOVER',
         'next': 'NEXT',
@@ -301,6 +317,7 @@ reserved = {
         'obtain': 'OBTAIN',
         'obtains': 'OBTAINS',
         'oops': 'OOPS',
+        'open': 'OPEN',
         'opening': 'OPENING',
         'overloaded': 'OVERLOADED',
         'prefer': 'PREFER',
@@ -335,15 +352,6 @@ reserved = {
         'when': 'WHEN',
         'where': 'WHERE',
         'with': 'WITH',
-        'OCaml': 'OCAML',
-        'SML': 'SML',
-        'Haskell': 'HASKELL',
-        'Scala': 'SCALA',
-        'Eval': 'EVAL',
-        'in': 'IN',
-        'module_name': 'MODULE_NAME',
-        'file_prefix': 'FILE_PREFIX',
-        'open': 'OPEN',
 }
 
 

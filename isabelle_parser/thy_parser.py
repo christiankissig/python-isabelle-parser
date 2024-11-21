@@ -18,7 +18,9 @@ def p_theory_file(p):
     '''theory_file : theory_block
                    | chapter_block theory_file
                    | section_block theory_file
-                   | text_block theory_file'''
+                   | subsection_block theory_file
+                   | text_block theory_file
+                   | marker theory_file'''
     if len(p) == 2:
         p[0] = [p[1]]
     else:
@@ -96,6 +98,7 @@ def p_statement(p):
                  | lemma_block
                  | lemmas
                  | locale_block
+                 | marker
                  | method_block
                  | record
                  | notation_block
@@ -872,17 +875,20 @@ def p_antiquotation_body(p):
 
 
 def p_chapter_block(p):
-    '''chapter_block : CHAPTER CARTOUCHE'''
+    '''chapter_block : CHAPTER CARTOUCHE
+                     | CHAPTER QUOTED_STRING'''
     p[0] = ('section', p[2])
 
 
 def p_section_block(p):
-    '''section_block : SECTION CARTOUCHE'''
+    '''section_block : SECTION CARTOUCHE
+                     | SECTION QUOTED_STRING'''
     p[0] = ('section', p[2])
 
 
 def p_subsection_block(p):
-    '''subsection_block : SUBSECTION CARTOUCHE'''
+    '''subsection_block : SUBSECTION CARTOUCHE
+                        | SUBSECTION QUOTED_STRING'''
     p[0] = ('subsection', p[2])
 
 
@@ -911,6 +917,20 @@ def p_antiquotation(p):
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
     })
+
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 4.4
+#
+
+
+def p_marker(p):
+    '''marker : MARKER CARTOUCHE'''
+    p[0] = ('marker', {
+        'marker': p[2],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
 
 
 #
