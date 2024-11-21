@@ -89,6 +89,7 @@ def p_statement(p):
                  | comment_block
                  | declare
                  | definition
+                 | export_code
                  | fun_block
                  | inductive
                  | interpretation_block
@@ -350,6 +351,18 @@ def p_par_name(p):
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
     })
+
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.3
+#
+
+
+def p_embedded(p):
+    '''embedded : ID
+                | QUOTED_STRING
+                | NAT'''
+    p[0] = p[1]
 
 
 #
@@ -1395,11 +1408,30 @@ def p_context_elem(p):
 
 def p_name_type_list(p):
     '''name_type_list : ID COLON COLON ID
+                      | ID COLON COLON ID DOT ID
                       | ID COLON COLON ID AND name_type_list'''
+
+    name = p[1]
     if len(p) == 4:
-        p[0] = [(p[1], p[4])]
+        type = p[4]
+    elif len(p) == 7 and p[5] == '.':
+        type = "".join(p[4:7])
     else:
-        p[0] = [(p[1], p[4])] + p[6]
+        type = p[4]
+
+    head = ('name_type', {
+        'name': name,
+        'type': type,
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+    })
+
+    if len(p) == 7 and p[5] == 'and':
+        rest = p[6]
+    else:
+        rest = []
+
+    p[0] = [head] + rest
 
 
 def p_defines_list(p):
@@ -2816,6 +2848,138 @@ def p_nitpick(p):
         p[0] = ('nitpick', {})
     p[0][1]['line'] = p.lineno(1)
     p[0][1]['column'] = get_column(source, p.lexpos(1)) if source else -1
+
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 13
+#
+
+
+def p_export_code(p):
+    '''export_code : OPEN const_expr_list export_target_list
+                   | const_expr_list export_target_list'''
+    is_open = p[1] == 'open'
+    consts = p[len(p)-2]
+    export_targts = p[len(p)-1]
+    p[0] = ('export_code', {
+        'open': is_open,
+        'consts': consts,
+        'export_targets': export_targts,
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+def p_const_expr_list(p):
+    '''const_expr_list : const_expr
+                       | const_expr const_expr_list'''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = [p[1]] + p[2]
+
+
+def p_export_target_list(p):
+    '''export_target_list : export_target export_target_list
+                          | empty'''
+    if len(p) == 2:
+        p[0] = []
+    else:
+        p[0] = [p[1]] + p[2]
+
+
+def p_export_target(p):
+    '''export_target : IN target MODULE_NAME ID FILE_PREFIX path LEFT_PAREN args RIGHT_PAREN
+                     | IN target MODULE_NAME ID FILE_PREFIX path
+                     | IN target MODULE_NAME ID LEFT_PAREN args RIGHT_PAREN
+                     | IN target MODULE_NAME ID
+                     | IN target FILE_PREFIX path LEFT_PAREN args RIGHT_PAREN
+                     | IN target FILE_PREFIX path
+                     | IN target LEFT_PAREN args RIGHT_PAREN
+                     | IN target
+                     '''
+    target = p[2]
+    if len(p) > 3 and p[3] == 'module_name':
+        module_name = p[4]
+        if len(p) > 5 and p[5] == 'file_prefix':
+            file_prefix = p[6]
+            path = p[7]
+            if len(p) > 8:
+                args = p[9]
+            else:
+                args = None
+        elif len(p) > 5 and p[5] == 'path':
+            path = p[6]
+            file_prefix = None
+            if len(p) > 7:
+                args = p[8]
+            else:
+                args = None
+        else:
+            file_prefix = None
+            path = None
+            if len(p) > 5:
+                args = p[6]
+            else:
+                args = None
+    elif len(p) > 3 and p[3] == 'file_prefix':
+        file_prefix = p[4]
+        path = p[5]
+        module_name = None
+        if len(p) > 6:
+            args = p[7]
+        else:
+            args = None
+    else:
+        module_name = None
+        file_prefix = None
+        path = None
+        if len(p) > 3:
+            args = p[4]
+        else:
+            args = None
+    p[0] = ('export_target', {
+        'target': target,
+        'module_name': module_name,
+        'file_prefix': file_prefix,
+        'path': path,
+        'args': args,
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+def p_target(p):
+    '''target : SML
+              | OCAML
+              | HASKELL
+              | SCALA
+              | EVAL'''
+    p[0] = ('target', {
+        'target': p[1],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+def p_const_expr(p):
+    '''const_expr : const
+                  | ID DOT UNDERSCORE
+                  | UNDERSCORE'''
+    p[0] = ('const_expr', {
+        'const_expr': p[1:],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+def p_const(p):
+    '''const : term'''
+    p[0] = p[1]
+
+
+def p_path(p):
+    '''path : embedded'''
+    p[0] = p[1]
 
 
 #

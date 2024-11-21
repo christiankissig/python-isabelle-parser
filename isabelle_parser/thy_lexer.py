@@ -90,6 +90,7 @@ tokens = (
     'OBTAIN',
     'OBTAINS',
     'OOPS',
+    'OPEN',
     'OPENING',
     'OVERLOADED',
     'PIPE',
@@ -134,6 +135,14 @@ tokens = (
     'WHEN',
     'WHERE',
     'WITH',
+    'IN',
+    'MODULE_NAME',
+
+    'SML',
+    'OCAML',
+    'HASKELL',
+    'SCALA',
+    'EVAL',
 
     'ALTSTRING',
     'GREEK',
@@ -147,6 +156,7 @@ tokens = (
     'TYPE_VAR',
     'VERBATIM',
     'UNDERSCORE',
+    'FILE_PREFIX',
 
     'NAT',
     'QUOTED_STRING',
@@ -325,6 +335,15 @@ reserved = {
         'when': 'WHEN',
         'where': 'WHERE',
         'with': 'WITH',
+        'OCaml': 'OCAML',
+        'SML': 'SML',
+        'Haskell': 'HASKELL',
+        'Scala': 'SCALA',
+        'Eval': 'EVAL',
+        'in': 'IN',
+        'module_name': 'MODULE_NAME',
+        'file_prefix': 'FILE_PREFIX',
+        'open': 'OPEN',
 }
 
 
