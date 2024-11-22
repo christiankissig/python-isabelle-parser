@@ -89,6 +89,7 @@ def p_theory(p):
 def p_statement(p):
     '''statement : abbreviation
                  | axiomatization_block
+                 | consts
                  | context
                  | comment_block
                  | declare
@@ -1536,6 +1537,47 @@ def p_interpretation_block(p):
     p[0] = ('interpretation', {
         'locale_expr': p[2],
         'proof_prove': p[3],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.9
+#
+
+
+def p_consts(p):
+    '''consts : CONSTS const_decls'''
+    p[0] = ('consts', {
+        'const_decls': p[2],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+def p_const_decls(p):
+    '''const_decls : const_decl
+                   | const_decl const_decls'''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = [p[1]] + p[2]
+
+def p_const_decl(p):
+    '''const_decl : name COLON COLON type
+                  | name COLON COLON type mixfix'''
+    if len(p) == 6:
+        mixfix = p[5]
+    else:
+        mixfix = None
+    name = p[1]
+    type = p[4]
+    p[0] = ('const_decl', {
+        'name': name,
+        'type': type,
+        'mixfix': mixfix,
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
