@@ -92,6 +92,7 @@ def p_statement(p):
                  | consts
                  | context
                  | comment_block
+                 | datatype
                  | declare
                  | definition
                  | export_code
@@ -341,7 +342,8 @@ def p_embedded(p):
                 | TRUE
                 | FALSE
                 | VAR_CASE
-                | VAR_THESIS'''
+                | VAR_THESIS
+                | TYPE_IDENT'''
     p[0] = p[1]
 
 
@@ -582,7 +584,6 @@ def p_prop_pat_term(p):
     '''prop_pat_term : IS ID
                      | IS QUOTED_STRING'''
     p[0] = ('prop is', p[2])
-
 
 
 #
@@ -1094,6 +1095,7 @@ def p_opening(p):
 
 def p_decl(p):
     '''decl : ID WHERE
+            | ID WHERE comment_block
             | ID mixfix WHERE
             | ID COLON COLON ID WHERE
             | ID COLON COLON QUOTED_STRING WHERE
@@ -1102,11 +1104,11 @@ def p_decl(p):
     name = p[1]
     type = None
     mixfix = None
-    if len(p) == 4:
+    if len(p) == 4 and p[2][0] == 'mixfix':
         mixfix = p[2]
     if p[2] == ':' and p[3] == ':':
         type = p[4]
-    if len(p) == 7:
+    if len(p) == 7 and p[5][0] == 'mixfix':
         mixfix = p[5]
     p[0] = ('decl', {
         'name': name,
@@ -1121,23 +1123,35 @@ def p_definition(p):
     '''definition : DEFINITION decl thmdecl prop spec_prems for_fixes
                   | DEFINITION decl prop spec_prems for_fixes
                   | DEFINITION thmdecl prop spec_prems for_fixes
-                  | DEFINITION prop spec_prems for_fixes'''
-    if p[2][0] == 'decl':
-        decl = p[2]
-        if len(p) == 7:
-            thmdecl = p[3]
-            prop = p[4]
+                  | DEFINITION prop spec_prems for_fixes
+                  | DEFINITION LEFT_PAREN IN ID RIGHT_PAREN decl thmdecl prop spec_prems for_fixes
+                  | DEFINITION LEFT_PAREN IN ID RIGHT_PAREN decl prop spec_prems for_fixes
+                  | DEFINITION LEFT_PAREN IN ID RIGHT_PAREN thmdecl prop spec_prems for_fixes
+                  | DEFINITION LEFT_PAREN IN ID RIGHT_PAREN prop spec_prems for_fixes'''
+    if p[2] == '(' and p[3] == 'in' and p[5] == ')':
+        immediate_target = p[4]
+        offset = 4
+    else:
+        immediate_target = None
+        offset = 0
+
+    if p[2 + offset][0] == 'decl':
+        decl = p[2 + offset]
+        if len(p) == 7 + offset:
+            thmdecl = p[3 + offset]
+            prop = p[4 + offset]
         else:
             thmdecl = None
-            prop = p[3]
+            prop = p[3 + offset]
     else:
         decl = None
-        if len(p) == 6:
-            thmdecl = p[2]
-            prop = p[3]
+        if len(p) == 6 + offset:
+            thmdecl = p[2 + offset]
+            prop = p[3 + offset]
         else:
             thmdecl = None
-            prop = p[2]
+            prop = p[2 + offset]
+
     spec_prems = p[len(p)-2]
     for_fixes = p[len(p)-1]
 
@@ -1147,6 +1161,7 @@ def p_definition(p):
         'prop': prop,
         'spec_prems': spec_prems,
         'for_fixes': for_fixes,
+        'immediate_target': immediate_target,
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
@@ -1156,23 +1171,35 @@ def p_abbreviation(p):
     '''abbreviation : ABBREVIATION prop for_fixes
                     | ABBREVIATION mode prop for_fixes
                     | ABBREVIATION decl prop for_fixes
-                    | ABBREVIATION mode decl prop for_fixes'''
+                    | ABBREVIATION mode decl prop for_fixes
+                    | ABBREVIATION LEFT_PAREN IN ID RIGHT_PAREN prop for_fixes
+                    | ABBREVIATION LEFT_PAREN IN ID RIGHT_PAREN mode prop for_fixes
+                    | ABBREVIATION LEFT_PAREN IN ID RIGHT_PAREN decl prop for_fixes
+                    | ABBREVIATION LEFT_PAREN IN ID RIGHT_PAREN mode decl prop for_fixes'''
+    if p[2] == '(' and p[3] == 'in' and p[5] == ')':
+        immediate_target = p[4]
+        offset = 4
+    else:
+        immediate_target = None
+        offset = 0
+
     prop = p[len(p)-2]
     for_fixes = p[len(p)-1]
     mode = None
     decl = None
-    if p[2][0] == 'mode':
-        mode = p[2]
-    elif p[2][0] != 'mode':
-        decl = p[2]
-        if len(p) == 6:
-            decl = p[3]
+    if p[2 + offset][0] == 'mode':
+        mode = p[2 + offset]
+    elif p[2 + offset][0] != 'mode':
+        decl = p[2 + offset]
+        if len(p) == 6 + offset:
+            decl = p[3 + offset]
 
     p[0] = ('abbreviation', {
         'mode': mode,
         'decl': decl,
         'prop': prop,
         'for_fixes': for_fixes,
+        'immediate_target': immediate_target,
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
@@ -2869,6 +2896,55 @@ def p_domintros(p):
     p[0] = p[1]
 
 
+# TODO generated from examples
+# Grammar rules
+def p_datatype(p):
+    """
+    datatype : DATATYPE generic_type EQUALS constructors
+    """
+    p[0] = {
+        "datatype": p[2],
+        "constructors": p[4],
+    }
+
+
+def p_generic_type(p):
+    """
+    generic_type : type name
+                 | type
+    """
+    if len(p) == 3:
+        p[0] = {"type": p[1], "parameter": p[2]}
+    else:
+        p[0] = {"type": p[1]}
+
+
+def p_constructors(p):
+    """
+    constructors : constructor
+                 | constructor PIPE constructors
+    """
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = [p[1]] + p[3]
+
+
+def p_constructor(p):
+    """
+    constructor : ID TYPE_IDENT comment_block
+                | ID TYPE_IDENT
+                | ID QUOTED_STRING comment_block
+                | ID QUOTED_STRING
+                | ID comment_block
+                | ID
+    """
+    if len(p) == 3:
+        p[0] = {"name": p[1], "type": p[2]}
+    else:
+        p[0] = {"name": p[1]}
+
+
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.6.2
 #
@@ -2918,11 +2994,12 @@ def p_constdecl_list(p):
 
 def p_constdecl(p):
     '''constdecl : name COLON COLON type
+                 | name COLON COLON type comment_block
                  | name COLON COLON type mixfix'''
     p[0] = ('constdecl', {
         'name': p[1],
         'type': p[4],
-        'mixfix': p[5] if len(p) == 6 else None,
+        'mixfix': p[5] if len(p) == 6 and p[5][0] == 'mixfix' else None,
         })
 
 
