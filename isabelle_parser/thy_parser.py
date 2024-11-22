@@ -192,9 +192,7 @@ def p_single_instruction(p):
 
 
 def p_method_args(p):
-    '''method_args : ID COLON method_args
-                   | ARBITRARY COLON method_args
-                   | method_arg method_args
+    '''method_args : method_arg method_args
                    | method_arg COMMA method_args
                    | method_arg
                    | empty'''
@@ -216,6 +214,9 @@ def p_method_arg(p):
                   | LEFT_PAREN ID ID DOT ID RIGHT_PAREN
                   | LEFT_PAREN ID ID ID RIGHT_PAREN
                   | LEFT_PAREN ID ID ID ID RIGHT_PAREN
+                  | ARBITRARY COLON
+                  | ID COLON
+                  | ID BANG COLON
                   | ID DOT ID
                   | ID DOT INDUCT
                   | GREEK DOT ID
@@ -224,7 +225,8 @@ def p_method_arg(p):
                   | GREEK DOT ID LEFT_PAREN NAT RIGHT_PAREN
                   | ID DOT ID DOT ID LEFT_PAREN NAT RIGHT_PAREN
                   | QUOTED_STRING
-                  | ID'''
+                  | ID
+                  | NAT'''
     p[0] = "".join(p[1:])
 
 
@@ -966,30 +968,28 @@ def p_atom(p):
     '''atom : LEFT_PAREN RIGHT_PAREN
             | LEFT_PAREN body RIGHT_PAREN
             | ID
+            | ID DOT ID
+            | ID DOT CASES
             | QUOTED_STRING
             | antiquotation
             | AT QUOTED_STRING
             | AT antiquotation
             | NEWLINE'''
-    if len(p) == 4 or (p[1] == '(' and p[2] == ')'):
-        p[0] = ('atom', {
-            'body': p[2] if len(p) == 4 else None,
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
-    elif len(p) == 2:
-        p[0] = ('atom', {
-            'name': p[1],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
+
+    if len(p) == 4 and p[1] == '(' and p[3] == ')':
+        body = p[2]
+        name = None
     else:
-        p[0] = ('atom', {
-            'at': len(p) == 3,
-            'name': p[2],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
+        name = ''.join(p[1:])
+        body = None
+
+
+    p[0] = ('atom', {
+        'name': name,
+        'body': body,
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+    })
 
 
 #
@@ -2351,10 +2351,14 @@ def p_name_underscore_list(p):
 
 def p_cases(p):
     '''cases : CASES no_simp_block insts_list_and_sep
-             | CASES no_simp_block insts_list_and_sep rule'''
+             | CASES no_simp_block insts_list_and_sep rule
+             | CASES QUOTED_STRING rule'''
     if len(p) == 4 and p[3] and p[3][0] == 'rule':
         rule = p[3]
-        insts = None
+        if isinstance(p[2], str):
+            insts = [p[2]]
+        else:
+            insts = None
     elif len(p) == 5 and p[4][0] == 'rule':
         rule = p[4]
         insts = p[3]
