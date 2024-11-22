@@ -194,6 +194,7 @@ def p_single_instruction(p):
 def p_method_args(p):
     '''method_args : method_arg method_args
                    | method_arg COMMA method_args
+                   | method_arg AND method_args
                    | method_arg
                    | empty'''
     if len(p) == 3:
@@ -218,6 +219,7 @@ def p_method_arg(p):
                   | ID COLON
                   | ID BANG COLON
                   | ID DOT ID
+                  | ID SUBSCRIPT NAT
                   | ID DOT INDUCT
                   | GREEK DOT ID
                   | ID DOT ID LEFT_PAREN NAT RIGHT_PAREN
@@ -268,7 +270,8 @@ def p_assumptions_list(p):
 
 def p_assumption(p):
     '''assumption : QUOTED_STRING
-                  | NAT COLON QUOTED_STRING'''
+                  | NAT COLON QUOTED_STRING
+                  | ID COLON QUOTED_STRING'''
     p[0] = ('assumption',
             {
                 'id': p[1] if len(p) > 2 else None,
@@ -598,54 +601,53 @@ def p_thmdef(p):
 
 def p_thm(p):
     '''thm : NAT
-           | ID attributes
+           | name attributes
            | ID
            | ID DOT ID
            | SYM_IDENT
            | TRUE
            | FALSE
-           | ID LEFT_PAREN NAT COMMA NAT RIGHT_PAREN
-           | ID DOT ID LEFT_PAREN NAT RIGHT_PAREN
-           | ASSMS LEFT_PAREN NAT RIGHT_PAREN
-           | ID LEFT_PAREN NAT RIGHT_PAREN
+           | name selection
+           | name selection attributes
+           | assms selection
            | CARTOUCHE
            | ID EQUALS ID
            | NAT EQUALS ID
            | assms
-           | attributes'''
+           | LEFT_BRACKET attributes RIGHT_BRACKET'''
     if len(p) == 2:
-        thm = p[1]
+        name = p[1]
+        attributes = []
+        selection = None
     elif len(p) == 3:
-        thm = p[1]
-    elif len(p) == 5 and p[2] == '(' and p[4] == ')':
-        thm = "".join(p[1:4])
-    elif len(p) == 4 and p[2] == '.':
-        thm = "".join(p[1:3])
-    elif len(p) == 7 and p[2] == '.' and p[4] == '(' and p[6] == ')':
-        thm = "".join(p[1:6])
+        name = p[1]
+        if p[2][0] == 'selection':
+            selection = p[2]
+            attributes = []
+        else:
+            selection = None
+            attributes = p[2]
+    elif len(p) == 4:
+        if p[2] == '.' or p[2] == '=':
+            name = "".join(p[1:3])
+            attributes = []
+            selection = None
+        else:
+            name = None
+            selection = p[2]
+            attributes = p[3]
+
     else:
-        thm = None
-    if len(p) == 2:
-        p[0] = ('thm', {
-            'name': thm,
-            'attributes': None if isinstance(p[1], str) else p[1],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
-    elif len(p) == 3:
-        p[0] = ('thm', {
-            'name': p[1],
-            'attributes': p[2],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
-    else:
-        p[0] = ('thm', {
-            'name': thm,
-            'attributes': None,
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
+        name = None
+        selection = None
+        attributes = None
+    p[0] = ('thm', {
+        'name': name,
+        'attributes': attributes,
+        'selection': selection,
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+    })
 
 
 def p_thms(p):
@@ -677,7 +679,8 @@ def p_thmbind(p):
 
 
 def p_attributes(p):
-    '''attributes : LEFT_BRACKET attributes_list RIGHT_BRACKET'''
+    '''attributes : LEFT_BRACKET attributes_list RIGHT_BRACKET
+                  | LEFT_BRACKET name_insts RIGHT_BRACKET'''
     p[0] = p[2]
 
 
@@ -730,6 +733,36 @@ def p_arg(p):
                 'line': p.lineno(1),
                 'column': get_column(source, p.lexpos(1)) if source else -1,
                 })
+
+
+def p_selection(p):
+    '''selection : LEFT_PAREN selection_list RIGHT_PAREN'''
+    p[0] = ('selection', {
+        'selection': p[2],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+def p_selection_list(p):
+    '''selection_list : selection_item
+                      | selection_item COMMA selection_list'''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = [p[1]] + p[3]
+
+
+def p_selection_item(p):
+    '''selection_item : NAT
+                      | NAT DASH
+                      | NAT DASH NAT'''
+    if len(p) == 2:
+        p[0] = ('point', {'at': p[1]})
+    elif len(p) == 3:
+        p[0] = ('range', {'from': p[1]})
+    else:
+        p[0] = ('range', {'from': p[1], 'to': p[3]})
 
 
 #
@@ -1290,12 +1323,13 @@ def p_name_insts(p):
 def p_name_insts_list(p):
     '''name_insts_list : ID EQUALS ID
                        | ID EQUALS QUOTED_STRING
+                       | SYM_IDENT EQUALS QUOTED_STRING
                        | ID EQUALS ID name_insts_list
                        | ID EQUALS QUOTED_STRING name_insts_list'''
-    if len(p) == 2:
+    if len(p) == 4:
         p[0] = [('equals', p[1], p[3])]
-    else:
-        p[0] = [('equals', p[1], p[3])] + p[3]
+    elif len(p) == 5:
+        p[0] = [('equals', p[1], p[3])] + p[4]
 
 
 #
@@ -1374,7 +1408,7 @@ def p_context_elem_list(p):
 def p_context_elem(p):
     '''context_elem : FIXES vars
                     | CONSTRAINS name_type_list
-                    | ASSUMES prop_list
+                    | ASSUMES props_list_and_sep
                     | DEFINES defines_list
                     | NOTES notes_list'''
     p[0] = ('context_elem', {
@@ -1411,6 +1445,15 @@ def p_name_type_list(p):
         rest = []
 
     p[0] = [head] + rest
+
+
+def p_props_list_and_sep(p):
+    '''props_list_and_sep : props
+                          | props AND props_list_and_sep'''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = [p[1]] + p[3]
 
 
 def p_defines_list(p):
@@ -2089,19 +2132,20 @@ def p_statement_context(p):
                          | includes
                          | context_elem_list
                          | empty'''
+    includes = None
+    context_elements = None
     if len(p) == 2:
         if p[1] == None:
             p[0] = None
             return
-        if p[1][0] == 'includes':
-            includes = p[1][1]
-            context_elements = None
-        else:
-            includes = None
+        if isinstance(p[1], list):
             context_elements = p[1]
-    else:
-        includes = p[1][1]
+        else:
+            inclused = p[1]
+    elif len(p) == 3:
+        includes = p[1]
         context_elements = p[2]
+
     p[0] = ('statement_context', {
         'includes': includes,
         'context_elements': context_elements,

@@ -355,55 +355,6 @@ reserved = {
 }
 
 
-def t_PIPE(t):
-    r'\|'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
-def t_STAR(t):
-    r'\*'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
-def t_BACKSLASH(t):
-    r'\\'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
-def t_LT(t):
-    r'<'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
-def t_HAT(t):
-    r'\^'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
-def t_GT(t):
-    r'>'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
-def t_TYPE_IDENT(t):
-    r'\'[a-zA-Z](_?\d*[a-zA-Z_\']*)*'
-    t.type = 'TYPE_IDENT'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
 
 def t_SHORT_IDENT(t):
     r'[a-zA-Z](_?\d*[a-zA-Z_\']*)*'
@@ -422,6 +373,21 @@ def t_LONG_IDENT(t):
         t.type = reserved[t.value]
     else:
         t.type = 'ID'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_SYM_IDENT(t):
+    r'[!#$%&*+\-/<=>?@^_`|~]+[a-zA-Z][a-zA-Z]*'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_ID(t):
+    r'[a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[0-9]*)?'
+    t.type = reserved.get(t.value, 'ID')    # Check for reserved words
     t.lineno = t.lexer.lineno
     t.column = find_column(t.lexer.lexdata, t)
     return t
@@ -531,6 +497,57 @@ def t_RIGHT_BRACKET(t):
     return t
 
 
+def t_PIPE(t):
+    r'\|'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_STAR(t):
+    r'\*'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_BACKSLASH(t):
+    r'\\'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_LT(t):
+    r'<'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_HAT(t):
+    r'\^'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_GT(t):
+    r'>'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_TYPE_IDENT(t):
+    r'\'[a-zA-Z](_?\d*[a-zA-Z_\']*)*'
+    t.type = 'TYPE_IDENT'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+
 # Token definitions
 t_NAT = r'\d+'
 t_SYM_FLOAT = r'(\d+(\.\d+)+|\.\d+)'
@@ -540,26 +557,11 @@ t_STRING = r'"[^"]*"'
 
 # Define sub-parts for more complex tokens
 latin_letters = r'[a-zA-Z]'
-subscript = r'\\<\^sub>'
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3
 #
 
-
-def t_SYM_IDENT(t):
-    r'[!#$%&*+\-/<=>?@^_`|~]+[a-zA-Z][a-zA-Z]*'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
-def t_ID(t):
-    r'[a-zA-Z_][a-zA-Z_0-9\']*'
-    t.type = reserved.get(t.value, 'ID')    # Check for reserved words
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
 
 
 def t_newline(t):

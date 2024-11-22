@@ -51,3 +51,9 @@ end
     assert len(tokens) > 0
     assert tokens[0].value == 'theory'
     assert tokens[0].type == 'THEORY'
+
+
+def test_re():
+    input = "xt\\<^sub>1"
+    pattern = re.compile(r'[a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[0-9]*)?')
+    assert pattern.fullmatch(input)
