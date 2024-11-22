@@ -67,7 +67,8 @@ def p_import_list(p):
 
 
 def p_content(p):
-    '''content : statement content
+    '''content : goal proof_prove
+               | statement content
                | empty'''
     if len(p) == 3:
         p[0] = [p[1]] + p[2]
@@ -76,7 +77,8 @@ def p_content(p):
 
 
 def p_theory(p):
-    '''theory : statement theory
+    '''theory : goal proof_prove
+              | statement theory
               | empty'''
     if len(p) == 3:
         p[0] = [p[1]] + p[2]
@@ -95,7 +97,6 @@ def p_statement(p):
                  | fun_block
                  | inductive
                  | interpretation_block
-                 | lemma_block
                  | lemmas
                  | locale_block
                  | marker
@@ -227,43 +228,6 @@ def p_method_arg(p):
     p[0] = "".join(p[1:])
 
 
-def p_lemma_block(p):
-    '''lemma_block : LEMMA ID COLON QUOTED_STRING proof_prove
-                   | LEMMA ID COLON fixes assumes conclusion proof_prove
-                   | LEMMA QUOTED_STRING proof_prove
-                   | THEOREM ID COLON QUOTED_STRING proof_prove
-                   | THEOREM ID COLON fixes assumes conclusion proof_prove'''
-
-    statement = None
-    fixes = []
-    assumes = []
-    conclusion = None
-    if p[3] == ':':
-        name = p[2]
-        if isinstance(p[4], str):
-            statement = p[4]
-        else:
-            fixes = p[4]
-            assumes = p[5]
-            conclusion = p[6]
-    else:
-        name = None
-        if isinstance(p[2], str):
-            statement = p[2]
-    proof = p[len(p)-1]
-
-    p[0] = (p[1], {
-        'name': name,
-        'statement': statement,
-        'fixes': fixes,
-        'assumes': assumes,
-        'conclusion': conclusion,
-        'proof': proof,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
-    })
-
-
 def p_fixes(p):
     '''fixes : FIXES var_list_nosep
              | empty'''
@@ -343,7 +307,9 @@ def p_subgoal(p):
 
 def p_name(p):
     '''name : ID
-            | QUOTED_STRING'''
+            | QUOTED_STRING
+            | GREEK
+            | NAT'''
     p[0] = p[1]
 
 
@@ -364,7 +330,12 @@ def p_par_name(p):
 def p_embedded(p):
     '''embedded : ID
                 | QUOTED_STRING
-                | NAT'''
+                | NAT
+                | GREEK
+                | TRUE
+                | FALSE
+                | VAR_CASE
+                | VAR_THESIS'''
     p[0] = p[1]
 
 
@@ -374,9 +345,7 @@ def p_embedded(p):
 
 
 def p_type(p):
-    '''type : QUOTED_STRING
-            | GREEK
-            | ID'''
+    '''type : embedded'''
     p[0] = ('type', p[1])
 
 
@@ -391,13 +360,7 @@ def p_term(p):
 
 
 def p_prop(p):
-    '''prop : QUOTED_STRING
-            | VAR_CASE
-            | VAR_THESIS
-            | FALSE
-            | TRUE
-            | NAT COLON QUOTED_STRING
-            | ID COLON QUOTED_STRING'''
+    '''prop : embedded'''
     p[0] = ('prop', {
         'value': p[1] if len(p) > 2 else None,
         'prop': p[len(p)-1],
@@ -524,19 +487,12 @@ def p_vars(p):
 
 
 def p_var(p):
-    '''var : ID COLON COLON ID
-           | GREEK COLON COLON ID
-           | ID COLON COLON QUOTED_STRING
-           | GREEK COLON COLON QUOTED_STRING
-           | names COLON COLON ID
-           | names COLON COLON QUOTED_STRING
-           | ID COLON COLON ID mixfix
-           | GREEK COLON COLON ID mixfix
-           | ID COLON COLON QUOTED_STRING mixfix
-           | GREEK COLON COLON QUOTED_STRING mixfix
-           | ID mixfix
-           | ID
-           | names'''
+    '''var : name COLON COLON type
+           | names COLON COLON type
+           | name COLON COLON type mixfix
+           | name mixfix
+           | names
+           | name'''
     if len(p) == 2:
         names = p[1] if isinstance(p[1], list) else [p[1]]
         mixfix = None
@@ -1047,11 +1003,14 @@ def p_context(p):
                | CONTEXT includes BEGIN local_theory END
                | CONTEXT includes context_elem_list BEGIN local_theory END
                | CONTEXT context_elem_list BEGIN local_theory END
-               | CONTEXT BEGIN local_theory END'''
+               | CONTEXT BEGIN local_theory END
+               | empty'''
     theory = p[len(p)-2]
     name = None
     includes = None
     context_elements = None
+    if len(p) == 2:
+        return None
     if len(p) == 6:
         if isinstance(p[2], str):
             name = p[2]
@@ -1815,19 +1774,7 @@ def p_with(p):
 
 # TODO the first line is adhoc based on AFP, and doesn't match the grammar
 def p_local_theory(p):
-    '''local_theory : LEMMA thmdecl QUOTED_STRING proof_prove
-                    | lemma_block local_theory
-                    | lemma_block
-                    | LEMMA long_statement proof_prove
-                    | LEMMA short_statement proof_prove
-                    | THEOREM long_statement proof_prove
-                    | THEOREM short_statement proof_prove
-                    | COROLLARY long_statement proof_prove
-                    | COROLLARY short_statement proof_prove
-                    | PROPOSITION long_statement proof_prove
-                    | PROPOSITION short_statement proof_prove
-                    | SCHEMATIC_GOAL long_statement proof_prove
-                    | SCHEMATIC_GOAL short_statement proof_prove
+    '''local_theory : goal proof_prove
                     | statement local_theory
                     | statement
                     | declare local_theory
@@ -1870,7 +1817,13 @@ def p_proof_prove(p):
                    | defer_block
                    | prefer_block proof_prove
                    | prefer_block
+                   | DONE proof_state
+                   | DONE theory
+                   | DONE local_theory
+                   | DONE
                    | by proof_state
+                   | by theory
+                   | by local_theory
                    | by
                    | using proof_prove
                    | using
@@ -1889,59 +1842,29 @@ def p_proof_prove(p):
     p[0] = p[1:]
 
 
-def p_stmt(p):
-    '''stmt : prop_list'''
-    p[0] = ('stmt', p[1])
 
-
-def p_cond_stmt(p):
-    '''cond_stmt : empty
-                 | IF stmt
-                 | WHEN stmt'''
-    if len(p) == 2:
-        p[0] = []
-    else:
-        p[0] = ('if', p[2])
-
-
-def p_short_statement(p):
-    '''short_statement : stmt for_fixes
-                       | stmt IF stmt for_fixes'''
-    p[0] = ('short_statement', {
-
-        'stmt': p[1],
-        'if_stmt': p[3] if len(p) == 5 else None,
-        'for_fixes': p[4] if len(p) == 5 else p[2],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
-    })
-
-
-def p_long_statement(p):
-    '''long_statement : context conclusion
-                      | thmdecl context conclusion'''
-    p[0] = ('long_statement', {
-        'thmdecl': p[1] if len(p) == 3 else None,
-        'context': p[1] if len(p) == 2 else p[2],
-        'conclusion': p[2] if len(p) == 2 else p[3],
-        })
-
-
+# QUOTED_STRING only found in AFP, not in Isabelle/Isar grammar
 def p_conclusion(p):
-    '''conclusion : SHOWS stmt
+    '''conclusion : QUOTED_STRING
+                  | SHOWS stmt
                   | OBTAINS obtain_clauses'''
     if p[1] == 'shows':
-        p[0] = ('conclusion', {
-            'shows': p[2],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-            })
+        shows = p[2]
+        obtains = None
+    elif len(p) == 2:
+        shows = p[1]
+        obtains = None
     else:
-        p[0] = ('conclusion', {
-            'obtains': p[2],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-            })
+        obtains = p[2]
+        shows = None
+
+    p[0] = ('conclusion', {
+        'shows': shows,
+        'obtains': obtains,
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
 
 
 def p_obtain_clauses(p):
@@ -2059,6 +1982,25 @@ def p_assms(p):
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.2.4
 #
 
+
+def p_goal(p):
+    '''goal : LEMMA long_statement
+            | LEMMA short_statement
+            | THEOREM long_statement
+            | THEOREM short_statement
+            | COROLLARY long_statement
+            | COROLLARY short_statement
+            | PROPOSITION long_statement
+            | PROPOSITION short_statement
+            | SCHEMATIC_GOAL long_statement
+            | SCHEMATIC_GOAL short_statement'''
+    p[0] = (p[1], {
+        'statement': p[2],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
 def p_have(p):
     '''have : HAVE stmt cond_stmt for_fixes'''
     p[0] = ('have', {
@@ -2100,6 +2042,69 @@ def p_thus(p):
         'stmt': p[2],
         'cond_stmt': p[3],
         'for_fixes': p[4] if len(p) == 5 else None,
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+def p_stmt(p):
+    '''stmt : prop_list'''
+    p[0] = ('stmt', p[1])
+
+
+def p_cond_stmt(p):
+    '''cond_stmt : empty
+                 | IF stmt
+                 | WHEN stmt'''
+    if len(p) == 2:
+        p[0] = []
+    else:
+        p[0] = ('if', p[2])
+
+
+def p_short_statement(p):
+    '''short_statement : stmt for_fixes
+                       | stmt IF stmt for_fixes'''
+    p[0] = ('short_statement', {
+
+        'stmt': p[1],
+        'if_stmt': p[3] if len(p) == 5 else None,
+        'for_fixes': p[4] if len(p) == 5 else p[2],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+    })
+
+
+def p_long_statement(p):
+    '''long_statement : thmdecl statement_context conclusion'''
+    p[0] = ('long_statement', {
+        'thmdecl': p[1] if len(p) == 4 else None,
+        'context': p[2] if len(p) == 4 else None,
+        'conclusion': p[3] if len(p) == 2 else None,
+        })
+
+
+def p_statement_context(p):
+    '''statement_context : includes context_elem_list
+                         | includes
+                         | context_elem_list
+                         | empty'''
+    if len(p) == 2:
+        if p[1] == None:
+            p[0] = None
+            return
+        if p[1][0] == 'includes':
+            includes = p[1][1]
+            context_elements = None
+        else:
+            includes = None
+            context_elements = p[1]
+    else:
+        includes = p[1][1]
+        context_elements = p[2]
+    p[0] = ('statement_context', {
+        'includes': includes,
+        'context_elements': context_elements,
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
