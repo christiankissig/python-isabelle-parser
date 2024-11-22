@@ -19,6 +19,7 @@ def p_theory_file(p):
                    | chapter_block theory_file
                    | section_block theory_file
                    | subsection_block theory_file
+                   | paragraph_block theory_file
                    | text_block theory_file
                    | marker theory_file'''
     if len(p) == 2:
@@ -103,10 +104,12 @@ def p_statement(p):
                  | locale_block
                  | marker
                  | method_block
+                 | partial_function
                  | record
                  | notation_block
                  | section_block
                  | subsection_block
+                 | paragraph_block
                  | text_block
                  | type_synonym
                  | typedecl'''
@@ -883,6 +886,11 @@ def p_subsection_block(p):
     '''subsection_block : SUBSECTION CARTOUCHE
                         | SUBSECTION QUOTED_STRING'''
     p[0] = ('subsection', p[2])
+
+
+def p_paragraph_block(p):
+    '''paragraph_block : PARAGRAPH CARTOUCHE'''
+    p[0] = ('paragraph', p[2])
 
 
 def p_text_block(p):
@@ -2944,6 +2952,20 @@ def p_constructor(p):
     else:
         p[0] = {"name": p[1]}
 
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.2.2
+#
+
+
+def p_partial_function(p):
+    '''partial_function : PARTIAL_FUNCTION LEFT_PAREN name RIGHT_PAREN specification'''
+    p[0] = ('partial_function', {
+        'name': p[3],
+        'specification': p[5],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.6.2

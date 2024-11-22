@@ -98,6 +98,8 @@ tokens = (
     'OPEN',
     'OPENING',
     'OVERLOADED',
+    'PARAGRAPH',
+    'PARTIAL_FUNCTION',
     'PIPE',
     'PLUS',
     'PREFER',
@@ -324,6 +326,8 @@ reserved = {
         'open': 'OPEN',
         'opening': 'OPENING',
         'overloaded': 'OVERLOADED',
+        'paragraph': 'PARAGRAPH',
+        'partial_function': 'PARTIAL_FUNCTION',
         'prefer': 'PREFER',
         'presume': 'PRESUME',
         'primrec': 'PRIMREC',
@@ -357,7 +361,6 @@ reserved = {
         'where': 'WHERE',
         'with': 'WITH',
 }
-
 
 
 def t_SHORT_IDENT(t):
