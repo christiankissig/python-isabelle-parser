@@ -9,6 +9,7 @@ tokens = (
     'VAR_THESIS',
 
     'ABBREVIATION',
+    'ALSO',
     'AND',
     'APPLY',
     'APPLY_END',
@@ -255,6 +256,7 @@ reserved = {
         'Scala': 'SCALA',
         'True': 'TRUE',
         'abbreviation': 'ABBREVIATION',
+        'also': 'ALSO',
         'and': 'AND',
         'apply': 'APPLY',
         'apply_end': 'APPLY_END',
@@ -386,14 +388,14 @@ def t_LONG_IDENT(t):
 
 
 def t_SYM_IDENT(t):
-    r'[!#$%&*+\-/<=>?@^_`|~]+[a-zA-Z][a-zA-Z]*'
+    r'[!#$%&*+\-/<=>?@^_`|~]+[a-zA-Z][a-zA-Z0-9]*'
     t.lineno = t.lexer.lineno
     t.column = find_column(t.lexer.lexdata, t)
     return t
 
 
 def t_ID(t):
-    r'[a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[0-9]*)?'
+    r'[a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[a-zA-Z0-9_]*)?'
     t.type = reserved.get(t.value, 'ID')    # Check for reserved words
     t.lineno = t.lexer.lineno
     t.column = find_column(t.lexer.lexdata, t)

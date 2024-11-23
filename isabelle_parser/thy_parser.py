@@ -287,8 +287,12 @@ def p_assumption(p):
 
 
 def p_shows(p):
-    '''shows : SHOWS QUOTED_STRING'''
-    p[0] = ('shows', p[2])
+    '''shows : SHOWS prop_list_with_pat'''
+    p[0] = ('shows', {
+        'props': p[2],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
 
 
 def p_subgoals(p):
@@ -317,10 +321,14 @@ def p_subgoal(p):
 
 def p_name(p):
     '''name : ID
+            | ID DOT ID
+            | ID DOT ID DOT ID
+            | ID SUBSCRIPT NAT
+            | ID SUBSCRIPT ID
             | QUOTED_STRING
             | GREEK
             | NAT'''
-    p[0] = p[1]
+    p[0] = ''.join(p[1:])
 
 
 def p_par_name(p):
@@ -548,10 +556,37 @@ def p_props(p):
 
 
 def p_prop_list_with_pat(p):
-    '''prop_list_with_pat : prop prop_pat prop_list
-                          | prop prop_list
+    '''prop_list_with_pat : prop prop_pat prop_list_with_pat
+                          | prop prop_list_with_pat
+                          | prop prop_pat
                           | prop'''
-    p[0] = [(p[1], p[2] if len(p) > 2 else None)] + p[3] if len(p) > 2 else [p[1]]
+
+    if len(p) == 2:
+        prop = p[1]
+        prop_pat = None
+        props = []
+    elif len(p) == 3:
+        if p[2][0] == 'prop_pat':
+            prop = p[1]
+            prop_pat = p[2]
+            props = []
+        else:
+            prop = p[1]
+            prop_pat = None
+            props = p[2]
+    else:
+        prop = p[1]
+        prop_pat = p[2]
+        props = p[3]
+
+    prop = ('prop', {
+        'prop': prop,
+        'prop_pat': prop_pat,
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+    })
+
+    p[0] = [prop] + props
 
 
 def p_names(p):
@@ -607,8 +642,7 @@ def p_thmdef(p):
 def p_thm(p):
     '''thm : NAT
            | name attributes
-           | ID
-           | ID DOT ID
+           | name
            | SYM_IDENT
            | TRUE
            | FALSE
@@ -618,36 +652,34 @@ def p_thm(p):
            | CARTOUCHE
            | ID EQUALS ID
            | NAT EQUALS ID
+           | assms attributes
            | assms
            | LEFT_BRACKET attributes RIGHT_BRACKET'''
-    if len(p) == 2:
-        name = p[1]
-        attributes = []
-        selection = None
-    elif len(p) == 3:
-        name = p[1]
-        if p[2][0] == 'selection':
-            selection = p[2]
-            attributes = []
-        else:
-            selection = None
-            attributes = p[2]
-    elif len(p) == 4:
-        if p[2] == '.' or p[2] == '=':
-            name = "".join(p[1:3])
-            attributes = []
-            selection = None
-        else:
-            name = None
-            selection = p[2]
-            attributes = p[3]
 
+    attributes = None
+    selection = None
+    assms = None
+    name = None
+
+    tail_offset = 0
+    if isinstance(p[len(p)-1], list):
+        attributes = p[len(p)-1]
+        tail_offset += 1
+    if p[len(p)-1-tail_offset][0] == 'selection':
+        selection = p[len(p)-1-tail_offset]
+        tail_offset += 1
+    if p[1] == '[' and p[3] == ']':
+        attributes = p[2]
+    if p[1][0] == 'assms':
+        assms = p[1]
     else:
-        name = None
-        selection = None
-        attributes = None
+        name = ''.join([s
+                        for s in p[1:len(p)-tail_offset]
+                        if isinstance(s, str)])
+
     p[0] = ('thm', {
         'name': name,
+        'assms': assms,
         'attributes': attributes,
         'selection': selection,
         'line': p.lineno(1),
@@ -664,23 +696,23 @@ def p_thms(p):
 
 def p_thmbind(p):
     '''thmbind : ID
+               | NAT
+               | ID SUBSCRIPT ID
                | ID attributes
                | attributes'''
-    if len(p) == 2:
-        if isinstance(p[1], str):
-            p[0] = ('thmbind', {
-                'name': p[1] if isinstance(p[1], str) else None,
-                'attributes': None if isinstance(p[1], str) else p[1],
-                'line': p.lineno(1),
-                'column': get_column(source, p.lexpos(1)) if source else -1,
-                })
-        elif len(p) == 3:
-            p[0] = ('thmbind', {
-                'name': p[1],
-                'attributes': p[2],
-                'line': p.lineno(1),
-                'column': get_column(source, p.lexpos(1)) if source else -1,
-                })
+    if isinstance(p[len(p)-1], list):
+        attributes = p[len(p)-1]
+        name = ''.join(p[1:len(p)-1])
+    else:
+        attributes = None
+        name = ''.join(p[1:len(p)])
+
+    p[0] = ('thmbind', {
+        'name': name,
+        'attributes': attributes,
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
 
 
 def p_attributes(p):
@@ -704,7 +736,12 @@ def p_attributes_list(p):
 
 def p_attribute(p):
     '''attribute : ID args'''
-    p[0] = (p[1], p[2])
+    p[0] = ('attribute', {
+        'name': p[1],
+        'args': p[2],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
 
 
 def p_args(p):
@@ -722,22 +759,24 @@ def p_args(p):
 
 def p_arg(p):
     '''arg : ID
+           | ID SUBSCRIPT ID
            | QUOTED_STRING
            | SYM_IDENT
            | LEFT_PAREN args RIGHT_PAREN
            | LEFT_BRACKET args RIGHT_BRACKET'''
-    if len(p) == 2:
-        p[0] = ('arg', {
-                'value': p[1],
-                'line': p.lineno(1),
-                'column': get_column(source, p.lexpos(1)) if source else -1,
-                })
+    value = None
+    args = None
+    if isinstance(p[2], list):
+        args = p[2]
     else:
-        p[0] = ('arg', {
-                'args': p[2],
-                'line': p.lineno(1),
-                'column': get_column(source, p.lexpos(1)) if source else -1,
-                })
+        value = ''.join(p[1:])
+
+    p[0] = ('arg', {
+            'value': value,
+            'args': args,
+            'line': p.lineno(1),
+            'column': get_column(source, p.lexpos(1)) if source else -1,
+            })
 
 
 def p_selection(p):
@@ -1106,6 +1145,7 @@ def p_decl(p):
             | ID WHERE comment_block
             | ID mixfix WHERE
             | ID COLON COLON ID WHERE
+            | ID COLON COLON QUOTED_STRING comment_block WHERE
             | ID COLON COLON QUOTED_STRING WHERE
             | ID COLON COLON QUOTED_STRING mixfix WHERE
             | ID COLON COLON ID mixfix WHERE'''
@@ -1821,6 +1861,8 @@ def p_proof_state(p):
                    | qed
                    | oops theory
                    | oops
+                   | ALSO proof_state
+                   | THEN proof_chain
                    | terminal_proof_steps
                    | hence proof_prove
                    | thus proof_prove
@@ -1924,6 +1966,7 @@ def p_local_theory(p):
         p[0] = ('local_theory', [p[1]])
 
 
+# NOTE ALSO proof_state here contradicts grammar in Isabelle/Isar
 def p_proof_prove(p):
     '''proof_prove : SHOW stmt cond_stmt
                    | SHOW stmt cond_stmt for_fixes
@@ -1937,6 +1980,7 @@ def p_proof_prove(p):
                    | defer_block
                    | prefer_block proof_prove
                    | prefer_block
+                   | ALSO proof_state
                    | DONE proof_state
                    | DONE theory
                    | DONE local_theory
@@ -1966,7 +2010,7 @@ def p_proof_prove(p):
 # QUOTED_STRING only found in AFP, not in Isabelle/Isar grammar
 def p_conclusion(p):
     '''conclusion : QUOTED_STRING
-                  | SHOWS stmt
+                  | SHOWS prop_list_with_pat
                   | OBTAINS obtain_clauses'''
     if p[1] == 'shows':
         shows = p[2]
@@ -1984,7 +2028,6 @@ def p_conclusion(p):
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
-
 
 
 def p_obtain_clauses(p):
@@ -2168,7 +2211,7 @@ def p_thus(p):
 
 
 def p_stmt(p):
-    '''stmt : prop_list'''
+    '''stmt : props_list_and_sep'''
     p[0] = ('stmt', p[1])
 
 

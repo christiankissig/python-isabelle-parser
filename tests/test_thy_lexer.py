@@ -54,6 +54,6 @@ end
 
 
 def test_re():
-    input = "xt\\<^sub>1"
-    pattern = re.compile(r'[a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[0-9]*)?')
+    input = "not_irreducible\\<^sub>d_lead_coeff_factors"
+    pattern = re.compile(r'[a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[a-zA-Z0-9_]*)?')
     assert pattern.fullmatch(input)
