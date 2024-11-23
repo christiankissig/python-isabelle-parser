@@ -232,9 +232,13 @@ def p_method_arg(p):
                   | GREEK DOT ID LEFT_PAREN NAT RIGHT_PAREN
                   | ID DOT ID DOT ID LEFT_PAREN NAT RIGHT_PAREN
                   | QUOTED_STRING
+                  | attributes
                   | ID
                   | NAT'''
-    p[0] = "".join(p[1:])
+    if len(p) == 2 and p[1][0] == 'attributes':
+        p[0] = p[1]
+    else:
+        p[0] = "".join(p[1:])
 
 
 def p_fixes(p):
@@ -700,7 +704,7 @@ def p_thmbind(p):
                | ID SUBSCRIPT ID
                | ID attributes
                | attributes'''
-    if isinstance(p[len(p)-1], list):
+    if p[len(p)-1][0] == 'attributes':
         attributes = p[len(p)-1]
         name = ''.join(p[1:len(p)-1])
     else:
@@ -718,7 +722,11 @@ def p_thmbind(p):
 def p_attributes(p):
     '''attributes : LEFT_BRACKET attributes_list RIGHT_BRACKET
                   | LEFT_BRACKET name_insts RIGHT_BRACKET'''
-    p[0] = p[2]
+    p[0] = ('attributes', {
+        'attributes': p[2],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
 
 
 def p_attributes_list(p):
@@ -1400,6 +1408,7 @@ def p_name_insts_list(p):
     '''name_insts_list : ID EQUALS ID
                        | ID EQUALS QUOTED_STRING
                        | SYM_IDENT EQUALS QUOTED_STRING
+                       | SYM_IDENT EQUALS ID
                        | ID EQUALS ID name_insts_list
                        | ID EQUALS QUOTED_STRING name_insts_list'''
     if len(p) == 4:
@@ -1960,7 +1969,7 @@ def p_local_theory(p):
             'statement': p[2],
             'proof': p[3],
             }])
-    elif len(p) == 3 and p[2][0] == 'local_theory':
+    elif len(p) == 3 and p[2] and p[2][0] == 'local_theory':
         p[0] = ('local_theory', [p[1]] + p[2][1])
     elif len(p) == 2:
         p[0] = ('local_theory', [p[1]])

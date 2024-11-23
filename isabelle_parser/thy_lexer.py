@@ -388,7 +388,7 @@ def t_LONG_IDENT(t):
 
 
 def t_SYM_IDENT(t):
-    r'[!#$%&*+\-/<=>?@^_`|~]+[a-zA-Z][a-zA-Z0-9]*'
+    r'[!#$%&*+\-/<>?@^_`|~]+[a-zA-Z][a-zA-Z0-9]*'
     t.lineno = t.lexer.lineno
     t.column = find_column(t.lexer.lexdata, t)
     return t
