@@ -16,12 +16,7 @@ logger = logging.getLogger(__name__)
 
 def p_theory_file(p):
     '''theory_file : theory_block
-                   | chapter_block theory_file
-                   | section_block theory_file
-                   | subsection_block theory_file
-                   | paragraph_block theory_file
-                   | text_block theory_file
-                   | comment_block theory_file
+                   | doc_block theory_file
                    | marker theory_file'''
     if len(p) == 2:
         p[0] = [p[1]]
@@ -110,10 +105,7 @@ def p_statement(p):
                  | primrec
                  | record
                  | notation_block
-                 | section_block
-                 | subsection_block
-                 | paragraph_block
-                 | text_block
+                 | doc_block
                  | type_synonym
                  | typedecl'''
     p[0] = p[1]
@@ -942,33 +934,24 @@ def p_antiquotation_body(p):
 #
 
 
-def p_chapter_block(p):
-    '''chapter_block : CHAPTER CARTOUCHE
-                     | CHAPTER QUOTED_STRING'''
-    p[0] = ('section', p[2])
+def p_doc_block(p):
+    '''doc_block :  CHAPTER QUOTED_STRING
+                 |  CHAPTER CARTOUCHE
+                 |  SECTION QUOTED_STRING
+                 |  SECTION CARTOUCHE
+                 |  SUBSECTION QUOTED_STRING
+                 |  SUBSECTION CARTOUCHE
+                 |  SUBSUBSECTION QUOTED_STRING
+                 |  SUBSUBSECTION CARTOUCHE
+                 |  PARAGRAPH QUOTED_STRING
+                 |  PARAGRAPH CARTOUCHE
+                 |  TEXT QUOTED_STRING
+                 |  TEXT CARTOUCHE
+                 |  COMMENT_CARTOUCHE QUOTED_STRING
+                 |  COMMENT_CARTOUCHE CARTOUCHE
 
-
-def p_section_block(p):
-    '''section_block : SECTION CARTOUCHE
-                     | SECTION QUOTED_STRING'''
-    p[0] = ('section', p[2])
-
-
-def p_subsection_block(p):
-    '''subsection_block : SUBSECTION CARTOUCHE
-                        | SUBSECTION QUOTED_STRING'''
-    p[0] = ('subsection', p[2])
-
-
-def p_paragraph_block(p):
-    '''paragraph_block : PARAGRAPH CARTOUCHE'''
-    p[0] = ('paragraph', p[2])
-
-
-def p_text_block(p):
-    '''text_block : TEXT CARTOUCHE
-                  | TXT CARTOUCHE'''
-    p[0] = ('text', p[2])
+    '''
+    p[0] = (p[1], p[2])
 
 
 def p_comment_block(p):
@@ -1933,8 +1916,8 @@ def p_proof_state(p):
                    | fix proof_state
                    | moreover proof_state
                    | ultimately proof_chain
-                   | comment_block proof_state
-                   | text_block proof_state'''
+                   | doc_block proof_state
+                   '''
     if len(p) == 3:
         p[0] = ('proof_state', {
             'kind': p[1] if p[1] in ['note', 'next'] else None,
@@ -2001,9 +1984,7 @@ def p_local_theory(p):
                     | statement local_theory
                     | statement
                     | declare local_theory
-                    | comment_block local_theory
-                    | text_block local_theory
-                    | subsection_block local_theory
+                    | doc_block local_theory
         '''
     if len(p) == 5 and p[1] == 'lemma':
         lemma = ('lemma', {
@@ -2062,8 +2043,8 @@ def p_proof_prove(p):
                    | terminal_proof_steps local_theory
                    | terminal_proof_steps theory
                    | terminal_proof_steps
-                   | comment_block proof_prove
-                   | text_block proof_prove'''
+                   | doc_block proof_prove
+                   '''
     p[0] = p[1:]
 
 
