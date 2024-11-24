@@ -221,6 +221,8 @@ def p_method_arg(p):
                   | LEFT_PAREN ID ID ID RIGHT_PAREN
                   | LEFT_PAREN ID ID ID ID RIGHT_PAREN
                   | ARBITRARY COLON
+                  | ASSMS LEFT_PAREN NAT RIGHT_PAREN
+                  | ASSMS
                   | ID COLON
                   | ID BANG COLON
                   | ID DOT ID
@@ -743,10 +745,11 @@ def p_attributes_list(p):
 
 
 def p_attribute(p):
-    '''attribute : ID args'''
+    '''attribute : ID args
+                 | NAT'''
     p[0] = ('attribute', {
         'name': p[1],
-        'args': p[2],
+        'args': p[2] if len(p) > 2 else None,
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
@@ -767,6 +770,7 @@ def p_args(p):
 
 def p_arg(p):
     '''arg : ID
+           | NAT
            | ID SUBSCRIPT ID
            | QUOTED_STRING
            | SYM_IDENT
@@ -774,7 +778,7 @@ def p_arg(p):
            | LEFT_BRACKET args RIGHT_BRACKET'''
     value = None
     args = None
-    if isinstance(p[2], list):
+    if len(p) > 2 and isinstance(p[2], list):
         args = p[2]
     else:
         value = ''.join(p[1:])
@@ -2156,7 +2160,17 @@ def p_assms(p):
 
 
 def p_goal(p):
-    '''goal : LEMMA long_statement
+    '''goal : LEMMA LEFT_PAREN IN ID RIGHT_PAREN long_statement
+            | LEMMA LEFT_PAREN IN ID RIGHT_PAREN short_statement
+            | THEOREM LEFT_PAREN IN ID RIGHT_PAREN long_statement
+            | THEOREM LEFT_PAREN IN ID RIGHT_PAREN short_statement
+            | COROLLARY LEFT_PAREN IN ID RIGHT_PAREN long_statement
+            | COROLLARY LEFT_PAREN IN ID RIGHT_PAREN short_statement
+            | PROPOSITION LEFT_PAREN IN ID RIGHT_PAREN long_statement
+            | PROPOSITION LEFT_PAREN IN ID RIGHT_PAREN short_statement
+            | SCHEMATIC_GOAL LEFT_PAREN IN ID RIGHT_PAREN long_statement
+            | SCHEMATIC_GOAL LEFT_PAREN IN ID RIGHT_PAREN short_statement
+            | LEMMA long_statement
             | LEMMA short_statement
             | THEOREM long_statement
             | THEOREM short_statement
@@ -2165,9 +2179,16 @@ def p_goal(p):
             | PROPOSITION long_statement
             | PROPOSITION short_statement
             | SCHEMATIC_GOAL long_statement
-            | SCHEMATIC_GOAL short_statement'''
+            | SCHEMATIC_GOAL short_statement
+
+    '''
+    if len(p) > 5 and p[2] == '(' and p[5] == ')' and p[4] == 'in':
+        target = p[5]
+    else:
+        target = None
     p[0] = (p[1], {
-        'statement': p[2],
+        'statement': p[len(p)-1],
+        'target': target,
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
@@ -2525,18 +2546,23 @@ def p_name_underscore_list(p):
 def p_cases(p):
     '''cases : CASES no_simp_block insts_list_and_sep
              | CASES no_simp_block insts_list_and_sep rule
-             | CASES QUOTED_STRING rule'''
-    if len(p) == 4 and p[3] and p[3][0] == 'rule':
-        rule = p[3]
-        if isinstance(p[2], str):
-            insts = [p[2]]
-        else:
-            insts = None
+             | CASES QUOTED_STRING rule
+             | CASES QUOTED_STRING'''
+    rule = None
+    insts = None
+    if len(p) == 4:
+        if p[3] and p[3][0] == 'rule':
+            rule = p[3]
+            if isinstance(p[2], str):
+                insts = [p[2]]
+        elif isinstance(p[3], list):
+            insts = p[3]
     elif len(p) == 5 and p[4][0] == 'rule':
         rule = p[4]
         insts = p[3]
+    elif len(p) == 3:
+        insts = [p[2]]
     else:
-        rule = None
         insts = p[3]
     p[0] = ('cases', {
         'no_simp': p[2],
@@ -2873,7 +2899,8 @@ def p_notation(p):
 
 # TODO
 def p_mode(p):
-    '''mode : ID'''
+    '''mode : ID
+            | LEFT_PAREN INPUT RIGHT_PAREN'''
     p[0] = ('mode', p[1])
 
 
@@ -3134,6 +3161,7 @@ def p_export_code(p):
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+
 
 def p_const_expr_list(p):
     '''const_expr_list : const_expr
