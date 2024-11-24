@@ -130,6 +130,7 @@ def p_method_name(p):
     '''method_name : ID
                    | INDUCT
                    | INDUCTION
+                   | RULE
                    | ID DOT ID
                    | ID DOT ID DOT ID
                    | QUOTED_STRING'''
@@ -654,6 +655,7 @@ def p_thmdef(p):
 def p_thm(p):
     '''thm : NAT
            | name attributes
+           | NAT attributes
            | name
            | SYM_IDENT
            | TRUE
@@ -663,6 +665,7 @@ def p_thm(p):
            | assms selection
            | CARTOUCHE
            | ID EQUALS ID
+           | ID EQUALS NAT attributes
            | ID EQUALS FALSE
            | NAT EQUALS ID
            | assms attributes
@@ -781,6 +784,8 @@ def p_arg(p):
            | ID SUBSCRIPT ID
            | QUOTED_STRING
            | SYM_IDENT
+           | TRUE
+           | FALSE
            | LEFT_PAREN args RIGHT_PAREN
            | LEFT_BRACKET args RIGHT_BRACKET'''
     value = None
