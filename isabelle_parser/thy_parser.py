@@ -21,6 +21,7 @@ def p_theory_file(p):
                    | subsection_block theory_file
                    | paragraph_block theory_file
                    | text_block theory_file
+                   | comment_block theory_file
                    | marker theory_file'''
     if len(p) == 2:
         p[0] = [p[1]]
@@ -98,6 +99,7 @@ def p_statement(p):
                  | definition
                  | export_code
                  | fun_block
+                 | hide_declarations
                  | inductive
                  | interpretation_block
                  | lemmas
@@ -240,9 +242,10 @@ def p_method_arg(p):
                   | ID DOT ID DOT ID LEFT_PAREN NAT RIGHT_PAREN
                   | QUOTED_STRING
                   | attributes
+                  | cases
                   | ID
                   | NAT'''
-    if len(p) == 2 and p[1][0] == 'attributes':
+    if len(p) == 2 and (p[1][0] == 'attributes' or p[1][0] == 'cases'):
         p[0] = p[1]
     else:
         p[0] = "".join(p[1:])
@@ -609,8 +612,8 @@ def p_names(p):
 
 
 def p_name_list(p):
-    '''name_list : ID
-                 | ID name_list'''
+    '''name_list : name
+                 | name name_list'''
     p[0] = [p[1]] + p[3] if len(p) == 4 else [p[1]]
 
 
@@ -657,6 +660,7 @@ def p_thm(p):
            | name attributes
            | NAT attributes
            | name
+           | STAR
            | SYM_IDENT
            | TRUE
            | FALSE
@@ -713,6 +717,7 @@ def p_thms(p):
 def p_thmbind(p):
     '''thmbind : ID
                | NAT
+               | STAR
                | ID SUBSCRIPT ID
                | ID attributes
                | attributes'''
@@ -783,6 +788,7 @@ def p_arg(p):
            | NAT
            | ID SUBSCRIPT ID
            | QUOTED_STRING
+           | CARTOUCHE
            | SYM_IDENT
            | TRUE
            | FALSE
@@ -1424,6 +1430,7 @@ def p_name_insts(p):
 def p_name_insts_list(p):
     '''name_insts_list : ID EQUALS ID
                        | ID EQUALS QUOTED_STRING
+                       | ID EQUALS NAT
                        | SYM_IDENT EQUALS QUOTED_STRING
                        | SYM_IDENT EQUALS ID
                        | ID EQUALS ID name_insts_list
@@ -1725,6 +1732,29 @@ def p_lemmas(p):
         'thmdef': p[2] if len(p) == 5 else None,
         'thms': p[len(p)-2],
         'for_fixes': p[len(p)-1],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.15
+#
+
+
+def p_hide_declarations(p):
+    '''hide_declarations : HIDE_CLASS LEFT_PAREN OPEN RIGHT_PAREN name_list
+                         | HIDE_TYPE LEFT_PAREN OPEN RIGHT_PAREN name_list
+                         | HIDE_CONST LEFT_PAREN OPEN RIGHT_PAREN name_list
+                         | HIDE_FACT LEFT_PAREN OPEN RIGHT_PAREN name_list
+                         | HIDE_CLASS name_list
+                         | HIDE_TYPE name_list
+                         | HIDE_CONST name_list
+                         | HIDE_FACT name_list'''
+    open = len(p) == 6 and p[3] == 'open'
+    p[0] = ('hide_declarations', {
+        'open': open,
+        'names': p[len(p)-1],
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
         })
@@ -2537,6 +2567,7 @@ def p_case(p):
     '''case : CASE ID
             | CASE TRUE
             | CASE FALSE
+            | CASE NAT
             | CASE LEFT_PAREN name_underscore_list RIGHT_PAREN'''
     p[0] = ('case', {
         'names': [p[2]] if len(p) == 3 else p[3],
