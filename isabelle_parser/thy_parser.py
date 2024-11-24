@@ -364,6 +364,7 @@ def p_par_name(p):
 def p_embedded(p):
     '''embedded : ID
                 | QUOTED_STRING
+                | CARTOUCHE
                 | NAT
                 | GREEK
                 | TRUE
@@ -668,6 +669,7 @@ def p_thm(p):
            | name selection attributes
            | assms selection
            | CARTOUCHE
+           | ASSMS EQUALS CARTOUCHE
            | ID EQUALS ID
            | ID EQUALS NAT attributes
            | ID EQUALS FALSE
@@ -786,6 +788,7 @@ def p_args(p):
 def p_arg(p):
     '''arg : ID
            | NAT
+           | FOR
            | ID SUBSCRIPT ID
            | QUOTED_STRING
            | CARTOUCHE
@@ -2064,10 +2067,10 @@ def p_proof_prove(p):
     p[0] = p[1:]
 
 
-
 # QUOTED_STRING only found in AFP, not in Isabelle/Isar grammar
 def p_conclusion(p):
     '''conclusion : QUOTED_STRING
+                  | CARTOUCHE
                   | SHOWS prop_list_with_pat
                   | OBTAINS obtain_clauses'''
     if p[1] == 'shows':
@@ -2314,7 +2317,8 @@ def p_short_statement(p):
 
 
 def p_long_statement(p):
-    '''long_statement : thmdecl statement_context conclusion'''
+    '''long_statement : thmdecl statement_context conclusion
+                      | statement_context conclusion'''
     p[0] = ('long_statement', {
         'thmdecl': p[1] if len(p) == 4 else None,
         'context': p[2] if len(p) == 4 else None,
@@ -2330,13 +2334,13 @@ def p_statement_context(p):
     includes = None
     context_elements = None
     if len(p) == 2:
-        if p[1] == None:
+        if p[1] is None:
             p[0] = None
             return
         if isinstance(p[1], list):
             context_elements = p[1]
         else:
-            inclused = p[1]
+            includes = p[1]
     elif len(p) == 3:
         includes = p[1]
         context_elements = p[2]
