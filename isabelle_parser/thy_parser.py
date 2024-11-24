@@ -105,6 +105,7 @@ def p_statement(p):
                  | marker
                  | method_block
                  | partial_function
+                 | primrec
                  | record
                  | notation_block
                  | section_block
@@ -212,6 +213,7 @@ def p_method_args(p):
         p[0] = []
 
 
+# TODO arbitary and rule should be instances of rule
 def p_method_arg(p):
     '''method_arg : ID LEFT_PAREN NAT RIGHT_PAREN
                   | LEFT_PAREN ID RIGHT_PAREN
@@ -221,11 +223,13 @@ def p_method_arg(p):
                   | LEFT_PAREN ID ID ID RIGHT_PAREN
                   | LEFT_PAREN ID ID ID ID RIGHT_PAREN
                   | ARBITRARY COLON
+                  | RULE COLON
                   | ASSMS LEFT_PAREN NAT RIGHT_PAREN
                   | ASSMS
                   | ID COLON
                   | ID BANG COLON
                   | ID DOT ID
+                  | ID DOT CASES
                   | ID SUBSCRIPT NAT
                   | ID DOT INDUCT
                   | GREEK DOT ID
@@ -328,6 +332,8 @@ def p_subgoal(p):
 def p_name(p):
     '''name : ID
             | ID DOT ID
+            | ID DOT
+            | ID DOT CASES
             | ID DOT ID DOT ID
             | ID SUBSCRIPT NAT
             | ID SUBSCRIPT ID
@@ -657,6 +663,7 @@ def p_thm(p):
            | assms selection
            | CARTOUCHE
            | ID EQUALS ID
+           | ID EQUALS FALSE
            | NAT EQUALS ID
            | assms attributes
            | assms
@@ -1000,9 +1007,10 @@ def p_rules(p):
 
 
 def p_rule(p):
-    '''rule : body
-            | ID COLON body
-            | antiquotation COLON body'''
+    '''rule : TYPE COLON name_list
+            | PRED COLON name_list
+            | SET COLON name_list
+            | RULE COLON thms'''
     if len(p) == 2:
         p[0] = ('rule', {
             'name': None,
@@ -1864,6 +1872,7 @@ def p_proof_state(p):
                    | let proof_state
                    | assume proof_state
                    | case proof_state
+                   | consider proof_prove
                    | from proof_chain
                    | have proof_prove
                    | show proof_prove
@@ -1924,6 +1933,7 @@ def p_proof_state_statement(p):
 
 def p_proof_chain(p):
     '''proof_chain : have proof_prove
+                   | consider proof_prove
                    | obtain proof_prove
                    | show proof_prove'''
     p[0] = (p[1], p[2])
@@ -2532,8 +2542,10 @@ def p_case(p):
 
 def p_name_underscore_list(p):
     '''name_underscore_list : ID
+                            | NAT
                             | UNDERSCORE
                             | ID name_underscore_list
+                            | NAT name_underscore_list
                             | UNDERSCORE name_underscore_list'''
     p[0] = [p[1]] + p[2] if len(p) == 3 else [p[1]]
 
@@ -2544,28 +2556,25 @@ def p_name_underscore_list(p):
 
 
 def p_cases(p):
-    '''cases : CASES no_simp_block insts_list_and_sep
-             | CASES no_simp_block insts_list_and_sep rule
+    '''cases : CASES no_simp_block insts_list_and_sep rule
+             | CASES no_simp_block rule
+             | CASES no_simp_block insts_list_and_sep
+             | CASES no_simp_block
+             | CASES insts_list_and_sep rule
+             | CASES insts_list_and_sep
              | CASES QUOTED_STRING rule
-             | CASES QUOTED_STRING'''
-    rule = None
-    insts = None
-    if len(p) == 4:
-        if p[3] and p[3][0] == 'rule':
-            rule = p[3]
-            if isinstance(p[2], str):
-                insts = [p[2]]
-        elif isinstance(p[3], list):
-            insts = p[3]
-    elif len(p) == 5 and p[4][0] == 'rule':
-        rule = p[4]
-        insts = p[3]
-    elif len(p) == 3:
-        insts = [p[2]]
-    else:
-        insts = p[3]
+             | CASES QUOTED_STRING
+             | CASES rule
+             | CASES
+             '''
+    rule = get_value_by_rule(p, 'rule')
+    no_simp = p[2] if len(p) > 2 and isinstance(p[2], bool) else False
+    insts = get_value_by_type(p, list, [])
+    inst = get_value_by_type(p, str, None)
+    if inst and insts == []:
+        insts = [inst]
     p[0] = ('cases', {
-        'no_simp': p[2],
+        'no_simp': no_simp,
         'insts': insts,
         'rule': rule,
         'line': p.lineno(1),
@@ -2682,6 +2691,14 @@ def p_coinduct_block(p):
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.6
 #
+
+
+def p_consider(p):
+    '''consider : CONSIDER obtain_clauses'''
+    p[0] = ('consider', {
+        'clauses': p[2],
+        })
+
 
 # TODO complete
 def p_obtain(p):
@@ -2936,8 +2953,8 @@ def p_inductive(p):
 #
 
 
-def p_primrec_block(p):
-    '''primrec_block : PRIMREC specification'''
+def p_primrec(p):
+    '''primrec : PRIMREC specification'''
     p[0] = ('primrec', p[2])
 
 
@@ -3366,3 +3383,22 @@ def parse(input):
     source = input
     reset_lexer(lexer)
     return _parser.parse(input)
+
+
+#
+# Utilities
+#
+
+
+def get_value_by_rule(p, rule_name, default=None):
+    for i in range(1, len(p)):
+        if p[i] and p[i][0] == rule_name:
+            return p[i]
+    return default
+
+
+def get_value_by_type(p, type, default=None):
+    for i in range(1, len(p)):
+        if isinstance(p[i], type):
+            return p[i]
+    return default
