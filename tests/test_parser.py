@@ -135,6 +135,13 @@ proof -
 qed
 end""",
      True),
+    ('parse_theory_nested_comments', """
+theory NestedComments
+     imports Main
+begin
+\\<comment> \\<open> some text \\<open> inner text \\<close> final text \\<close>
+end""",
+     True),
 ])
 def test_parse(name, test_input, expected):
     source_code = test_input.strip()

@@ -1,5 +1,4 @@
 import re
-import isabelle_parser
 from isabelle_parser import thy_lexer
 
 
@@ -51,6 +50,19 @@ end
     assert len(tokens) > 0
     assert tokens[0].value == 'theory'
     assert tokens[0].type == 'THEORY'
+
+
+def test_lex_nested_comment():
+    input = "\\<open> some text \\<open> inner text \\<close> final text \\<close>"
+    thy_lexer.input(input)
+    tokens = []
+    while True:
+        tok = thy_lexer.token()
+        if not tok:
+            break
+        tokens.append(tok)
+    assert len(tokens) > 0
+    print (tokens)
 
 
 def test_re():

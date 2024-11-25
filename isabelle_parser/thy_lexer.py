@@ -1,5 +1,63 @@
 import ply.lex as lex
 
+states = (
+    ('cartouche', 'exclusive'),
+)
+
+#
+# Support for nested cartouche blocks
+#
+
+
+def t_CARTOUCHE_START(t):
+    r'\\<open>'
+    print('cartouche start', t.value)
+    t.lexer.push_state('cartouche')  # Enter `cartouche` state
+    t.lexer.cartouche_content = t.value
+    t.lexer.cartouche_level = 1     # Start at nesting level 1
+
+
+def t_cartouche_TEXT(t):
+    r'[^\\]+'
+    print('cartouche text', t.value)
+    t.lexer.cartouche_content += t.value
+
+
+def t_cartouche_OPEN(t):
+    r'\\<open>'
+    print('cartouche open')
+    t.lexer.cartouche_content += t.value
+    t.lexer.cartouche_level += 1
+
+
+def t_cartouche_CLOSE(t):
+    r'\\<close>'
+    t.lexer.cartouche_level -= 1
+    t.lexer.cartouche_content += t.value
+    if t.lexer.cartouche_level == 0:
+        # Exit `cartouche` state when nesting level reaches 0
+        t.value = t.lexer.cartouche_content
+        t.type = "CARTOUCHE"  # Emit a CARTOUCHE token
+        t.lineno = t.lexer.lineno
+        t.column = find_column(t.lexer.lexdata, t)
+        t.lexer.pop_state()
+        return t
+
+
+def t_cartouche_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
+    t.lexer.cartouche_content += t.value
+
+
+def t_cartouche_error(t):
+    print(f"Illegal character '{t.value[0]}' in cartouche")
+    t.lexer.skip(1)
+
+
+t_cartouche_ignore = ' \t'
+
+
 # Define tokens for Isabelle syntax elements
 tokens = (
     'OUTER_COMMENT',
@@ -206,14 +264,6 @@ def t_EQUIV(t):
 
 def t_NEWLINE(t):
     r'\\<newline>'
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
-def t_CARTOUCHE(t):
-    r'\\<open>[\s\S]*?\\<close>'
-    t.lexer.lineno += t.value.count('\n')
     t.lineno = t.lexer.lineno
     t.column = find_column(t.lexer.lexdata, t)
     return t
@@ -578,7 +628,6 @@ def t_TYPE_IDENT(t):
     return t
 
 
-
 # Token definitions
 t_NAT = r'\d+'
 t_SYM_FLOAT = r'(\d+(\.\d+)+|\.\d+)'
@@ -592,7 +641,6 @@ latin_letters = r'[a-zA-Z]'
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3
 #
-
 
 
 def t_newline(t):
