@@ -740,15 +740,24 @@ def p_attributes_list(p):
         p[0] = [p[1]] + p[len(p) - 1]
 
 
+# TODO [OF assms(1)] should be handled separately
 def p_attribute(p):
     '''attribute : ID args
+                 | ID ASSMS LEFT_PAREN NAT RIGHT_PAREN
                  | NAT'''
+    args = None
+    if isinstance(p[2], list):
+        args = p[2]
+    if len(p) == 5:
+        name = ''.join(p[1:])
+    else:
+        name = p[1]
+
     p[0] = ('attribute', {
-        'name': p[1],
-        'args': p[2] if len(p) > 2 else None,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
+        'name': name,
+        'args': args,
         })
+    add_position(p)
 
 
 def p_args(p):
