@@ -34,10 +34,9 @@ def p_theory_block(p):
             'name': p[2],
             'imports': imports[1],
             'content': p[5],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
         }
     )
+    add_position(p)
 
 
 def p_imports_opt(p):
@@ -117,6 +116,7 @@ def p_method_block(p):
         'name': p[2],
         'instruction': p[4],
     })
+    add_position(p)
 
 
 # Lemma name
@@ -143,6 +143,7 @@ def p_instruction(p):
                    | LEFT_PAREN instruction RIGHT_PAREN
                    | LEFT_PAREN instruction RIGHT_PAREN instruction_modifier'''
     p[0] = ('instruction', *p[1:])
+    add_position(p)
 
 
 def p_instruction_modifier(p):
@@ -162,55 +163,47 @@ def p_single_instruction(p):
         p[0] = ('single_instruction',
                 {
                     'method': p[1],
-                    'line': p.lineno(1),
-                    'column': get_column(source, p.lexpos(1)) if source else -1,
                 })
     elif len(p) == 3:
         p[0] = ('single_instruction',
                 {
                     'method': p[1],
                     'args': p[2],
-                    'line': p.lineno(1),
-                    'column': get_column(source, p.lexpos(1)) if source else -1,
                 })
     elif len(p) == 5:
         p[0] = ('single_instruction',
                 {
                     'method': p[2],
                     'args': p[3],
-                    'line': p.lineno(1),
-                    'column': get_column(source, p.lexpos(1)) if source else -1,
                 })
     elif len(p) == 6:
         p[0] = ('single_instruction',
                 {
                     'method': p[2],
                     'args': p[3],
-                    'line': p.lineno(1),
-                    'column': get_column(source, p.lexpos(1)) if source else -1,
                     'modifier': p[5],
                 })
+    add_position(p)
 
 
 def p_method_args(p):
     '''method_args : method_arg method_args
-                   | method_arg COMMA method_args
                    | method_arg AND method_args
                    | method_arg
                    | empty'''
-    if len(p) == 3:
-        p[0] = [p[1]] + p[2]
-    elif len(p) == 4:
-        p[0] = [p[1]] + p[3]
-    elif len(p) == 5:
-        p[0] = [p[1], p[2], p[3]] + p[4]
-    else:
+    if len(p) == 2 and not p[1]:
         p[0] = []
+        return
+    arg = p[1]
+    args = p[len(p)-1] if len(p) > 2 else []
+    p[0] = [arg] + args
 
 
 # TODO arbitary and rule should be instances of rule
 def p_method_arg(p):
     '''method_arg : ID LEFT_PAREN NAT RIGHT_PAREN
+                  | ID LEFT_PAREN NAT DASH RIGHT_PAREN
+                  | ID LEFT_PAREN NAT COMMA NAT RIGHT_PAREN
                   | LEFT_PAREN ID RIGHT_PAREN
                   | LEFT_PAREN ID COMMA ID RIGHT_PAREN
                   | LEFT_PAREN ID ID RIGHT_PAREN
@@ -236,6 +229,7 @@ def p_method_arg(p):
                   | attributes
                   | cases
                   | ID
+                  | STAR
                   | NAT'''
     if len(p) == 2 and (p[1][0] == 'attributes' or p[1][0] == 'cases'):
         p[0] = p[1]
@@ -296,9 +290,8 @@ def p_shows(p):
     '''shows : SHOWS prop_list_with_pat'''
     p[0] = ('shows', {
         'props': p[2],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_subgoals(p):
@@ -315,9 +308,8 @@ def p_subgoal(p):
     p[0] = ('subgoal', {
         'name': p[2],
         'apply_block': p[3],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
     })
+    add_position(p)
 
 
 #
@@ -343,9 +335,8 @@ def p_par_name(p):
     '''par_name : LEFT_PAREN name RIGHT_PAREN'''
     p[0] = ('par_name', {
         'name': p[2],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
     })
+    add_position(p)
 
 
 #
@@ -392,9 +383,8 @@ def p_prop(p):
     p[0] = ('prop', {
         'value': p[1] if len(p) > 2 else None,
         'prop': p[len(p)-1],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_inst(p):
@@ -418,9 +408,8 @@ def p_typespec(p):
     p[0] = ('typespec', {
                 'typeargs': p[1] if len(p) == 3 else [],
                 'name': p[2] if len(p) == 3 else p[1],
-                'line': p.lineno(1),
-                'column': get_column(source, p.lexpos(1)) if source else -1,
                 })
+    add_position(p)
 
 
 def p_typearg(p):
@@ -430,9 +419,8 @@ def p_typearg(p):
     p[0] = ('typearg', {
                 'name': p[1],
                 'sort': p[4] if len(p) > 2 else None,
-                'line': p.lineno(1),
-                'column': get_column(source, p.lexpos(1)) if source else -1,
                 })
+    add_position(p)
 
 
 # moved empty case to p_typespec in order to avoid parsing error
@@ -462,16 +450,18 @@ def p_typeargs_sorts(p):
     p[0] = ('typeargs_sorts',
             {
                 'type_idents': type_idents,
-                })
+            })
+    add_position(p)
 
 
 def p_type_ident_with_sort(p):
     '''type_ident_with_sort : TYPE_IDENT COLON COLON sort
                             | TYPE_IDENT'''
-    p[0] = {
+    p[0] = ('type_ident_with_sort', {
             'ident': p[1],
             'sort': p[4] if len(p) == 5 else None,
-            }
+            })
+    add_position(p)
 
 
 def p_type_ident_with_sort_list(p):
@@ -486,6 +476,7 @@ def p_typespec_sorts(p):
         'typeargs_sorts': p[1],
         'name': p[2],
         })
+    add_position(p)
 
 
 #
@@ -495,7 +486,8 @@ def p_typespec_sorts(p):
 
 def p_sort(p):
     '''sort : ID'''
-    p[0] = ('sort', p[1])
+    p[0] = ('sort', {'sort': p[1]})
+    add_position(p)
 
 
 #
@@ -548,9 +540,8 @@ def p_var(p):
                 'names': names,
                 'type': var_type,
                 'mixfix': mixfix,
-                'line': p.lineno(1),
-                'column': get_column(source, p.lexpos(1)) if source else -1,
                 })
+    add_position(p)
 
 
 def p_props(p):
@@ -559,9 +550,8 @@ def p_props(p):
     p[0] = ('props', {
                 'thmdecl': p[1] if len(p) == 3 else None,
                 'props': p[1] if len(p) == 2 else p[2],
-                'line': p.lineno(1),
-                'column': get_column(source, p.lexpos(1)) if source else -1,
                 })
+    add_position(p)
 
 
 def p_prop_list_with_pat(p):
@@ -679,8 +669,8 @@ def p_thm(p):
     if isinstance(p[len(p)-1], list):
         attributes = p[len(p)-1]
         tail_offset += 1
-    if p[len(p)-1-tail_offset][0] == 'selection':
-        selection = p[len(p)-1-tail_offset]
+    if p[-1-tail_offset][0] == 'selection':
+        selection = p[-1-tail_offset]
         tail_offset += 1
     if p[1] == '[' and p[3] == ']':
         attributes = p[2]
@@ -696,9 +686,8 @@ def p_thm(p):
         'assms': assms,
         'attributes': attributes,
         'selection': selection,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
     })
+    add_position(p)
 
 
 def p_thms(p):
@@ -717,17 +706,16 @@ def p_thmbind(p):
                | attributes'''
     if p[len(p)-1][0] == 'attributes':
         attributes = p[len(p)-1]
-        name = ''.join(p[1:len(p)-1])
+        name = ''.join(p[1:-1])
     else:
         attributes = None
-        name = ''.join(p[1:len(p)])
+        name = ''.join(p[1:])
 
     p[0] = ('thmbind', {
         'name': name,
         'attributes': attributes,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_attributes(p):
@@ -735,9 +723,8 @@ def p_attributes(p):
                   | LEFT_BRACKET name_insts RIGHT_BRACKET'''
     p[0] = ('attributes', {
         'attributes': p[2],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_attributes_list(p):
@@ -1419,8 +1406,8 @@ def p_name_insts_list(p):
                        | ID EQUALS NAT
                        | SYM_IDENT EQUALS QUOTED_STRING
                        | SYM_IDENT EQUALS ID
-                       | ID EQUALS ID name_insts_list
-                       | ID EQUALS QUOTED_STRING name_insts_list'''
+                       | ID EQUALS ID AND name_insts_list
+                       | ID EQUALS QUOTED_STRING AND name_insts_list'''
     if len(p) == 4:
         p[0] = [('equals', p[1], p[3])]
     elif len(p) == 5:
@@ -1829,8 +1816,6 @@ def p_prems(p):
             'vars': p[2],
             'props': p[4],
             'for_fixes': p[5],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
     else:
         p[0] = ('prems', {
@@ -1838,9 +1823,8 @@ def p_prems(p):
             'vars': p[4],
             'props': p[6],
             'for_fixes': p[7],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
+    add_position(p)
 
 
 #
@@ -1867,9 +1851,8 @@ def p_let_statement(p):
     p[0] = ('let', {
         'terms': p[1],
         'term': p[3],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_term_list(p):
@@ -1923,18 +1906,15 @@ def p_proof_state(p):
             'kind': p[1] if p[1] in ['note', 'next'] else None,
             'step': None if p[1] in ['note', 'next'] else p[1],
             'proof': p[2],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
         })
     elif len(p) == 4:
         if p[1] == '{' and p[3] == '}':
             p[0] = ('proof_state', {
                 'proof_state': p[2],
-                'line': p.lineno(1),
-                'column': get_column(source, p.lexpos(1)) if source else -1,
             })
     else:
         p[0] = p[1]
+    add_position(p)
 
 
 def p_proof_state_statements(p):
@@ -1950,6 +1930,7 @@ def p_proof_state_statement(p):
         'thmdef': p[1] if len(p) == 2 else None,
         'thms': p[2] if len(p) == 3 else p[1],
     })
+    add_position(p)
 
 
 def p_proof_chain(p):
@@ -1964,18 +1945,16 @@ def p_note(p):
     '''note : NOTE thms_list_and_sep'''
     p[0] = ('note', {
         'thms': p[2],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_with(p):
     '''with : WITH thms_list_and_sep'''
     p[0] = ('with', {
         'thms': p[2],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 # TODO the first line is adhoc based on AFP, and doesn't match the grammar
@@ -2067,9 +2046,8 @@ def p_conclusion(p):
     p[0] = ('conclusion', {
         'shows': shows,
         'obtains': obtains,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_obtain_clauses(p):
@@ -2081,30 +2059,24 @@ def p_obtain_clauses(p):
         p[0] = [('obtain_clause', {
             'par_name': None,
             'obtain_case': p[1],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })]
     elif len(p) == 3:
         p[0] = [('obtain_clause', {
             'par_name': p[1],
             'obtain_case': p[2],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })]
     elif len(p) == 4:
         p[0] = [('obtain_clause', {
             'par_name': None,
             'obtain_case': p[1],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })] + p[3]
     else:
         p[0] = [('obtain_clause', {
             'par_name': p[1],
             'obtain_case': p[2],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })] + p[4]
+    add_position(p)
+
 
 def p_obtain_clause(p):
     '''obtain_clause : obtain_case
@@ -2112,9 +2084,8 @@ def p_obtain_clause(p):
     p[0] = ('obtain_clause', {
         'par_name': p[1] if len(p) == 3 else None,
         'obtain_case': p[1] if len(p) == 2 else p[2],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
     })
+    add_position(p)
 
 
 def p_obtain_case(p):
@@ -2123,9 +2094,8 @@ def p_obtain_case(p):
     p[0] = ('obtain_case', {
         'vars': p[1] if len(p) == 4 else None,
         'obtain_case_statements': p[2] if len(p) == 4 else p[1],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
     })
+    add_position(p)
 
 
 def p_obtain_case_statements(p):
@@ -2140,18 +2110,16 @@ def p_obtain_case_statement(p):
     p[0] = ('obtain_case_statement', {
         'thmdecl': p[1] if len(p) == 3 else None,
         'prop_list': p[len(p)-1],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
     })
+    add_position(p)
 
 
 def p_from(p):
     '''from : FROM thms_list_and_sep'''
     p[0] = ('from', {
         'thms': p[2],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_using(p):
@@ -2159,9 +2127,8 @@ def p_using(p):
              | UNFOLDING thms_list_and_sep'''
     p[0] = (p[1], {
         'thms': p[2],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_thms_list_and_sep(p):
@@ -2177,10 +2144,8 @@ def p_thms_list_and_sep(p):
 # no rail road diagram
 def p_assms(p):
     '''assms : ASSMS'''
-    p[0] = ('assms', {
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
+    p[0] = ('assms', {})
+    add_position(p)
 
 
 #
@@ -2218,9 +2183,8 @@ def p_goal(p):
     p[0] = (p[1], {
         'statement': p[len(p)-1],
         'target': target,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_have(p):
@@ -2229,9 +2193,8 @@ def p_have(p):
         'stmt': p[2],
         'cond_stmt': p[3],
         'for_fixes': p[4],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_show(p):
@@ -2240,9 +2203,8 @@ def p_show(p):
         'stmt': p[2],
         'cond_stmt': p[3],
         'for_fixes': p[4],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_hence(p):
@@ -2252,9 +2214,8 @@ def p_hence(p):
         'stmt': p[2],
         'cond_stmt': p[3],
         'for_fixes': p[4] if len(p) == 5 else None,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_thus(p):
@@ -2264,14 +2225,14 @@ def p_thus(p):
         'stmt': p[2],
         'cond_stmt': p[3],
         'for_fixes': p[4] if len(p) == 5 else None,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_stmt(p):
     '''stmt : props_list_and_sep'''
     p[0] = ('stmt', p[1])
+    add_position(p)
 
 
 def p_cond_stmt(p):
@@ -2282,6 +2243,7 @@ def p_cond_stmt(p):
         p[0] = []
     else:
         p[0] = ('if', p[2])
+        add_position(p)
 
 
 def p_short_statement(p):
@@ -2292,9 +2254,8 @@ def p_short_statement(p):
         'stmt': p[1],
         'if_stmt': p[3] if len(p) == 5 else None,
         'for_fixes': p[4] if len(p) == 5 else p[2],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
     })
+    add_position(p)
 
 
 def p_long_statement(p):
@@ -2305,6 +2266,7 @@ def p_long_statement(p):
         'context': p[2] if len(p) == 4 else None,
         'conclusion': p[3] if len(p) == 2 else None,
         })
+    add_position(p)
 
 
 def p_statement_context(p):
@@ -2329,9 +2291,8 @@ def p_statement_context(p):
     p[0] = ('statement_context', {
         'includes': includes,
         'context_elements': context_elements,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 #
@@ -2342,18 +2303,14 @@ def p_statement_context(p):
 # TODO complete
 def p_moreover(p):
     '''moreover : MOREOVER'''
-    p[0] = ('moreover', {
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
+    p[0] = ('moreover', {})
+    add_position(p)
 
 
 def p_ultimately(p):
     '''ultimately : ULTIMATELY'''
-    p[0] = ('ultimately', {
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
+    p[0] = ('ultimately', {})
+    add_position(p)
 
 
 #
@@ -2364,46 +2321,28 @@ def p_ultimately(p):
 # TODO missing induct, induction, and coinduct
 def p_method(p):
     '''method : cases
-              | method method_modifier
-              | method_name method_args
-              | LEFT_PAREN method_name method_args RIGHT_PAREN
               | LEFT_PAREN methods RIGHT_PAREN
-              | LEFT_PAREN cases RIGHT_PAREN
+              | method_name method_args method_modifier
+              | method_name method_args
+              | method_name method_modifier
+              | method method_modifier
               | method_name'''
-    if len(p) == 2:
-        p[0] = ('method', {
-            'name': p[1],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
+    if p[1][0] == 'cases':
+        p[0] = p[1]
+        return
+    method_name = None
+    methods = None
+    method_modifier = get_value_by_rule(p, 'method_modifier')
+    if p[1] == '(' and p[3] == ')':
+        methods = p[2]
+    elif isinstance(p[1], str):
+        method_name = p[1]
+    p[0] = ('method', {
+        'name': method_name,
+        'methods': methods,
+        'modifier': method_modifier,
         })
-    elif len(p) == 3:
-        p[0] = ('method', {
-            'name': p[1],
-            'modifier': p[2],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
-    elif len(p) == 4:
-        p[0] = ('method', {
-            'methods': p[2],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
-    elif len(p) == 5:
-        p[0] = ('method', {
-            'name': p[2],
-            'args': p[4],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
-    else:
-        p[0] = ('method', {
-            'name': p[2],
-            'args': p[3],
-            'modifier': p[5],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
+    add_position(p)
 
 
 def p_method_modifier(p):
@@ -2413,55 +2352,45 @@ def p_method_modifier(p):
     if len(p) == 2:
         p[0] = ('method_modifier', {
             'modifier': p[1],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
         })
     else:
         p[0] = ('method_modifier', {
             'modifier': 'times',
             'nat': p[2],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 # TODO keywords overlap: INDUCT
 # TODO this seems to overlap with p_method
 def p_methods(p):
-    '''methods : method
-               | method COMMA methods
+    '''methods : method COMMA methods
                | method SEMICOLON methods
-               | method PIPE methods'''
+               | method PIPE methods
+               | method'''
     if len(p) == 2:
         p[0] = p[1]
     elif len(p) == 3:
         p[0] = ('method', {
             'name': p[1],
             'args': p[2],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
     elif len(p) == 4:
         p[0] = ('methods', {
             'method': p[1],
             'sep': p[2],
             'methods': p[3],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
     elif len(p) == 5:
         p[0] = ('methods', {
             'method': ('method', {
                 'name': p[1],
                 'args': p[2],
-                'line': p.lineno(1),
-                'column': get_column(source, p.lexpos(1)) if source else -1,
                 }),
             'sep': p[3],
             'methods': p[4],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
+    add_position(p)
 
 
 def p_goal_spec(p):
@@ -2473,23 +2402,18 @@ def p_goal_spec(p):
         p[0] = ('goal_spec', {
             'from': p[2],
             'to': p[4],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
     elif len(p) == 5:
         p[0] = ('goal_spec', {
             'from': p[2],
             'to': None,
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
     elif len(p) == 4:
         p[0] = ('goal_spec', {
             'at': p[2],
             'bang': True,
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
+    add_position(p)
 
 
 #
@@ -2505,9 +2429,8 @@ def p_proof(p):
     p[0] = ('proof', {
         'method': p[len(p)-1] if len(p) > 2 else None,
         'ident': p[2] if len(p) == 4 else None,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_qed(p):
@@ -2515,9 +2438,8 @@ def p_qed(p):
            | QED'''
     p[0] = ('qed', {
         'method': p[2] if len(p) == 3 else None,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_by(p):
@@ -2530,9 +2452,8 @@ def p_by(p):
 
     p[0] = ('by', {
         'methods':  methods,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_terminal_proof_steps(p):
@@ -2556,9 +2477,8 @@ def p_case(p):
             | CASE LEFT_PAREN name_underscore_list RIGHT_PAREN'''
     p[0] = ('case', {
         'names': [p[2]] if len(p) == 3 else p[3],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_name_underscore_list(p):
@@ -2598,9 +2518,8 @@ def p_cases(p):
         'no_simp': no_simp,
         'insts': insts,
         'rule': rule,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_insts_list_and_sep(p):
@@ -2622,9 +2541,8 @@ def p_induct_block(p):
         'arbitary': p[4],
         'taking': p[5],
         'rule': p[6],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_no_simp_block(p):
@@ -2654,6 +2572,7 @@ def p_definst(p):
             'comparison': "equiv" if len(p) == 4 else "equals",
             'term': p[len(p)-1],
             })
+    add_position(p)
 
 
 def p_arbitary_block(p):
@@ -2666,9 +2585,8 @@ def p_arbitrary(p):
     '''arbitrary : ARBITRARY COLON term_list_and'''
     p[0] = ('arbitrary', {
         'terms': p[3],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_term_list_and(p):
@@ -2688,9 +2606,8 @@ def p_taking(p):
     else:
         p[0] = ('taking', {
             'insts': p[3],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
+    add_position(p)
 
 
 def p_rule_block(p):
@@ -2707,6 +2624,7 @@ def p_coinduct_block(p):
             'taking': p[3],
             'rule': p[4] if len(p) > 4 else None,
             })
+    add_position(p)
 
 
 #
@@ -2719,6 +2637,7 @@ def p_consider(p):
     p[0] = ('consider', {
         'clauses': p[2],
         })
+    add_position(p)
 
 
 # TODO complete
@@ -2731,8 +2650,6 @@ def p_obtain(p):
         p[0] = ('obtain', {
             'concl': p[2],
             'prems': p[3],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
     elif len(p) == 5:
         p[0] = ('obtain', {
@@ -2740,8 +2657,6 @@ def p_obtain(p):
             'concl': p[3] if p[2][0] == 'par_name' else p[2],
             'prems': p[4] if p[2][0] == 'par_name' else p[3],
             'for_fixes': None if p[2][0] == 'par_name' else p[4],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
     elif len(p) == 6:
         p[0] = ('obtain', {
@@ -2750,8 +2665,6 @@ def p_obtain(p):
             'concl': p[4] if p[3] == 'where' else p[3],
             'prems': p[5] if p[3] == 'where' else p[4],
             'for_fixes': None if p[3] == 'where' else p[5],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
     elif len(p) == 7:
         p[0] = ('obtain', {
@@ -2760,8 +2673,6 @@ def p_obtain(p):
             'concl': p[5] if p[4][0] == 'par_name' else p[4],
             'prems': p[6] if p[4][0] == 'par_name' else p[5],
             'for_fixes': None if p[4][0] == 'par_name' else p[6],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
     else:
         p[0] = ('obtain', {
@@ -2770,9 +2681,8 @@ def p_obtain(p):
             'concl': p[5],
             'prems': p[6],
             'for_fixes': p[7],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
             })
+    add_position(p)
 
 
 #
@@ -2787,6 +2697,7 @@ def p_apply_block(p):
         'end': p[1] == 'apply_end',
         'method': p[2],
         })
+    add_position(p)
 
 
 def p_supply_block(p):
@@ -2794,6 +2705,7 @@ def p_supply_block(p):
     p[0] = ('supply', {
         'statements': p[2],
         })
+    add_position(p)
 
 
 def p_defer_block(p):
@@ -2802,6 +2714,7 @@ def p_defer_block(p):
     p[0] = ('defer', {
         'number': p[2] if len(p) > 2 else None,
         })
+    add_position(p)
 
 
 def p_prefer_block(p):
@@ -2809,6 +2722,7 @@ def p_prefer_block(p):
     p[0] = ('prefer', {
         'number': p[2],
         })
+    add_position(p)
 
 
 #
@@ -2832,16 +2746,12 @@ def p_mixfix(p):
     if len(p) == 1:
         p[0] = ('mixfix', {
                     'type': p[1],
-                    'line': line,
-                    'column': column,
                     })
     elif p[2] in ['infix', 'infixl', 'infixr']:
         p[0] = ('mixfix', {
                     'type': p[2],
                     'template': p[3],
                     'nat': p[4],
-                    'line': line,
-                    'column': column,
                     })
     elif p[1] == 'binder':
         p[0] = ('mixfix', {
@@ -2849,8 +2759,6 @@ def p_mixfix(p):
                     'template': p[2],
                     'prio': p[3] if len(p) > 4 else None,
                     'nat': p[4] if len(p) > 4 else p[3],
-                    'line': line,
-                    'column': column,
                     })
     elif p[1] == '(':
         if len(p) == 4 and isinstance(p[3], int):
@@ -2870,9 +2778,8 @@ def p_mixfix(p):
             'prios': prios,
             'type': 'template',
             'template': p[2],
-            'line': line,
-            'column': column,
             })
+    add_position(p)
 
 
 def p_template(p):
@@ -2911,9 +2818,8 @@ def p_notation_block(p):
     p[0] = ('notations', {
         'mode': p[2] if len(p) == 3 else None,
         'notation_list': p[2],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
     })
+    add_position(p)
 
 
 def p_notation_list(p):
@@ -2930,9 +2836,8 @@ def p_notation(p):
     p[0] = ('notation', {
         'name': p[1],
         'mixfix': p[2],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
     })
+    add_position(p)
 
 
 # TODO
@@ -2940,6 +2845,7 @@ def p_mode(p):
     '''mode : ID
             | LEFT_PAREN INPUT RIGHT_PAREN'''
     p[0] = ('mode', p[1])
+    add_position(p)
 
 
 #
@@ -2964,9 +2870,8 @@ def p_inductive(p):
         'for_fixes': for_fixes,
         'multi_specs': multi_specs,
         'thms': thms,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 #
@@ -2977,22 +2882,25 @@ def p_inductive(p):
 def p_primrec(p):
     '''primrec : PRIMREC specification'''
     p[0] = ('primrec', p[2])
+    add_position(p)
 
 
 def p_fun_block(p):
     '''fun_block : FUN specification
-                 | FUNCTION specification
+                 | FUNCTION specification proof_prove
                  | FUN opts specification
-                 | FUNCTION opts specification'''
+                 | FUNCTION opts specification proof_prove'''
     p[0] = ('fun', {
         'specification': p[2] if len(p) == 3 else p[3],
         'opts': p[2] if len(p) == 4 else None,
         })
+    add_position(p)
 
 
 def p_opts(p):
     '''opts : LEFT_PAREN opt_list RIGHT_PAREN'''
     p[0] = ('opts', p[2])
+    add_position(p)
 
 
 def p_opt_list(p):
@@ -3031,6 +2939,7 @@ def p_datatype(p):
         "datatype": p[2],
         "constructors": p[4],
     }
+    add_position(p)
 
 
 def p_generic_type(p):
@@ -3042,6 +2951,7 @@ def p_generic_type(p):
         p[0] = {"type": p[1], "parameter": p[2]}
     else:
         p[0] = {"type": p[1]}
+    add_position(p)
 
 
 def p_constructors(p):
@@ -3068,6 +2978,7 @@ def p_constructor(p):
         p[0] = {"name": p[1], "type": p[2]}
     else:
         p[0] = {"name": p[1]}
+    add_position(p)
 
 
 #
@@ -3080,9 +2991,8 @@ def p_partial_function(p):
     p[0] = ('partial_function', {
         'name': p[3],
         'specification': p[5],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.6.2
@@ -3123,6 +3033,7 @@ def p_record(p):
         'type': type,
         'consts': consts,
         })
+    add_position(p)
 
 
 def p_constdecl_list(p):
@@ -3140,6 +3051,7 @@ def p_constdecl(p):
         'type': p[4],
         'mixfix': p[5] if len(p) == 6 and p[5][0] == 'mixfix' else None,
         })
+    add_position(p)
 
 
 #
@@ -3162,24 +3074,20 @@ def p_nitpick(p):
                | NITPICK LEFT_BRACKET args RIGHT_BRACKET
                | NITPICK NAT
                | NITPICK'''
+    args = None
+    nat = None
     if len(p) == 6:
-        p[0] = ('nitpick', {
-            'args': p[3],
-            'nat': p[5],
-            })
+        args = p[3]
+        nat = p[5]
     elif len(p) == 5:
-        p[0] = ('nitpick', {
-            'args': p[3],
-            })
+        args = p[3]
     elif len(p) == 3:
-        p[0] = ('nitpick', {
-            'nat': p[2],
-            })
-    else:
-        p[0] = ('nitpick', {})
-    p[0][1]['line'] = p.lineno(1)
-    p[0][1]['column'] = get_column(source, p.lexpos(1)) if source else -1
-
+        nat = p[2]
+    p[0] = ('nitpick', {
+        'args': args,
+        'nat': nat,
+        })
+    add_position(p)
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 13
@@ -3196,9 +3104,8 @@ def p_export_code(p):
         'open': is_open,
         'consts': consts,
         'export_targets': export_targts,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_const_expr_list(p):
@@ -3275,9 +3182,8 @@ def p_export_target(p):
         'file_prefix': file_prefix,
         'path': path,
         'args': args,
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_target(p):
@@ -3288,9 +3194,8 @@ def p_target(p):
               | EVAL'''
     p[0] = ('target', {
         'target': p[1],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_const_expr(p):
@@ -3299,9 +3204,8 @@ def p_const_expr(p):
                   | UNDERSCORE'''
     p[0] = ('const_expr', {
         'const_expr': p[1:],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_const(p):
@@ -3409,6 +3313,12 @@ def parse(input):
 #
 # Utilities
 #
+
+
+def add_position(p):
+    if isinstance(p[0], tuple) and isinstance(p[0][1], dict):
+        p[0][1]['line'] = p.lineno(1)
+        p[0][1]['column'] = get_column(source, p.lexpos(1)) if source else -1
 
 
 def get_value_by_rule(p, rule_name, default=None):
