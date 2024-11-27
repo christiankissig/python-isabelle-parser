@@ -47,11 +47,14 @@ def p_imports_opt(p):
 
 def p_import_list(p):
     '''import_list : QUOTED_STRING import_list
+                   | comment_block import_list
                    | ID import_list
                    | ID DOT ID import_list
                    | ID DOT ID
                    | ID
-                   | QUOTED_STRING'''
+                   | QUOTED_STRING
+                   | comment_block
+                   '''
     if len(p) == 2:
         p[0] = [p[1]]
     elif p[2] == '.':
@@ -85,12 +88,13 @@ def p_theory(p):
 def p_statement(p):
     '''statement : abbreviation
                  | axiomatization_block
+                 | comment_block
                  | consts
                  | context
-                 | comment_block
                  | datatype
                  | declare
                  | definition
+                 | doc_block
                  | export_code
                  | fun_block
                  | hide_declarations
@@ -100,38 +104,26 @@ def p_statement(p):
                  | locale_block
                  | marker
                  | method_block
+                 | ml
+                 | notation_block
                  | partial_function
                  | primrec
                  | record
-                 | notation_block
-                 | doc_block
+                 | syntax
+                 | translations
                  | type_synonym
-                 | typedecl'''
+                 | typedecl
+                 '''
     p[0] = p[1]
 
 
 def p_method_block(p):
-    '''method_block : METHOD method_name EQUALS instruction'''
+    '''method_block : METHOD name EQUALS instruction'''
     p[0] = ('method', {
         'name': p[2],
         'instruction': p[4],
     })
     add_position(p)
-
-
-# Lemma name
-def p_method_name(p):
-    '''method_name : ID
-                   | INDUCT
-                   | INDUCTION
-                   | RULE
-                   | ID DOT ID
-                   | ID DOT ID DOT ID
-                   | QUOTED_STRING'''
-    if len(p) == 2:
-        p[0] = p[1]
-    else:
-        p[0] = ".".join(p[1:])
 
 
 def p_instruction(p):
@@ -225,12 +217,16 @@ def p_method_arg(p):
                   | ID DOT ID LEFT_PAREN NAT COMMA NAT RIGHT_PAREN
                   | GREEK DOT ID LEFT_PAREN NAT RIGHT_PAREN
                   | ID DOT ID DOT ID LEFT_PAREN NAT RIGHT_PAREN
+                  | ID EQUALS QUOTED_STRING
+                  | ID EQUALS ID
                   | QUOTED_STRING
                   | attributes
                   | cases
+                  | IN
                   | ID
                   | STAR
-                  | NAT'''
+                  | NAT
+                  '''
     if len(p) == 2 and (p[1][0] == 'attributes' or p[1][0] == 'cases'):
         p[0] = p[1]
     else:
@@ -354,7 +350,9 @@ def p_embedded(p):
                 | FALSE
                 | VAR_CASE
                 | VAR_THESIS
-                | TYPE_IDENT'''
+                | TYPE_IDENT
+                | SYM_IDENT
+                '''
     p[0] = p[1]
 
 
@@ -378,10 +376,36 @@ def p_term(p):
     p[0] = ('term', term)
 
 
+def p_named_prop_list_and_sep(p):
+    '''named_prop_list_and_sep : named_prop AND named_prop_list_and_sep
+                               | named_prop'''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = [p[1]] + p[3]
+
+
+def p_named_prop(p):
+    '''named_prop : prop
+                  | ID COLON prop
+                  | NAT COLON prop
+                  | STAR COLON prop
+                  | STAR STAR COLON prop
+                  | STAR STAR STAR COLON prop'''
+    if p[len(p)-2] == ':':
+        id = "".join(p[1:len(p)-2])
+    else:
+        id = p[1]
+    p[0] = ('named_prop', {
+            'id': id,
+            'prop': p[len(p)-1],
+            })
+    add_position(p)
+
+
 def p_prop(p):
     '''prop : embedded'''
     p[0] = ('prop', {
-        'value': p[1] if len(p) > 2 else None,
         'prop': p[len(p)-1],
         })
     add_position(p)
@@ -556,36 +580,28 @@ def p_props(p):
 
 def p_prop_list_with_pat(p):
     '''prop_list_with_pat : prop prop_pat prop_list_with_pat
+                          | prop AND prop_list_with_pat
                           | prop prop_list_with_pat
                           | prop prop_pat
                           | prop'''
+    prop = p[1]
+    prop_pat = None
+    props = []
 
-    if len(p) == 2:
-        prop = p[1]
-        prop_pat = None
-        props = []
-    elif len(p) == 3:
-        if p[2][0] == 'prop_pat':
-            prop = p[1]
-            prop_pat = p[2]
-            props = []
-        else:
-            prop = p[1]
-            prop_pat = None
-            props = p[2]
-    else:
-        prop = p[1]
+    if len(p) > 2 and isinstance(p[2], list):
+        props = p[2]
+    elif len(p) > 2 and p[2][0] == 'prop_pat':
         prop_pat = p[2]
-        props = p[3]
+    elif len(p) > 3:
+        props = p[len(p)-1]
 
-    prop = ('prop', {
+    prop_with_pat = ('prop_with_pat', {
         'prop': prop,
         'prop_pat': prop_pat,
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
     })
-
-    p[0] = [prop] + props
+    p[0] = [prop_with_pat] + props
 
 
 def p_names(p):
@@ -743,9 +759,12 @@ def p_attributes_list(p):
 # TODO [OF assms(1)] should be handled separately
 def p_attribute(p):
     '''attribute : ID args
+                 | ID EQUALS ID
                  | ID ASSMS LEFT_PAREN NAT RIGHT_PAREN
                  | NAT'''
     args = None
+    if len(p) == 4 and p[2] == '=':
+        name = "".join(p[1:])
     if isinstance(p[2], list):
         args = p[2]
     if len(p) == 5:
@@ -1674,6 +1693,20 @@ def p_const_decl(p):
 
 
 #
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.10
+#
+
+
+def p_ml(p):
+    '''ml : ML CARTOUCHE'''
+    p[0] = ('ml', {
+        'command': p[2],
+        'line': p.lineno(1),
+        'column': get_column(source, p.lexpos(1)) if source else -1,
+        })
+
+
+#
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.12.2
 #
 
@@ -1779,37 +1812,9 @@ def p_assume(p):
 
 
 def p_concl(p):
-    '''concl : props
-             | NAT COLON props
-             | props AND concl
-             | NAT COLON props AND concl'''
-    if len(p) == 2:
-        p[0] = [('concl', {
-            'props': p[1],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-            })]
-    elif len(p) == 4:
-        if p[2] == ':':
-            p[0] = [('concl', {
-                'number': p[1],
-                'props': p[3],
-                'line': p.lineno(1),
-                'column': get_column(source, p.lexpos(1)) if source else -1,
-                })]
-        else:
-            p[0] = [('concl', {
-                'props': p[1],
-                'line': p.lineno(1),
-                'column': get_column(source, p.lexpos(1)) if source else -1,
-                })] + p[3]
-    else:
-        p[0] = [('concl', {
-            'number': p[1],
-            'props': p[3],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-            })] + p[5]
+    '''concl : named_prop_list_and_sep'''
+    p[0] = ('concl', {'props': p[1]})
+    add_position(p)
 
 
 # TODO should be props'_list in first line instead, but don't find definition
@@ -1819,8 +1824,9 @@ def p_prems(p):
              | IF prop_list DEFINE vars WHERE prop_list for_fixes
              | empty'''
     if len(p) == 2:
-        p[0] = ('prems', None)
-    elif len(p) == 6:
+        p[0] = None
+        return
+    if len(p) == 6:
         p[0] = ('prems', {
             'vars': p[2],
             'props': p[4],
@@ -2329,25 +2335,24 @@ def p_ultimately(p):
 
 # TODO missing induct, induction, and coinduct
 def p_method(p):
-    '''method : cases
+    '''method : LEFT_PAREN methods RIGHT_PAREN method_modifier
               | LEFT_PAREN methods RIGHT_PAREN
-              | method_name method_args method_modifier
-              | method_name method_args
-              | method_name method_modifier
-              | method method_modifier
-              | method_name'''
-    if p[1][0] == 'cases':
-        p[0] = p[1]
-        return
-    method_name = None
+              | name method_modifier
+              | name
+              | cases
+              '''
+    name = None
     methods = None
     method_modifier = get_value_by_rule(p, 'method_modifier')
+
+    if p[1][0] == 'cases':
+        methods = p[1]
     if p[1] == '(' and p[3] == ')':
         methods = p[2]
-    elif isinstance(p[1], str):
-        method_name = p[1]
+    else:
+        name = p[1]
     p[0] = ('method', {
-        'name': method_name,
+        'name': name,
         'methods': methods,
         'modifier': method_modifier,
         })
@@ -2371,34 +2376,45 @@ def p_method_modifier(p):
 
 
 # TODO keywords overlap: INDUCT
-# TODO this seems to overlap with p_method
 def p_methods(p):
     '''methods : method COMMA methods
                | method SEMICOLON methods
                | method PIPE methods
-               | method'''
-    if len(p) == 2:
-        p[0] = p[1]
-    elif len(p) == 3:
-        p[0] = ('method', {
+               | method
+               | name method_args COMMA methods
+               | INDUCT method_args COMMA methods
+               | RULE method_args COMMA methods
+               | name method_args SEMICOLON methods
+               | INDUCT method_args SEMICOLON methods
+               | RULE method_args SEMICOLON methods
+               | name method_args PIPE methods
+               | INDUCT method_args PIPE methods
+               | RULE method_args PIPE methods
+               | name method_args
+               | INDUCT method_args
+               | RULE method_args
+               '''
+    method = None
+    sep = None
+    methods = None
+    if p[1][0] == 'method':
+        method = p[1]
+        if len(p) > 2:
+            sep = p[2]
+            methods = p[3]
+    else:
+        method = ('method', {
             'name': p[1],
             'args': p[2],
             })
-    elif len(p) == 4:
-        p[0] = ('methods', {
-            'method': p[1],
-            'sep': p[2],
-            'methods': p[3],
-            })
-    elif len(p) == 5:
-        p[0] = ('methods', {
-            'method': ('method', {
-                'name': p[1],
-                'args': p[2],
-                }),
-            'sep': p[3],
-            'methods': p[4],
-            })
+        if len(p) == 5:
+            sep = p[3]
+            methods = p[4]
+    p[0] = ('methods', {
+        'method': method,
+        'sep': sep,
+        'methods': methods,
+        })
     add_position(p)
 
 
@@ -2823,10 +2839,13 @@ def p_nat_list(p):
 
 def p_notation_block(p):
     '''notation_block : NOTATION notation_list
-                      | NOTATION mode notation_list'''
-    p[0] = ('notations', {
-        'mode': p[2] if len(p) == 3 else None,
-        'notation_list': p[2],
+                      | NOTATION mode notation_list
+                      | NO_NOTATION notation_list
+                      | NO_NOTATION mode notation_list
+                      '''
+    p[0] = (p[1], {
+        'mode': p[2] if len(p) == 4 else None,
+        'notations': p[len(p)-1],
     })
     add_position(p)
 
@@ -2841,7 +2860,7 @@ def p_notation_list(p):
 
 
 def p_notation(p):
-    '''notation : ID mixfix'''
+    '''notation : name mixfix'''
     p[0] = ('notation', {
         'name': p[1],
         'mixfix': p[2],
@@ -2854,6 +2873,57 @@ def p_mode(p):
     '''mode : ID
             | LEFT_PAREN INPUT RIGHT_PAREN'''
     p[0] = ('mode', p[1])
+    add_position(p)
+
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 8.5.2
+#
+
+
+def p_syntax(p):
+    '''syntax : SYNTAX mode constdecl_list
+              | SYNTAX constdecl_list
+              | NO_SYNTAX mode constdecl_list
+              | NO_SYNTAX constdecl_list'''
+    p[0] = (p[1], {
+        'mode': p[2] if len(p) == 4 else None,
+        'const_decls': p[len(p)-1],
+    })
+    add_position(p)
+
+
+def p_translations(p):
+    '''translations : TRANSLATIONS transpat EQUALS EQUALS transpat
+                    | TRANSLATIONS transpat EQUALS GT transpat
+                    | TRANSLATIONS transpat LT EQUALS transpat
+                    | TRANSLATIONS transpat RIGHTLEFTHARPOONS GT transpat
+                    | NO_TRANSLATIONS transpat EQUALS EQUALS transpat
+                    | NO_TRANSLATIONS transpat EQUALS GT transpat
+                    | NO_TRANSLATIONS transpat LT EQUALS transpat
+                    | NO_TRANSLATIONS transpat RIGHTLEFTHARPOONS GT transpat
+                    '''
+    p[0] = (p[1], {
+        'operand1': p[2],
+        'operand2': p[len(p)-1],
+        'comparison': "".join(p[3:len(p)-1]),
+        })
+    add_position(p)
+
+
+def p_transpat(p):
+    '''transpat : QUOTED_STRING
+                | LEFT_PAREN name RIGHT_PAREN QUOTED_STRING'''
+    if len(p) == 2:
+        name = None
+        string = p[1]
+    else:
+        name = p[2]
+        string = p[4]
+    p[0] = ('transpat', {
+        'name': name,
+        'string': string,
+    })
     add_position(p)
 
 

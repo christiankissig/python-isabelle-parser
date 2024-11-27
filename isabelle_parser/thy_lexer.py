@@ -20,6 +20,7 @@ def t_CARTOUCHE_START(t):
 def t_cartouche_TEXT(t):
     r'[^\\]+'
     print('cartouche text', t.value)
+    t.lexer.lineno += t.value.count('\n')
     t.lexer.cartouche_content += t.value
 
 
@@ -62,6 +63,8 @@ t_cartouche_ignore = ' \t'
 tokens = (
     'OUTER_COMMENT',
     'CARTOUCHE',
+
+    'RIGHTLEFTHARPOONS',
 
     'VAR_CASE',
     'VAR_THESIS',
@@ -147,6 +150,7 @@ tokens = (
     'LT',
     'MARKER',
     'METHOD',
+    'ML',
     'MODULE_NAME',
     'MONOS',
     'MOREOVER',
@@ -156,7 +160,10 @@ tokens = (
     'NOTATION',
     'NOTE',
     'NOTES',
+    'NO_NOTATION',
     'NO_SIMP',
+    'NO_SYNTAX',
+    'NO_TRANSLATIONS',
     'OBTAIN',
     'OBTAINS',
     'OOPS',
@@ -195,12 +202,14 @@ tokens = (
     'SUBSECTION',
     'SUBSUBSECTION',
     'SUPPLY',
+    'SYNTAX',
     'TAKING',
     'TEXT',
     'THEN',
     'THEOREM',
     'THEORY',
     'THUS',
+    'TRANSLATIONS',
     'TRUE',
     'TXT',
     'TYPE',
@@ -308,10 +317,18 @@ def t_GREEK(t):
     return t
 
 
+def t_RIGHTLEFTHARPOONS(t):
+    r'\\<rightleftharpoons>'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
 reserved = {
         'Eval': 'EVAL',
         'False': 'FALSE',
         'Haskell': 'HASKELL',
+        'ML': 'ML',
         'OCaml': 'OCAML',
         'SML': 'SML',
         'Scala': 'SCALA',
@@ -385,7 +402,10 @@ reserved = {
         'moreover': 'MOREOVER',
         'next': 'NEXT',
         'nitpick': 'NITPICK',
+        'no_notation': 'NO_NOTATION',
         'no_simp': 'NO_SIMP',
+        'no_syntax': 'NO_SYNTAX',
+        'no_translations': 'NO_TRANSLATIONS',
         'notation': 'NOTATION',
         'note': 'NOTE',
         'notes': 'NOTES',
@@ -418,12 +438,14 @@ reserved = {
         'subsection': 'SUBSECTION',
         'subsubsection': 'SUBSUBSECTION',
         'supply': 'SUPPLY',
+        'syntax': 'SYNTAX',
         'taking': 'TAKING',
         'text': 'TEXT',
         'then': 'THEN',
         'theorem': 'THEOREM',
         'theory': 'THEORY',
         'thus': 'THUS',
+        'translations': 'TRANSLATIONS',
         'txt': 'TXT',
         'type': 'TYPE',
         'type_synonym': 'TYPE_SYNONYM',
