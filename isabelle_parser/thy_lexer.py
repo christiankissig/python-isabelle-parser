@@ -91,6 +91,7 @@ tokens = (
     'CHAPTER',
     'COINDUCT',
     'COLON',
+    'COLONCOLON',
     'COMMA',
     'COMMENT_CARTOUCHE',
     'CONSIDER',
@@ -570,6 +571,13 @@ t_PLUS = r'\+'
 t_QUESTION_MARK = r'\?'
 t_SEMICOLON = r';'
 t_UNDERSCORE = r'_'
+
+
+def t_COLONCOLON(t):
+    r'::'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
 
 
 def t_LEFT_PAREN(t):

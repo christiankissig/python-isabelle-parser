@@ -387,6 +387,7 @@ def p_named_prop_list_and_sep(p):
 
 def p_named_prop(p):
     '''named_prop : prop
+                  | prop_list
                   | ID COLON prop
                   | NAT COLON prop
                   | STAR COLON prop
@@ -439,7 +440,7 @@ def p_typespec(p):
 def p_typearg(p):
     '''typearg : ID
                | TYPE_IDENT
-               | ID COLON COLON ID'''
+               | ID COLONCOLON ID'''
     p[0] = ('typearg', {
                 'name': p[1],
                 'sort': p[4] if len(p) > 2 else None,
@@ -479,7 +480,7 @@ def p_typeargs_sorts(p):
 
 
 def p_type_ident_with_sort(p):
-    '''type_ident_with_sort : TYPE_IDENT COLON COLON sort
+    '''type_ident_with_sort : TYPE_IDENT COLONCOLON sort
                             | TYPE_IDENT'''
     p[0] = ('type_ident_with_sort', {
             'ident': p[1],
@@ -531,9 +532,9 @@ def p_vars(p):
 
 
 def p_var(p):
-    '''var : name COLON COLON type
-           | names COLON COLON type
-           | name COLON COLON type mixfix
+    '''var : name COLONCOLON type
+           | names COLONCOLON type
+           | name COLONCOLON type mixfix
            | name mixfix
            | names
            | name'''
@@ -1176,11 +1177,11 @@ def p_decl(p):
     '''decl : ID WHERE
             | ID WHERE comment_block
             | ID mixfix WHERE
-            | ID COLON COLON ID WHERE
-            | ID COLON COLON QUOTED_STRING comment_block WHERE
-            | ID COLON COLON QUOTED_STRING WHERE
-            | ID COLON COLON QUOTED_STRING mixfix WHERE
-            | ID COLON COLON ID mixfix WHERE'''
+            | ID COLONCOLON ID WHERE
+            | ID COLONCOLON QUOTED_STRING comment_block WHERE
+            | ID COLONCOLON QUOTED_STRING WHERE
+            | ID COLONCOLON QUOTED_STRING mixfix WHERE
+            | ID COLONCOLON ID mixfix WHERE'''
     name = p[1]
     type = None
     mixfix = None
@@ -1430,12 +1431,16 @@ def p_name_insts(p):
 
 def p_name_insts_list(p):
     '''name_insts_list : ID EQUALS ID
-                       | ID EQUALS QUOTED_STRING
-                       | ID EQUALS NAT
-                       | SYM_IDENT EQUALS QUOTED_STRING
-                       | SYM_IDENT EQUALS ID
                        | ID EQUALS ID AND name_insts_list
-                       | ID EQUALS QUOTED_STRING AND name_insts_list'''
+                       | ID EQUALS NAT
+                       | ID EQUALS QUOTED_STRING
+                       | ID EQUALS QUOTED_STRING AND name_insts_list
+                       | ID EQUALS SYM_IDENT
+                       | ID EQUALS SYM_IDENT AND name_insts_list
+                       | SYM_IDENT EQUALS ID
+                       | SYM_IDENT EQUALS ID AND name_insts_list
+                       | SYM_IDENT EQUALS QUOTED_STRING
+                       '''
     if len(p) == 4:
         p[0] = [('equals', p[1], p[3])]
     elif len(p) == 5:
@@ -1530,9 +1535,9 @@ def p_context_elem(p):
 
 
 def p_name_type_list(p):
-    '''name_type_list : ID COLON COLON ID
-                      | ID COLON COLON ID DOT ID
-                      | ID COLON COLON ID AND name_type_list'''
+    '''name_type_list : ID COLONCOLON ID
+                      | ID COLONCOLON ID DOT ID
+                      | ID COLONCOLON ID AND name_type_list'''
 
     name = p[1]
     if len(p) == 4:
@@ -1675,8 +1680,8 @@ def p_const_decls(p):
         p[0] = [p[1]] + p[2]
 
 def p_const_decl(p):
-    '''const_decl : name COLON COLON type
-                  | name COLON COLON type mixfix'''
+    '''const_decl : name COLONCOLON type
+                  | name COLONCOLON type mixfix'''
     if len(p) == 6:
         mixfix = p[5]
     else:
@@ -2383,15 +2388,19 @@ def p_methods(p):
                | method
                | name method_args COMMA methods
                | INDUCT method_args COMMA methods
+               | INDUCTION method_args COMMA methods
                | RULE method_args COMMA methods
                | name method_args SEMICOLON methods
                | INDUCT method_args SEMICOLON methods
+               | INDUCTION method_args SEMICOLON methods
                | RULE method_args SEMICOLON methods
                | name method_args PIPE methods
                | INDUCT method_args PIPE methods
+               | INDUCTION method_args PIPE methods
                | RULE method_args PIPE methods
                | name method_args
                | INDUCT method_args
+               | INDUCTION method_args
                | RULE method_args
                '''
     method = None
@@ -3122,9 +3131,9 @@ def p_constdecl_list(p):
 
 
 def p_constdecl(p):
-    '''constdecl : name COLON COLON type
-                 | name COLON COLON type comment_block
-                 | name COLON COLON type mixfix'''
+    '''constdecl : name COLONCOLON type
+                 | name COLONCOLON type comment_block
+                 | name COLONCOLON type mixfix'''
     p[0] = ('constdecl', {
         'name': p[1],
         'type': p[4],
