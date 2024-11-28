@@ -92,6 +92,7 @@ def p_statement(p):
                  | consts
                  | context
                  | datatype
+                 | declaration
                  | declare
                  | definition
                  | doc_block
@@ -315,12 +316,11 @@ def p_subgoal(p):
 
 def p_name(p):
     '''name : ID
-            | ID DOT ID
+            | ID DOT name
             | ID DOT
             | ID DOT CASES
-            | ID DOT ID DOT ID
             | ID SUBSCRIPT NAT
-            | ID SUBSCRIPT ID
+            | ID SUBSCRIPT name
             | QUOTED_STRING
             | GREEK
             | NAT'''
@@ -715,18 +715,17 @@ def p_thms(p):
 
 
 def p_thmbind(p):
-    '''thmbind : ID
-               | NAT
-               | STAR
-               | ID SUBSCRIPT ID
-               | ID attributes
+    '''thmbind : name attributes
+               | name
                | attributes'''
-    if p[len(p)-1][0] == 'attributes':
-        attributes = p[len(p)-1]
-        name = ''.join(p[1:-1])
+    name = None
+    attributes = None
+    if p[1][0] == 'attributes':
+        attributes = p[1]
     else:
-        attributes = None
-        name = ''.join(p[1:])
+        name = p[1]
+    if len(p) > 2 and p[2][0] == 'attributes':
+        attributes = p[2]
 
     p[0] = ('thmbind', {
         'name': name,
@@ -759,17 +758,18 @@ def p_attributes_list(p):
 
 # TODO [OF assms(1)] should be handled separately
 def p_attribute(p):
-    '''attribute : ID args
+    '''attribute : name args
+                 | name QUESTION_MARK
                  | ID EQUALS ID
                  | ID ASSMS LEFT_PAREN NAT RIGHT_PAREN
                  | NAT'''
+    name = None
     args = None
-    if len(p) == 4 and p[2] == '=':
-        name = "".join(p[1:])
-    if isinstance(p[2], list):
-        args = p[2]
-    if len(p) == 5:
-        name = ''.join(p[1:])
+    if len(p) > 2:
+        if isinstance(p[2], list):
+            args = p[2]
+        else:
+            name = "".join(p[1:])
     else:
         name = p[1]
 
@@ -1336,6 +1336,21 @@ def p_axiomatization_header(p):
 #
 
 
+def p_declaration(p):
+    '''declaration : DECLARATION LEFT_PAREN PERVASIVE RIGHT_PAREN CARTOUCHE
+                   | DECLARATION CARTOUCHE
+                   | SYNTAX_DECLARATION LEFT_PAREN PERVASIVE RIGHT_PAREN CARTOUCHE
+                   | SYNTAX_DECLARATION CARTOUCHE
+                   '''
+    text = p[len(p)-1]
+    pervasive = len(p) == 6
+    p[0] = (p[1], {
+        'pervasive': pervasive,
+        'text': text,
+        })
+    add_position(p)
+
+
 def p_declare(p):
     '''declare : DECLARE thms_list_and_sep'''
     p[0] = ('declare', {
@@ -1371,9 +1386,9 @@ def p_instance_list(p):
 
 
 def p_instance(p):
-    '''instance : ID pos_insts
-                | ID name_insts
-                | ID
+    '''instance : name pos_insts
+                | name name_insts
+                | name
                 | qualifier COLON ID pos_insts
                 | qualifier COLON ID name_insts'''
     if len(p) == 2:
@@ -1453,48 +1468,35 @@ def p_name_insts_list(p):
 
 
 def p_locale_block(p):
-    '''locale_block : LOCALE ID comment_block BEGIN content END
-                    | LOCALE ID BEGIN content END
-                    | LOCALE ID EQUALS locale BEGIN content END
-                    | LOCALE ID EQUALS locale
-                    | LOCALE ID'''
-    global source
-    if len(p) == 3:
-        p[0] = ('locale', {
-            'name': p[2],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
-    elif len(p) == 6:
-        p[0] = ('locale', {
-            'name': p[2],
-            'locale_theory': p[4],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
+    '''locale_block : LOCALE name comment_block BEGIN content END
+                    | LOCALE name BEGIN content END
+                    | LOCALE name EQUALS locale BEGIN content END
+                    | LOCALE name EQUALS locale
+                    | LOCALE name'''
+    name = p[2]
+    locale = None
+    comment = None
+    local_theory = None
+
+    if len(p) == 6:
+        local_theory = p[4]
     elif len(p) == 7:
-        p[0] = ('locale', {
-            'name': p[2],
-            'comment': p[3],
-            'locale_theory': p[5],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
+        comment = p[3]
+        local_theory = p[5]
     elif len(p) == 5:
-        p[0] = ('locale', {
-            'name': p[2],
-            'locale': p[4],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-        })
+        locale = p[4]
     elif len(p) == 8:
-        p[0] = ('locale', {
-            'name': p[2],
-            'locale': p[4],
-            'locale_theory': p[6],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
-            })
+        locale = p[4]
+        local_theory = p[6]
+
+    p[0] = ('locale', {
+        'name': name,
+        'locale': locale,
+        'local_theory': local_theory,
+        'comment': comment,
+    })
+
+    add_position(p)
 
 
 # flattened locale_expr to avoid parsing conflict between instance_list
@@ -1702,9 +1704,10 @@ def p_const_decl(p):
 #
 
 
-def p_ml(p):
-    '''ml : ML CARTOUCHE'''
-    p[0] = ('ml', {
+def p_ml_code(p):
+    '''ml : ML CARTOUCHE
+          | SETUP CARTOUCHE'''
+    p[0] = (p[1], {
         'command': p[2],
         'line': p.lineno(1),
         'column': get_column(source, p.lexpos(1)) if source else -1,
