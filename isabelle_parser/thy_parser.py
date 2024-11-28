@@ -885,8 +885,6 @@ def p_structured_spec(p):
             'prop': p[1],
             'spec_prems': p[2],
             'for_fixes': [],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
         })
     elif len(p) == 4:
         p[0] = ('structured_spec', {
@@ -894,8 +892,6 @@ def p_structured_spec(p):
             'prop': p[1],
             'spec_prems': p[2],
             'for_fixes': p[3],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
         })
     else:
         p[0] = ('structured_spec', {
@@ -903,9 +899,8 @@ def p_structured_spec(p):
             'prop': p[2],
             'spec_prems': p[3],
             'for_fixes': p[4],
-            'line': p.lineno(1),
-            'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 def p_spec_prems(p):
@@ -926,13 +921,19 @@ def p_prop_list(p):
 
 def p_specification(p):
     '''specification : vars WHERE multi_specs
-                     | vars WHERE comment_block multi_specs'''
+                     | vars WHERE comment_block multi_specs
+                     | vars comment_block WHERE multi_specs'''
+    comment = None
+    if len(p) > 2 and p[2][0] == 'comment':
+        comment = p[2]
+    elif len(p) > 3 and p[3][0] == 'comment':
+        comment = p[3]
     p[0] = ('specification', {
         'vars': p[1],
         'multi_specs': p[len(p)-1],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
+        'comment': comment,
         })
+    add_position(p)
 
 
 # TODO p75
@@ -940,9 +941,8 @@ def p_antiquotation_body(p):
     '''antiquotation_body : ID'''
     p[0] = ('antiquotation_body', {
         'type': p[1],
-        'line': p.lineno(1),
-        'column': get_column(source, p.lexpos(1)) if source else -1,
         })
+    add_position(p)
 
 
 #
@@ -3060,6 +3060,8 @@ def p_constructor(p):
     """
     constructor : ID TYPE_IDENT comment_block
                 | ID TYPE_IDENT
+                | ID ID comment_block
+                | ID ID
                 | ID QUOTED_STRING comment_block
                 | ID QUOTED_STRING
                 | ID comment_block
