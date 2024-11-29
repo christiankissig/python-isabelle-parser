@@ -65,6 +65,8 @@ tokens = (
     'CARTOUCHE',
 
     'RIGHTLEFTHARPOONS',
+    'INFINITY',
+    'SUBSETEQ',
 
     'VAR_CASE',
     'VAR_THESIS',
@@ -115,6 +117,7 @@ tokens = (
     'FALSE',
     'FIX',
     'FIXES',
+    'FOLDED',
     'FOR',
     'FROM',
     'FUN',
@@ -139,6 +142,8 @@ tokens = (
     'INFIXL',
     'INFIXR',
     'INPUT',
+    'INSTANCE',
+    'INSTANTIATION',
     'INTERPRET',
     'INTERPRETATION',
     'IS',
@@ -221,6 +226,7 @@ tokens = (
     'TYPEDECL',
     'TYPE_SYNONYM',
     'ULTIMATELY',
+    'UNFOLDED',
     'UNFOLDING',
     'USING',
     'WHEN',
@@ -329,6 +335,20 @@ def t_RIGHTLEFTHARPOONS(t):
     return t
 
 
+def t_INFINITY(t):
+    r'\\<infinity>'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
+def t_SUBSETEQ(t):
+    r'\\<subseteq>'
+    t.lineno = t.lexer.lineno
+    t.column = find_column(t.lexer.lexdata, t)
+    return t
+
+
 reserved = {
         'Eval': 'EVAL',
         'False': 'FALSE',
@@ -373,6 +393,7 @@ reserved = {
         'file_prefix': 'FILE_PREFIX',
         'fix': 'FIX',
         'fixes': 'FIXES',
+        'folded': 'FOLDED',
         'for': 'FOR',
         'from': 'FROM',
         'fun': 'FUN',
@@ -395,6 +416,8 @@ reserved = {
         'infixl': 'INFIXL',
         'infixr': 'INFIXR',
         'input': 'INPUT',
+        'instance': 'INSTANCE',
+        'instantiation': 'INSTANTIATION',
         'interpret': 'INTERPRET',
         'interpretation': 'INTERPRETATION',
         'is': 'IS',
@@ -460,6 +483,7 @@ reserved = {
         'type_synonym': 'TYPE_SYNONYM',
         'typedecl': 'TYPEDECL',
         'ultimately': 'ULTIMATELY',
+        'unfolded': 'UNFOLDED',
         'unfolding': 'UNFOLDING',
         'using': 'USING',
         'when': 'WHEN',
