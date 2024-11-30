@@ -173,12 +173,6 @@ def p_single_instruction(p):
     add_position(p)
 
 
-def p_fixes(p):
-    '''fixes : FIXES var_list_nosep
-             | empty'''
-    p[0] = p[2] if len(p) == 3 else []
-
-
 def p_var_list_nosep(p):
     '''var_list_nosep : var var_list_nosep
                       | var'''
@@ -186,18 +180,6 @@ def p_var_list_nosep(p):
         p[0] = [p[1]]
     else:
         p[0] = [p[1]] + p[2]
-
-
-def p_assumes(p):
-    '''assumes : ASSUME assumption
-               | ASSUMES assumptions_list
-               | empty'''
-    if len(p) == 2:
-        p[0] = []
-    elif isinstance(p[2], list):
-        p[0] = ('assumes', p[2])
-    else:
-        p[0] = ('assumes', [p[2]])
 
 
 def p_assumptions_list(p):
@@ -222,14 +204,6 @@ def p_assumption(p):
             })
 
 
-def p_shows(p):
-    '''shows : SHOWS prop_list_with_pat'''
-    p[0] = ('shows', {
-        'props': p[2],
-        })
-    add_position(p)
-
-
 def p_subgoal(p):
     '''subgoal : SUBGOAL name COLON
                | SUBGOAL
@@ -247,17 +221,24 @@ def p_subgoal(p):
 
 def p_name(p):
     '''name : ID
-            | ID DOT name
+            | CASE
+            | CASES
+            | GREEK
             | ID DOT
             | ID DOT CASES
+            | ID DOT name
             | ID SUBSCRIPT NAT
             | ID SUBSCRIPT name
-            | QUOTED_STRING
-            | GREEK
-            | PRED
+            | IN
             | INDUCT
-            | CASES
-            | NAT'''
+            | NAT
+            | PRED
+            | QUOTED_STRING
+            | STAR
+            | STAR STAR
+            | SYM_IDENT
+            | WHERE
+            '''
     p[0] = ''.join(p[1:])
 
 
@@ -603,6 +584,7 @@ def p_method_arg_atom(p):
                        | NAT
                        | CARTOUCHE
                        | ASSMS
+                       | STAR
                        | name COLON
                        | ARBITRARY COLON
                        | RULE COLON
@@ -634,6 +616,7 @@ def p_method_arg(p):
 def p_method_args(p):
     '''method_args : method_arg method_args
                    | method_arg AND method_args
+                   | method_arg COMMA method_args
                    | method_arg
                    | empty'''
     if len(p) == 2 and not p[1]:
@@ -1528,7 +1511,7 @@ def p_context_elem_list(p):
 def p_context_elem(p):
     '''context_elem : FIXES vars
                     | CONSTRAINS name_type_list
-                    | ASSUMES props_list_and_sep
+                    | ASSUMES named_prop_list_and_sep
                     | DEFINES defines_list
                     | NOTES notes_list'''
     p[0] = ('context_elem', {
@@ -2141,16 +2124,6 @@ def p_obtain_clauses(p):
     add_position(p)
 
 
-def p_obtain_clause(p):
-    '''obtain_clause : obtain_case
-                     | par_name obtain_case'''
-    p[0] = ('obtain_clause', {
-        'par_name': p[1] if len(p) == 3 else None,
-        'obtain_case': p[1] if len(p) == 2 else p[2],
-    })
-    add_position(p)
-
-
 def p_obtain_case(p):
     '''obtain_case : obtain_case_statements
                    | vars WHERE obtain_case_statements'''
@@ -2251,7 +2224,7 @@ def p_goal(p):
 
 
 def p_have(p):
-    '''have : HAVE stmt cond_stmt for_fixes'''
+    '''have : HAVE short_stmt cond_stmt for_fixes'''
     p[0] = ('have', {
         'stmt': p[2],
         'cond_stmt': p[3],
@@ -2292,8 +2265,14 @@ def p_thus(p):
     add_position(p)
 
 
+def p_short_stmt(p):
+    '''short_stmt : props_list_and_sep'''
+    p[0] = ('stmt', p[1])
+    add_position(p)
+
+
 def p_stmt(p):
-    '''stmt : props_list_and_sep'''
+    '''stmt : named_prop_list_and_sep'''
     p[0] = ('stmt', p[1])
     add_position(p)
 
@@ -2309,9 +2288,10 @@ def p_cond_stmt(p):
         add_position(p)
 
 
+# short_stmt (over stmt) disambiguates parsing with lemma name in long_statement
 def p_short_statement(p):
-    '''short_statement : stmt for_fixes
-                       | stmt IF stmt for_fixes'''
+    '''short_statement : short_stmt for_fixes
+                       | short_stmt IF short_stmt for_fixes'''
     p[0] = ('short_statement', {
 
         'stmt': p[1],
@@ -2470,29 +2450,6 @@ def p_methods(p):
     add_position(p)
 
 
-def p_goal_spec(p):
-    '''goal_spec : LEFT_BRACKET NAT DASH NAT RIGHT_BRACKET
-                 | LEFT_BRACKET NAT DASH RIGHT_BRACKET
-                 | LEFT_BRACKET NAT RIGHT_BRACKET
-                 | LEFT_BRACKET BANG RIGHT_BRACKET'''
-    if len(p) == 6:
-        p[0] = ('goal_spec', {
-            'from': p[2],
-            'to': p[4],
-            })
-    elif len(p) == 5:
-        p[0] = ('goal_spec', {
-            'from': p[2],
-            'to': None,
-            })
-    elif len(p) == 4:
-        p[0] = ('goal_spec', {
-            'at': p[2],
-            'bang': True,
-            })
-    add_position(p)
-
-
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.4.2
 #
@@ -2559,10 +2516,10 @@ def p_case(p):
 
 
 def p_name_underscore_list(p):
-    '''name_underscore_list : ID
+    '''name_underscore_list : name
                             | NAT
                             | UNDERSCORE
-                            | ID name_underscore_list
+                            | name name_underscore_list
                             | NAT name_underscore_list
                             | UNDERSCORE name_underscore_list'''
     p[0] = [p[1]] + p[2] if len(p) == 3 else [p[1]]
@@ -2607,19 +2564,6 @@ def p_insts_list_and_sep(p):
         p[0] = [p[1]] if p[1] else []
     else:
         p[0] = [p[1]] + p[3]
-
-
-def p_induct_block(p):
-    '''induct_block : INDUCT no_simp_block definsts_list_block arbitary_block taking rule_block
-                    | INDUCTION no_simp_block definsts_list_block arbitary_block taking rule_block'''
-    p[0] = (p[1], {
-        'no_simp': p[2],
-        'definsts_list': p[3],
-        'arbitary': p[4],
-        'taking': p[5],
-        'rule': p[6],
-        })
-    add_position(p)
 
 
 def p_no_simp_block(p):
@@ -2691,17 +2635,6 @@ def p_rule_block(p):
     '''rule_block : empty
                   | rule'''
     p[0] = p[1]
-
-
-def p_coinduct_block(p):
-    '''coinduct_block : COINDUCT insts taking
-                      | COINDUCT insts taking rule'''
-    p[0] = ('coinduct', {
-            'insts': p[2],
-            'taking': p[3],
-            'rule': p[4] if len(p) > 4 else None,
-            })
-    add_position(p)
 
 
 #
@@ -3362,27 +3295,6 @@ def p_const(p):
 def p_path(p):
     '''path : embedded'''
     p[0] = p[1]
-
-
-#
-# Should be lexer rules, but overlap
-#
-
-
-# symbol = r'[!#$%&*+\-/<=>?@^_`|~]'
-def p_symbol(p):
-    '''symbol : BANG
-              | STAR
-              | BACKSLASH
-              | LT
-              | HAT
-              | GT
-              | PLUS'''
-    p[0] = p[1]
-
-# t_SYM_FLOAT = r'(\d+(\.\d+)?|\.\d+)'
-# t_DIGIT = r'[0-9]'
-# t_QUASILETTER = r'[a-zA-Z0-9._]'
 
 
 def p_empty(_):
