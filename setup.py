@@ -32,7 +32,7 @@ setup(
     ],
     python_requires='>=3.6',
     install_requires=[
-        "ply>=3.0",
+        "lark>=1.2.2",
     ],
     extras_require=extras_require,
     entry_points={

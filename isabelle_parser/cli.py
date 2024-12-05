@@ -2,7 +2,6 @@ import argparse
 import sys
 
 from .error import ParsingError
-from .thy_lexer import lexer
 from .thy_parser import parse
 
 
@@ -36,8 +35,9 @@ def main():
 
     # Lex and parse
     try:
-        lexer.input(data)
         result = parse(data)
+        if not result:
+            raise ParsingError("No result returned.")
     except ParsingError as e:
         print("Parsing failed due to errors.")
         print(f"Error: {e.with_source_code(data)}")
@@ -46,7 +46,7 @@ def main():
     # Print result
     if result:
         print("Parsing successful.")
-        print("Parsed structure:", result)
+        print("Parsed structure:", result.pretty())
     else:
         print("Parsing failed due to errors.")
 

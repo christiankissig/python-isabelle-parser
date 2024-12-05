@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from isabelle_parser import parse, ParsingError, reset_lexer, thy_lexer
+from isabelle_parser import parse, ParsingError
 
 
 @pytest.mark.parametrize("name,test_input, expected", [
@@ -146,9 +146,11 @@ end""",
 def test_parse(name, test_input, expected):
     source_code = test_input.strip()
     try:
-        reset_lexer(thy_lexer)
         ast = parse(source_code)
-        print(json.dumps(ast, indent=2))
+        if ast:
+            print(ast.pretty())
+        else:
+            print("Parsing failed.")
         assert expected, f"{name}: Expected {expected}, got True"
         assert ast is not None, f"{name}: Expected AST, got None"
     except ParsingError as e:

@@ -254,7 +254,6 @@ tokens = (
     'FILE_PREFIX',
 
     'NAT',
-    'QUOTED_STRING',
     'ID',
     'LONG_IDENT',
     'SHORT_IDENT',
@@ -524,14 +523,6 @@ def t_SYM_IDENT(t):
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[a-zA-Z0-9_]*)?'
     t.type = reserved.get(t.value, 'ID')    # Check for reserved words
-    t.lineno = t.lexer.lineno
-    t.column = find_column(t.lexer.lexdata, t)
-    return t
-
-
-def t_QUOTED_STRING(t):
-    r'"[^"]*"'
-    t.lexer.lineno += t.value.count('\n')
     t.lineno = t.lexer.lineno
     t.column = find_column(t.lexer.lexdata, t)
     return t
