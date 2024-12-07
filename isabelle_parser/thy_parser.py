@@ -19,8 +19,47 @@ QUOTED_STRING: "\"" /[\s\S]*?/ "\""
 CARTOUCHE_OPEN: "\\<open>"
 CARTOUCHE_TEXT: /[^\\]+/
 CARTOUCHE_CLOSE: "\\<close>"
+CARTOUCHE_SYMBOLS: "\\<And>"
+                 | "\\#"
+                 | "\\<Longrightarrow>"
+                 | "\\<^bsub>"
+                 | "\\<^cite>"
+                 | "\\<^descr>"
+                 | "\\<^enum>"
+                 | "\\<^esub>"
+                 | "\\<^noindent>"
+                 | "\\<^sub>"
+                 | "\\<for>"
+                 | "\\<forall>"
+                 | "\\<ge>"
+                 | "\\<guillemotleft>"
+                 | "\\<guillemotright>"
+                 | "\\<in>"
+                 | "\\<lambda>"
+                 | "\\<lbrakk>"
+                 | "\\<le>"
+                 | "\\<noteq>"
+                 | "\\<notin>"
+                 | "\\<oplus>"
+                 | "\\<rbrakk>"
+                 | "\\<rightarrow>"
+                 | "\\<surd>"
+                 | "\\<turnstile>"
+                 | "\\begin"
+                 | "\\bigskip"
+                 | "\\clearpage"
+                 | "\\emph"
+                 | "\\end"
+                 | "\\isaheader"
+                 | "\\item"
+                 | "\\label"
+                 | "\\noindent"
+                 | "\\paragraph"
+                 | "\\snip"
+                 | "\\texttt"
+                 | "\\upshape"
 
-cartouche: CARTOUCHE_OPEN cartouche_content CARTOUCHE_CLOSE
+cartouche: CARTOUCHE_OPEN (cartouche_content | CARTOUCHE_SYMBOLS | cartouche)* CARTOUCHE_CLOSE
 
 cartouche_content: (CARTOUCHE_TEXT | cartouche)*
 
@@ -30,7 +69,7 @@ BOTTOM: "\\<bottom>"
 EQUIV: "\\<equiv>"
 NEWLINE: "\\<newline>"
 COMMENT_CARTOUCHE: "\\<comment>"
-MARKER: "\\<\\^marker>"
+MARKER: "\\<^marker>"
 VAR_CASE: "\\?case"
 VAR_THESIS: "\\?thesis"
 
@@ -120,6 +159,7 @@ theory: (goal proof_prove
 
 statement: abbreviation
          | axiomatization_block
+         | bundle
          | comment_block
          | consts
          | context
@@ -136,19 +176,26 @@ statement: abbreviation
          | instantiation
          | interpretation_block
          | lemmas
+         | lift_definition proof_prove
+         | lifting_forget
+         | lifting_update
          | locale_block
          | marker
          | method_block
          | ml
+         | named_theorems
+         | nonterminal
          | notation_block
          | partial_function
          | primrec
          | record
+         | setup_lifting
          | sublocale proof_prove
          | syntax
          | translations
          | type_synonym
          | typedecl
+         | unbundle
 
 method_block: "method" name "=" instruction
 
@@ -178,20 +225,19 @@ assumption: QUOTED_STRING
           | NAT ":" QUOTED_STRING
           | ID ":" QUOTED_STRING
 
-subgoal: "subgoal" name ":"
-       | "subgoal"
+subgoal: "subgoal" thmbind? subgoal_prems? subgoal_params?
+
+subgoal_prems: "premises" thmbind?
+
+subgoal_params: "for" "..."? ("_" | name)+
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.1
 #
 
-name: ID
-    | "case"
+name: "case"
     | "cases"
-    | GREEK "'"*
-    | ID "."
     | ID "." "cases"
-    | ID "." name
     | ID "\\<^sub>" NAT "'"?
     | ID "\\<^sub>" name
     | "in"
@@ -202,7 +248,8 @@ name: ID
     | "*"
     | "**"
     | SYM_IDENT
-    | "where"
+    | (ID | GREEK | "\\<^sub>" | ".")+ "'"*
+    | "-"
 
 par_name: "(" name ")"
 
@@ -221,6 +268,15 @@ embedded: ID
         | VAR_THESIS
         | TYPE_IDENT
         | SYM_IDENT
+        | TERM_VAR
+        | SYM_IDENT
+        | "?" ID "'"
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.4
+#
+
+text: embedded
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.7
@@ -228,35 +284,17 @@ embedded: ID
 
 type: embedded
 
-term: QUOTED_STRING
-    | GREEK
-    | ID
-    | TERM_VAR
-    | SYM_IDENT
-    | "?f'"
-
-named_prop_list_and_sep: named_prop "and" named_prop_list_and_sep
-                       | named_prop
-
-named_prop: prop
-          | prop_list
-          | ID ":" prop
-          | NAT ":" prop
-          | "*" ":" prop
-          | "**" ":" prop
-          | "***" ":" prop
+term: embedded
 
 prop: embedded
 
-inst: "_"
-    | term
+inst: "_" | term
 
 insts: inst insts
 
 typespec: typeargs? ID
 
-typearg: TYPE_IDENT
-       | ID ("::" ID)?
+typearg: TYPE_IDENT | ID ("::" ID)?
 
 # moved empty case to p_typespec in order to avoid parsing error
 typeargs: typearg ("," typearg)* | "(" typeargs ")"
@@ -284,9 +322,9 @@ arity : ("(" sort_list_comma_sep ")")? sort
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.8
 #
 
-vars: var ("and"? var)*
+vars: var ("and" var)*
 
-var: (name | names) ("::" type)? mixfix?
+var: (name+ ("::" type)?) | (name ("::" type)? mixfix)
 
 props: thmdecl? (prop prop_pat?)+
 
@@ -331,7 +369,7 @@ method_arg: method_arg_atom
 
 method_args: (","? method_arg)*
 
-attributes: "[" (name args ("," name args)*)? "]"
+attributes: "[" (name args? ("," name args?)*)? "]"
 
 attributes_list : attribute ("," attribute)*
 
@@ -402,7 +440,7 @@ antiquotation_body : ID
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 4.1
 #
 
-doc_block: ("chapter" | "section" | "subsection" | "subsubsection" | "paragraph" | "text" | "txt" | "text_raw" | COMMENT_CARTOUCHE) (cartouche | QUOTED_STRING)
+doc_block: ("chapter" | "section" | "subsection" | "subsubsection" | "paragraph" | "text" | "txt" | "text_raw" | COMMENT_CARTOUCHE) (cartouche | QUOTED_STRING | ID)
 
 comment_block: COMMENT_CARTOUCHE cartouche
 
@@ -418,7 +456,7 @@ antiquotation : "at" "{" antiquotation_body "}"
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 4.4
 #
 
-marker : "marker" cartouche
+marker : MARKER cartouche
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 4.5
@@ -470,15 +508,25 @@ context : "context" name "begin" local_theory "end"
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.3
 #
 
-includes :  "includes"  names_list
+bundle: "bundle" name (("=" thms for_fixes?) | "begin" local_theory "end")
 
-opening : "opening" names_list
+print_bundles: "print_bundles" "!"?
+
+include: "include" name*
+
+including: "including" name*
+
+includes :  "includes" name*
+
+opening : "opening" name*
+
+unbundle: "unbundle" name*
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.4
 #
 
-decl : name ("::" (ID | QUOTED_STRING))? mixfix? "where" comment_block?
+decl: name ("::" (ID | QUOTED_STRING))? mixfix? "where" comment_block?
 
 definition: "definition" ("(" "in" ID ")")? decl? thmdecl? prop spec_prems? for_fixes?
 
@@ -506,7 +554,6 @@ declare : "declare" thms ("and" thms)*
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.7.1
 #
 
-# move empty case of for_fixes here to avoid parsing error
 locale_expr: instance_list for_fixes?
 
 instance_list: instance ("+" instance)*
@@ -551,7 +598,7 @@ context_elem_list: context_elem+
 
 context_elem: "fixes" vars
             | "constrains" name_type_list
-            | "assumes" named_prop_list_and_sep
+            | "assumes" props ("and" props)*
             | "defines" defines_list
             | "notes" notes_list
 
@@ -627,7 +674,9 @@ type_synonym : "type_synonym" typespec "=" (ID | QUOTED_STRING) mixfix?
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.13
 #
 
-lemmas : "lemmas" thmdef? thms for_fixes
+lemmas: "lemmas" (thmdef? thms) ("and" thmdef? thms)* for_fixes?
+
+named_theorems: "named_theorems" (name text?) ("and" name text?)*
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.15
@@ -691,6 +740,7 @@ proof_state: "also" proof_state
            | have proof_prove
            | hence proof_prove
            | interpret proof_prove
+           | include proof_state
            | let proof_state
            | note proof_state
            | note proof_state
@@ -730,7 +780,7 @@ with: "with" thms ("and" thms)*
 
 using: "using" thms ("and" thms)*
 
-unfolding: "unfolding" thms ("and" thms)*
+unfolding: "unfolding" thm+ ("and" thm+)*
 
 # TODO the first line is adhoc based on AFP, and doesn't match the grammar
 # "class_instance proof_prove" not allowed in Isabelle/Isar grammar, but found in AFP
@@ -741,50 +791,53 @@ local_theory: goal proof_prove
             | doc_block local_theory
             | class_instance local_theory
             | class_instance proof_prove
+            | termination proof_prove
+            | print_bundles context local_theory
 
 # "note" "also" proof_state here contradicts grammar in Isabelle/Isar
-proof_prove : "show" stmt cond_stmt
-               | "show" stmt cond_stmt for_fixes
-               | "hence" stmt cond_stmt
-               | "hence" stmt cond_stmt for_fixes
-               | apply proof_prove
-               | apply
-               | supply_block proof_prove
-               | supply_block
-               | subgoal proof_prove
-               | prefer_block proof_prove
-               | prefer_block
-               | "also" proof_state
-               | "done" proof_state
-               | "done" theory
-               | "done" local_theory
-               | "done"
-               | qed proof_state
-               | qed local_theory
-               | qed theory
-               | qed
-               | by proof_state
-               | by theory
-               | by local_theory
-               | by
-               | using proof_prove
-               | using
-               | with proof_chain
-               | proof proof_state
-               | proof
-               | nitpick proof_prove
-               | "oops" theory
-               | "oops"
-               | terminal_proof_steps proof_state
-               | terminal_proof_steps local_theory
-               | terminal_proof_steps theory
-               | terminal_proof_steps
-               | doc_block proof_prove
-               | termination proof_prove
+proof_prove: "show" stmt cond_stmt
+             | "also" proof_state
+             | "done"
+             | "done" local_theory
+             | "done" proof_state
+             | "done" theory
+             | "hence" stmt cond_stmt
+             | "hence" stmt cond_stmt for_fixes
+             | "oops"
+             | "oops" theory
+             | "show" stmt cond_stmt for_fixes
+             | apply
+             | apply proof_prove
+             | by
+             | by local_theory
+             | by proof_state
+             | by theory
+             | doc_block proof_prove
+             | including proof_prove
+             | nitpick proof_prove
+             | prefer_block
+             | prefer_block proof_prove
+             | proof
+             | proof proof_state
+             | qed
+             | qed local_theory
+             | qed proof_state
+             | qed theory
+             | subgoal proof_prove
+             | supply_block
+             | supply_block proof_prove
+             | terminal_proof_steps
+             | terminal_proof_steps local_theory
+             | terminal_proof_steps proof_state
+             | terminal_proof_steps theory
+             | termination proof_prove
+             | using
+             | using proof_prove
+             | with proof_chain
 
 # QUOTED_STRING only found in AFP, not in Isabelle/Isar grammar
-conclusion : "shows" stmt
-           | "obtains" obtain_clauses
+conclusion: "shows" stmt
+          | "obtains" obtain_clauses
 
 obtain_clauses: obtain_case
               | par_name obtain_case
@@ -807,26 +860,7 @@ assms : "assms"
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.2.4
 #
 
-goal : "lemma" "(" "in" ID ")" long_statement
-        | "lemma" "(" "in" ID ")" short_statement
-        | "theorem" "(" "in" ID ")" long_statement
-        | "theorem" "(" "in" ID ")" short_statement
-        | "corollary" "(" "in" ID ")" long_statement
-        | "corollary" "(" "in" ID ")" short_statement
-        | "proposition" "(" "in" ID ")" long_statement
-        | "proposition" "(" "in" ID ")" short_statement
-        | "schematic_goal" "(" "in" ID ")" long_statement
-        | "schematic_goal" "(" "in" ID ")" short_statement
-        | "lemma" long_statement
-        | "lemma" short_statement
-        | "theorem" long_statement
-        | "theorem" short_statement
-        | "corollary" long_statement
-        | "corollary" short_statement
-        | "proposition" long_statement
-        | "proposition" short_statement
-        | "schematic_goal" long_statement
-        | "schematic_goal" short_statement
+goal: ("lemma" | "theorem" | "corollary" | "proposition" | "schematic_goal") ("(" "in" ID ")")? (long_statement | short_statement)
 
 have: "have" stmt cond_stmt? for_fixes?
 
@@ -857,7 +891,7 @@ statement_context: includes context_elem_list?
 #
 
 # TODO missing induct, induction, and coinduct
-method: (name | ("(" methods ")")) method_modifier?
+method: (name | ("(" methods ")")) method_modifier? attributes?
       | cases
 
 method_modifier: "?" | "+" | "[" NAT "]"
@@ -882,9 +916,7 @@ terminal_proof_steps : "." | ".." | "sorry"
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.5.1
 
 
-case : "case" (ID | "True" | "False" | NAT | "(" name_underscore_list ")")
-
-name_underscore_list : (name | NAT | "_" )+
+case: "case" thmdecl? (name | ("(" name ("_" | name)? ")"))
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.5.2
@@ -976,26 +1008,20 @@ notation_list : notation
 notation : name mixfix
 
 # TODO
-mode : ID
-     | "(" "input" ")"
+mode: ID
+    | "(" "input" ")"
+    | "(" "ASCII" ")"
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 8.5.2
 #
 
-syntax : "syntax" mode constdecl_list
-       | "syntax" constdecl_list
-       | "no_syntax" mode constdecl_list
-       | "no_syntax" constdecl_list
+nonterminal: "nonterminal" name ("and" name)*
 
-translations : "translations" transpat "=" "=" transpat
-             | "translations" transpat "=" ">" transpat
-             | "translations" transpat "<" "=" transpat
-             | "translations" transpat "\\<rightleftharpoons>" ">" transpat
-             | "no_translations" transpat "=" "=" transpat
-             | "no_translations" transpat "=" ">" transpat
-             | "no_translations" transpat "<" "=" transpat
-             | "no_translations" transpat "\\<rightleftharpoons>" ">" transpat
+syntax : "syntax" mode? constdecl_list*
+       | "no_syntax" mode? constdecl_list*
+
+translations : ("translations" | "no_translations") (transpat ("==" | "=>" | "<=" | "\\<rightleftharpoons>" | "\\<leftharpoons>" | "\\<rigtharpoons>") transpat)*
 
 transpat : QUOTED_STRING
          | "(" name ")" QUOTED_STRING
@@ -1011,24 +1037,22 @@ folded : "folded" thms
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.1
 #
 
-inductive : "inductive" vars for_fixes "where" multi_specs "monos" thms
-          | "inductive" vars for_fixes "where" multi_specs
-          | "inductive" vars for_fixes "monos" thms
+inductive : ("inductive" | "inductive_set" | "coinductive" | "coinductive_set") vars for_fixes? ("where" multi_specs)? ("monos" thms)?
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.2
 #
 
-primrec : "primrec" specification
+primrec: "primrec" specification
 
-fun_block : ("fun" | "function") specification proof_prove?
+fun_block: ("fun" | "function") specification proof_prove?
 
-opts : "(" opt_list ")"
+opts: "(" opt_list ")"
 
-opt_list : sequential
-         | domintros
-         | sequential "," opt_list
-         | domintros "," opt_list
+opt_list: sequential
+        | domintros
+        | sequential "," opt_list
+        | domintros "," opt_list
 
 termination: "termination" term?
 
@@ -1085,6 +1109,20 @@ constdecl : name "::" type
 #
 
 overloaded : "(" "overloaded" ")"
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.9.2
+#
+
+setup_lifting: "setup_lifting" thm thm? ("parametric" thm)?
+
+lift_definition: "lift_definition" ("(" "code_dt" ")")? name "::" type mixfix? "is" term ("parametric" thm*)?
+
+lifting_forget: "lifting_forget" name
+
+lifting_update: "lifting_update" name
+
+lifting_restore: "lifting_restore" thm (thm thm)?
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 12.2
