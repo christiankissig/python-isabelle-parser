@@ -14,52 +14,1494 @@ grammar = r"""
 %ignore OUTER_COMMENT
 
 QUOTED_STRING: "\"" /[\s\S]*?/ "\""
+             | "`" /[\s\S]*?/ "`"
 
 // Tokens for cartouche
 CARTOUCHE_OPEN: "\\<open>"
 CARTOUCHE_TEXT: /[^\\]+/
 CARTOUCHE_CLOSE: "\\<close>"
-CARTOUCHE_SYMBOLS: "\\<And>"
+CARTOUCHE_SYMBOLS: "\<A>"
+                 | "\<AA>"
+                 | "\<B>"
+                 | "\<BB>"
+                 | "\<C>"
+                 | "\<CC>"
+                 | "\<Colon>"
+                 | "\<Coprod>"
+                 | "\<D>"
+                 | "\<DD>"
+                 | "\<Delta>"
+                 | "\<Down>"
+                 | "\<E>"
+                 | "\<EE>"
+                 | "\<Empt>"
+                 | "\<F>"
+                 | "\<FF>"
+                 | "\<G>"
+                 | "\<GG>"
+                 | "\<Gamma>"
+                 | "\<H>"
+                 | "\<HH>"
+                 | "\<I>"
+                 | "\<II>"
+                 | "\<Inter>"
+                 | "\<J>"
+                 | "\<JJ>"
+                 | "\<Join>"
+                 | "\<K>"
+                 | "\<KK>"
+                 | "\<L>"
+                 | "\<LL>"
+                 | "\<LM>"
+                 | "\<Lambda>"
+                 | "\<Leftarrow>"
+                 | "\<Leftrightarrow>"
+                 | "\<Lleftarrow>"
+                 | "\<Longleftarrow>"
+                 | "\<Longleftrightarrow>"
+                 | "\<Longrightarrow>"
+                 | "\<M>"
+                 | "\<MM>"
+                 | "\<Midarrow>"
+                 | "\<Msg>"
+                 | "\<N>"
+                 | "\<NN>"
+                 | "\<NoMsg>"
+                 | "\<O>"
+                 | "\<OO>"
+                 | "\<Odot>"
+                 | "\<Omega>"
+                 | "\<Oplus>"
+                 | "\<Or>"
+                 | "\<Otimes>"
+                 | "\<P>"
+                 | "\<PP>"
+                 | "\<PR>"
+                 | "\<Parallel>"
+                 | "\<Phi>"
+                 | "\<Pi>"
+                 | "\<Prod>"
+                 | "\<Psi>"
+                 | "\<Q>"
+                 | "\<QQ>"
+                 | "\<R>"
+                 | "\<RM>"
+                 | "\<RR>"
+                 | "\<Rightarrow>"
+                 | "\<Rrightarrow>"
+                 | "\<S>"
+                 | "\<SS>"
+                 | "\<Sigma>"
+                 | "\<Sqinter>"
+                 | "\<Squnion>"
+                 | "\<Sum>"
+                 | "\<T>"
+                 | "\<TT>"
+                 | "\<TTurnstile>"
+                 | "\<Theta>"
+                 | "\<Turnstile>"
+                 | "\<U>"
+                 | "\<UU>"
+                 | "\<Union>"
+                 | "\<Up>"
+                 | "\<Updown>"
+                 | "\<Uplus>"
+                 | "\<Upsilon>"
+                 | "\<V>"
+                 | "\<VV>"
+                 | "\<W>"
+                 | "\<WW>"
+                 | "\<X>"
+                 | "\<XX>"
+                 | "\<Xi>"
+                 | "\<Y>"
+                 | "\<YY>"
+                 | "\<Z>"
+                 | "\<ZZ>"
+                 | "\<Zinj>"
+                 | "\<Zpfun>"
+                 | "\<Zsemi>"
+                 | "\<Zspot>"
+                 | "\<^BibTeX>"
+                 | "\<^C>"
+                 | "\<^C_theory_text>"
+                 | "\<^Const>"
+                 | "\<^Const_>"
+                 | "\<^LaTeX>"
+                 | "\<^ML>"
+                 | "\<^ML_file>"
+                 | "\<^ML_structure>"
+                 | "\<^ML_text>"
+                 | "\<^ML_type>"
+                 | "\<^TeXLive>"
+                 | "\<^Type>"
+                 | "\<^abbrev>"
+                 | "\<^assert>"
+                 | "\<^bindex>"
+                 | "\<^binding>"
+                 | "\<^bitalic>"
+                 | "\<^bold>"
+                 | "\<^boxed_bash>"
+                 | "\<^boxed_latex>"
+                 | "\<^boxed_sml>"
+                 | "\<^boxed_text>"
+                 | "\<^boxed_theory_text>"
+                 | "\<^bsub>"
+                 | "\<^bsup>"
+                 | "\<^bundle>"
+                 | "\<^cancel>"
+                 | "\<^cell>"
+                 | "\<^cite>"
+                 | "\<^citep>"
+                 | "\<^citet>"
+                 | "\<^class>"
+                 | "\<^code>"
+                 | "\<^col>"
+                 | "\<^command_keyword>"
+                 | "\<^const>"
+                 | "\<^const_name>"
+                 | "\<^const_syntax>"
+                 | "\<^context>"
+                 | "\<^cterm>"
+                 | "\<^ctyp>"
+                 | "\<^descr>"
+                 | "\<^dir>"
+                 | "\<^doc_class>"
+                 | "\<^dof>"
+                 | "\<^eg>"
+                 | "\<^eitalic>"
+                 | "\<^emph>"
+                 | "\<^enum>"
+                 | "\<^esub>"
+                 | "\<^esup>"
+                 | "\<^etc>"
+                 | "\<^figure>"
+                 | "\<^file>"
+                 | "\<^footnote>"
+                 | "\<^here>"
+                 | "\<^hfill>"
+                 | "\<^htriple>"
+                 | "\<^htriple_partial>"
+                 | "\<^ie>"
+                 | "\<^imp>"
+                 | "\<^index>"
+                 | "\<^infer_instantiate>"
+                 | "\<^instantiate>"
+                 | "\<^isadof>"
+                 | "\<^item>"
+                 | "\<^keyword>"
+                 | "\<^latex>"
+                 | "\<^locale>"
+                 | "\<^lstlisting>"
+                 | "\<^ltxinline>"
+                 | "\<^make_string>"
+                 | "\<^marker>"
+                 | "\<^master_dir>"
+                 | "\<^medskip>"
+                 | "\<^method>"
+                 | "\<^morph_infer_instantiate>"
+                 | "\<^named_theorems>"
+                 | "\<^noindent>"
+                 | "\<^nolinkurl>"
+                 | "\<^path>"
+                 | "\<^path_binding>"
+                 | "\<^pattern>"
+                 | "\<^pdf>"
+                 | "\<^print>"
+                 | "\<^prop>"
+                 | "\<^ps>"
+                 | "\<^rail>"
+                 | "\<^row>"
+                 | "\<^session>"
+                 | "\<^simproc>"
+                 | "\<^simproc_setup>"
+                 | "\<^sub>"
+                 | "\<^sup>"
+                 | "\<^syntax_const>"
+                 | "\<^technical>"
+                 | "\<^term>"
+                 | "\<^term_>"
+                 | "\<^text>"
+                 | "\<^theory>"
+                 | "\<^theory_context>"
+                 | "\<^theory_text>"
+                 | "\<^try>"
+                 | "\<^typ>"
+                 | "\<^type>"
+                 | "\<^type_name>"
+                 | "\<^undefined>"
+                 | "\<^url>"
+                 | "\<^value_>"
+                 | "\<^verbatim>"
+                 | "\<^vs>"
+                 | "\<a>"
+                 | "\<aA>"
+                 | "\<aC>"
+                 | "\<aF>"
+                 | "\<aPR>"
+                 | "\<aa>"
+                 | "\<aans>"
+                 | "\<abenv>"
+                 | "\<abinit>"
+                 | "\<accache>"
+                 | "\<aclosure>"
+                 | "\<acstate>"
+                 | "\<acute>"
+                 | "\<ad>"
+                 | "\<afstate>"
+                 | "\<aleph>"
+                 | "\<alpha>"
+                 | "\<amalg>"
+                 | "\<anb>"
+                 | "\<and>"
+                 | "\<angle>"
+                 | "\<approx>"
+                 | "\<aproc>"
+                 | "\<avenv>"
+                 | "\<b>"
+                 | "\<bar>"
+                 | "\<bb>"
+                 | "\<bbbA>"
+                 | "\<bbbD>"
+                 | "\<bbbI>"
+                 | "\<bbbO>"
+                 | "\<bbbP>"
+                 | "\<beta>"
+                 | "\<bind>"
+                 | "\<binit>"
+                 | "\<bool>"
+                 | "\<bottom>"
+                 | "\<bowtie>"
+                 | "\<box>"
+                 | "\<boxplus>"
+                 | "\<bsub>"
+                 | "\<bullet>"
+                 | "\<c>"
+                 | "\<cc>"
+                 | "\<cdot>"
+                 | "\<cdots>"
+                 | "\<checkmark>"
+                 | "\<chi>"
+                 | "\<circ>"
+                 | "\<circle>"
+                 | "\<clubsuit>"
+                 | "\<comment>"
+                 | "\<complex>"
+                 | "\<cong>"
+                 | "\<congruent>"
+                 | "\<currency>"
+                 | "\<d>"
+                 | "\<dagger>"
+                 | "\<dd>"
+                 | "\<ddagger>"
+                 | "\<degree>"
+                 | "\<delta>"
+                 | "\<diamond>"
+                 | "\<diamondop>"
+                 | "\<diamondsuit>"
+                 | "\<dieresis>"
+                 | "\<div>"
+                 | "\<doteq>"
+                 | "\<dots>"
+                 | "\<doublequote>"
+                 | "\<down>"
+                 | "\<downharpoonleft>"
+                 | "\<downharpoonright>"
+                 | "\<e>"
+                 | "\<ee>"
+                 | "\<eight>"
+                 | "\<emptyset>"
+                 | "\<epsilon>"
+                 | "\<equiv>"
+                 | "\<esub>"
+                 | "\<eta>"
+                 | "\<exclamdown>"
+                 | "\<exists>"
+                 | "\<ff>"
+                 | "\<five>"
+                 | "\<flat>"
+                 | "\<forall>"
+                 | "\<four>"
+                 | "\<frown>"
+                 | "\<g>"
+                 | "\<gamma>"
+                 | "\<ge>"
+                 | "\<gg>"
+                 | "\<ggreater>"
+                 | "\<greaterapprox>"
+                 | "\<greatersim>"
+                 | "\<guillemotleft>"
+                 | "\<guillemotright>"
+                 | "\<heartsuit>"
+                 | "\<hh>"
+                 | "\<hole>"
+                 | "\<hookleftarrow>"
+                 | "\<hookrightarrow>"
+                 | "\<hungarumlaut>"
+                 | "\<hyphen>"
+                 | "\<i>"
+                 | "\<ii>"
+                 | "\<iinter>"
+                 | "\<in>"
+                 | "\<index>"
+                 | "\<infinity>"
+                 | "\<int>"
+                 | "\<integral>"
+                 | "\<inter>"
+                 | "\<inverse>"
+                 | "\<iota>"
+                 | "\<j>"
+                 | "\<jj>"
+                 | "\<k>"
+                 | "\<kappa>"
+                 | "\<kk>"
+                 | "\<l>"
+                 | "\<lambda>"
+                 | "\<langle>"
+                 | "\<lblot>"
+                 | "\<lbrace>"
+                 | "\<lbrakk>"
+                 | "\<lceil>"
+                 | "\<le>"
+                 | "\<leadsto>"
+                 | "\<leftarrow>"
+                 | "\<leftharpoondown>"
+                 | "\<leftharpoonup>"
+                 | "\<leftrightarrow>"
+                 | "\<lessapprox>"
+                 | "\<lesssim>"
+                 | "\<lfloor>"
+                 | "\<lhd>"
+                 | "\<ll>"
+                 | "\<llangle>"
+                 | "\<lless>"
+                 | "\<longleftarrow>"
+                 | "\<longleftrightarrow>"
+                 | "\<longlonglongrightarrow>"
+                 | "\<longlongrightarrow>"
+                 | "\<longmapsto>"
+                 | "\<longrightarrow>"
+                 | "\<lozenge>"
+                 | "\<lparr>"
+                 | "\<m>"
+                 | "\<mapsto>"
+                 | "\<mho>"
+                 | "\<midarrow>"
+                 | "\<minusplus>"
+                 | "\<mm>"
+                 | "\<mu>"
+                 | "\<nabla>"
+                 | "\<nat>"
+                 | "\<natural>"
+                 | "\<newline>"
+                 | "\<nexists>"
+                 | "\<nine>"
+                 | "\<nn>"
+                 | "\<not>"
+                 | "\<notTurnstile>"
+                 | "\<noteq>"
+                 | "\<notin>"
+                 | "\<notsqsubseteq>"
+                 | "\<notturnstile>"
+                 | "\<nu>"
+                 | "\<o>"
+                 | "\<odot>"
+                 | "\<ointegral>"
+                 | "\<omega>"
+                 | "\<ominus>"
+                 | "\<one>"
+                 | "\<onehalf>"
+                 | "\<oo>"
+                 | "\<oplus>"
+                 | "\<or>"
+                 | "\<oslash>"
+                 | "\<otimes>"
+                 | "\<p>"
+                 | "\<paragraph>"
+                 | "\<parallel>"
+                 | "\<partial>"
+                 | "\<phi>"
+                 | "\<pi>"
+                 | "\<plusminus>"
+                 | "\<pp>"
+                 | "\<prec>"
+                 | "\<preceq>"
+                 | "\<propto>"
+                 | "\<psi>"
+                 | "\<q>"
+                 | "\<qq>"
+                 | "\<questiondown>"
+                 | "\<quote>"
+                 | "\<r>"
+                 | "\<rangle>"
+                 | "\<rat>"
+                 | "\<rblot>"
+                 | "\<rbrace>"
+                 | "\<rbrakk>"
+                 | "\<rceil>"
+                 | "\<real>"
+                 | "\<registered>"
+                 | "\<restriction>"
+                 | "\<rfloor>"
+                 | "\<rhd>"
+                 | "\<rho>"
+                 | "\<rightarrow>"
+                 | "\<rightharpoondown>"
+                 | "\<rightharpoonup>"
+                 | "\<rightleftharpoons>"
+                 | "\<rparr>"
+                 | "\<rr>"
+                 | "\<rrangle>"
+                 | "\<s>"
+                 | "\<section>"
+                 | "\<setminus>"
+                 | "\<seven>"
+                 | "\<sharp>"
+                 | "\<sigma>"
+                 | "\<sim>"
+                 | "\<simeq>"
+                 | "\<six>"
+                 | "\<smile>"
+                 | "\<some>"
+                 | "\<spadesuit>"
+                 | "\<sqdot>"
+                 | "\<sqinter>"
+                 | "\<sqrt>"
+                 | "\<sqsubset>"
+                 | "\<sqsubseteq>"
+                 | "\<sqsupset>"
+                 | "\<sqsupseteq>"
+                 | "\<squnion>"
+                 | "\<ss>"
+                 | "\<sslash>"
+                 | "\<star>"
+                 | "\<stileturn>"
+                 | "\<sub>"
+                 | "\<subset>"
+                 | "\<subseteq>"
+                 | "\<succ>"
+                 | "\<succeq>"
+                 | "\<supset>"
+                 | "\<supseteq>"
+                 | "\<surd>"
+                 | "\<t>"
+                 | "\<tau>"
+                 | "\<then>"
+                 | "\<theta>"
+                 | "\<three>"
+                 | "\<times>"
+                 | "\<top>"
+                 | "\<triangle>"
+                 | "\<triangleleft>"
+                 | "\<triangleq>"
+                 | "\<triangleright>"
+                 | "\<tt>"
+                 | "\<tturnstile>"
+                 | "\<turnstile>"
+                 | "\<two>"
+                 | "\<union>"
+                 | "\<unlhd>"
+                 | "\<unrhd>"
+                 | "\<up>"
+                 | "\<updown>"
+                 | "\<upharpoonleft>"
+                 | "\<uplus>"
+                 | "\<upsilon>"
+                 | "\<v>"
+                 | "\<vv>"
+                 | "\<w>"
+                 | "\<wrong>"
+                 | "\<ww>"
+                 | "\<xi>"
+                 | "\<xx>"
+                 | "\<yy>"
+                 | "\<zero>"
+                 | "\<zeta>"
+                 | "\<zz>"
+                 | "\\ "
                  | "\\#"
+                 | "\\<And>"
+                 | "\\<D>"
+                 | "\\<F>"
+                 | "\\<K>"
                  | "\\<Longrightarrow>"
+                 | "\\<R>"
+                 | "\\<Rightarrow>"
+                 | "\\<Sqinter>"
+                 | "\\<Sum>"
+                 | "\\<T>"
+                 | "\\<TTurnstile>"
+                 | "\\<Turnstile>"
+                 | "\\<Union>"
+                 | "\\<W>"
+                 | "\\<^bold>"
                  | "\\<^bsub>"
                  | "\\<^cite>"
+                 | "\\<^const>"
                  | "\\<^descr>"
                  | "\\<^enum>"
                  | "\\<^esub>"
+                 | "\\<^item>"
+                 | "\\<^locale>"
                  | "\\<^noindent>"
                  | "\\<^sub>"
+                 | "\\<^sup>"
+                 | "\\<^term>"
+                 | "\\<^typ>"
+                 | "\\<and>"
+                 | "\\<bottom>"
+                 | "\\<box>"
+                 | "\\<checkmark>"
+                 | "\\<equiv>"
+                 | "\\<exists>"
                  | "\\<for>"
                  | "\\<forall>"
                  | "\\<ge>"
                  | "\\<guillemotleft>"
                  | "\\<guillemotright>"
                  | "\\<in>"
+                 | "\\<integral>"
+                 | "\\<inter>"
                  | "\\<lambda>"
                  | "\\<lbrakk>"
                  | "\\<le>"
+                 | "\\<leadsto>"
+                 | "\\<longleftrightarrow>"
+                 | "\\<longmapsto>"
+                 | "\\<longrightarrow>"
+                 | "\\<lparr>"
+                 | "\\<midarrow>"
+                 | "\\<not>"
                  | "\\<noteq>"
                  | "\\<notin>"
                  | "\\<oplus>"
+                 | "\\<or>"
+                 | "\\<otimes>"
                  | "\\<rbrakk>"
+                 | "\\<rhd>"
                  | "\\<rightarrow>"
+                 | "\\<rparr>"
+                 | "\\<sqinter>"
+                 | "\\<sqsubseteq>"
+                 | "\\<star>"
+                 | "\\<subseteq>"
                  | "\\<surd>"
                  | "\\<turnstile>"
+                 | "\\<union>"
+                 | "\\A"
+                 | "\\AA"
+                 | "\\AC"
+                 | "\\ActSemimodule"
+                 | "\\Agent"
+                 | "\\An"
+                 | "\\As"
+                 | "\\AtBeginDocument"
+                 | "\\BNFCC"
+                 | "\\BNFCC"
+                 | "\\BODY"
+                 | "\\Because"
+                 | "\\BibTeX"
+                 | "\\Box"
+                 | "\\C"
+                 | "\\CCKAabbrv"
+                 | "\\CH"
+                 | "\\CKAabbrv"
+                 | "\\CKAenc"
+                 | "\\CKAencompass"
+                 | "\\CKAiterPar"
+                 | "\\CKAiterSeq"
+                 | "\\CKAle"
+                 | "\\CKApar"
+                 | "\\CKAseq"
+                 | "\\CKAset"
+                 | "\\CKAsim"
+                 | "\\CKAstructure"
+                 | "\\Coloneqq"
+                 | "\\CryptHOL"
+                 | "\\DOFauthor"
+                 | "\\DTcomment"
+                 | "\\Def"
+                 | "\\DefineSnippet"
+                 | "\\Delta"
+                 | "\\Diamond"
+                 | "\\Dstim"
+                 | "\\E"
+                 | "\\ENVcomm"
+                 | "\\ENVcommD"
+                 | "\\Even"
+                 | "\\Ex"
+                 | "\\FOCL"
+                 | "\\Finally"
+                 | "\\First"
+                 | "\\FloatBarrier"
+                 | "\\Gamma"
+                 | "\\H"
+                 | "\\HOL"
+                 | "\\HolOclOidOf"
+                 | "\\However"
+                 | "\\If"
+                 | "\\IfFileExists"
+                 | "\\In"
+                 | "\\Indeed"
+                 | "\\L"
+                 | "\\LE"
+                 | "\\LaTeX"
+                 | "\\LaTeXë"
+                 | "\\Lambda"
+                 | "\\Large"
+                 | "\\Leftrightarrow"
+                 | "\\Longleftrightarrow"
+                 | "\\Longrightarrow"
+                 | "\\N"
+                 | "\\NE"
+                 | "\\NN"
+                 | "\\NP"
+                 | "\\Nat"
+                 | "\\NewEnviron"
+                 | "\\Next"
+                 | "\\Nstim"
+                 | "\\OCL"
+                 | "\\Observe"
+                 | "\\Odd"
+                 | "\\Omega"
+                 | "\\Ors"
+                 | "\\Otherwise"
+                 | "\\OutSemimodule"
+                 | "\\P"
+                 | "\\PackageError"
+                 | "\\Phi"
+                 | "\\Pi"
+                 | "\\Pr"
+                 | "\\Psi"
+                 | "\\RR"
+                 | "\\Re"
+                 | "\\Rightarrow"
+                 | "\\S"
+                 | "\\SAT"
+                 | "\\SC"
+                 | "\\SLE"
+                 | "\\SN"
+                 | "\\STIMbasic"
+                 | "\\STIMcomm"
+                 | "\\STIMcommD"
+                 | "\\STIMcommN"
+                 | "\\STIMdot"
+                 | "\\STIMenc"
+                 | "\\STIMle"
+                 | "\\STIMplus"
+                 | "\\STIMset"
+                 | "\\STIMstructure"
+                 | "\\STbot"
+                 | "\\STdiff"
+                 | "\\STleq"
+                 | "\\Sigma"
+                 | "\\Since"
+                 | "\\Such"
+                 | "\\TTurnstile"
+                 | "\\TeX"
+                 | "\\TeXLive"
+                 | "\\The"
+                 | "\\Then"
+                 | "\\These"
+                 | "\\Theta"
+                 | "\\This"
+                 | "\\Thus"
+                 | "\\To"
+                 | "\\Upsilon"
+                 | "\\Var"
+                 | "\\Vert"
+                 | "\\ZF"
+                 | "\\ZFC"
+                 | "\\_"
+                 | "\\a"
+                 | "\\actOp"
+                 | "\\addaffiliation"
+                 | "\\addauthor"
+                 | "\\addcontentsline"
+                 | "\\addplot"
+                 | "\\addtolength"
+                 | "\\agent"
+                 | "\\aleph"
+                 | "\\all"
+                 | "\\alpah"
+                 | "\\alpha"
+                 | "\\and"
+                 | "\\ap"
+                 | "\\append"
+                 | "\\approx"
+                 | "\\ar"
+                 | "\\arccos"
+                 | "\\arcsin"
+                 | "\\arraycolsep"
+                 | "\\arrow"
+                 | "\\ast"
+                 | "\\asymp"
+                 | "\\ate"
+                 | "\\author"
+                 | "\\autoref"
+                 | "\\b"
+                 | "\\bar"
+                 | "\\baseheight"
+                 | "\\baselineskip"
+                 | "\\basewidth"
+                 | "\\bbOI"
+                 | "\\bbbI"
+                 | "\\bbbO"
+                 | "\\bcancel"
                  | "\\begin"
+                 | "\\begin"
+                 | "\\begingroup"
+                 | "\\beta"
+                 | "\\bf"
+                 | "\\bfseries"
+                 | "\\bibliography"
+                 | "\\big"
+                 | "\\bigA"
+                 | "\\bigbreak"
+                 | "\\bigcap"
+                 | "\\bigcup"
+                 | "\\bigg"
+                 | "\\biggl"
+                 | "\\biggr"
+                 | "\\bigl"
+                 | "\\biglnotation"
+                 | "\\bigotimes"
+                 | "\\bigr"
                  | "\\bigskip"
+                 | "\\bigskip"
+                 | "\\bigsqcup"
+                 | "\\bigvee"
+                 | "\\bigwedge"
+                 | "\\biimp"
+                 | "\\bindex"
+                 | "\\binom"
+                 | "\\blackdot"
+                 | "\\bluecircle"
+                 | "\\bluesquare"
+                 | "\\bmod"
+                 | "\\bot"
+                 | "\\bottomrule"
+                 | "\\box"
+                 | "\\break"
+                 | "\\bullet"
+                 | "\\c"
+                 | "\\cal"
+                 | "\\calV"
+                 | "\\cap"
+                 | "\\caption"
+                 | "\\captionsetup"
+                 | "\\cdot"
+                 | "\\cdot"
+                 | "\\cdots"
+                 | "\\center"
+                 | "\\centering"
+                 | "\\ceta"
+                 | "\\chapref"
+                 | "\\chapter"
+                 | "\\chapterauthor"
+                 | "\\checkmark"
+                 | "\\chi"
+                 | "\\choose"
+                 | "\\circ"
+                 | "\\cite"
+                 | "\\citeauthor"
+                 | "\\citep"
+                 | "\\citet"
+                 | "\\cka"
                  | "\\clearpage"
+                 | "\\clearpage"
+                 | "\\close"
+                 | "\\colon"
+                 | "\\color"
+                 | "\\columnsep"
+                 | "\\commandkey"
+                 | "\\comment"
+                 | "\\cong"
+                 | "\\constructor"
+                 | "\\coordinate"
+                 | "\\coprod"
+                 | "\\cormen"
+                 | "\\cos"
+                 | "\\create"
+                 | "\\cref"
+                 | "\\csname"
+                 | "\\cup"
+                 | "\\d"
+                 | "\\dagger"
+                 | "\\dash"
+                 | "\\dashv"
+                 | "\\ddltwocell"
+                 | "\\ddrtwocell"
+                 | "\\ddtwocell"
+                 | "\\def"
+                 | "\\definecolor"
+                 | "\\deg"
+                 | "\\delete"
+                 | "\\delta"
+                 | "\\dep"
+                 | "\\depOp"
+                 | "\\depOpTC"
+                 | "\\depTC"
+                 | "\\dfrac"
+                 | "\\diamond"
+                 | "\\diamondsuit"
+                 | "\\dir"
+                 | "\\dirtree"
+                 | "\\displaystyle"
+                 | "\\div"
+                 | "\\documentclass"
+                 | "\\dof"
+                 | "\\dofurl"
+                 | "\\dom"
+                 | "\\dots"
+                 | "\\dotsb"
+                 | "\\dotsc"
+                 | "\\doublecap"
+                 | "\\downarrow"
+                 | "\\draw"
+                 | "\\drop"
+                 | "\\drtwocell"
+                 | "\\dtwocell"
+                 | "\\e"
+                 | "\\eg"
+                 | "\\eigbyz"
+                 | "\\ell"
+                 | "\\em"
+                 | "\\email"
+                 | "\\embeddedstyle"
                  | "\\emph"
+                 | "\\emph"
+                 | "\\emptyset"
                  | "\\end"
+                 | "\\end"
+                 | "\\endcsname"
+                 | "\\endgroup"
+                 | "\\endisaantiq"
+                 | "\\endisatagafp"
+                 | "\\endisatagannexa"
+                 | "\\endxy"
+                 | "\\enskip"
+                 | "\\enspace"
+                 | "\\ensuremath"
+                 | "\\env"
+                 | "\\epigraph"
+                 | "\\epsilon"
+                 | "\\eq"
+                 | "\\eqnum"
+                 | "\\eqref"
+                 | "\\equal"
+                 | "\\equiv"
+                 | "\\ess"
+                 | "\\eta"
+                 | "\\etc"
+                 | "\\evalmu"
+                 | "\\evalnu"
+                 | "\\ex"
+                 | "\\exists"
+                 | "\\exp"
+                 | "\\expandafter"
+                 | "\\expunge"
+                 | "\\extrah"
+                 | "\\f"
+                 | "\\fbox"
+                 | "\\file"
+                 | "\\filldraw"
+                 | "\\flatten"
+                 | "\\flattentwo"
+                 | "\\footnote"
+                 | "\\footnote"
+                 | "\\footnotesize"
+                 | "\\forall"
+                 | "\\forces"
+                 | "\\frac"
+                 | "\\framebox"
+                 | "\\from"
+                 | "\\fsub"
+                 | "\\fundesc"
+                 | "\\funheadersep"
+                 | "\\fussy"
+                 | "\\fw"
+                 | "\\gamma"
+                 | "\\gausslucasexample"
+                 | "\\gcalt"
+                 | "\\gcd"
+                 | "\\gdef"
+                 | "\\ge"
+                 | "\\genfrac"
+                 | "\\geq"
+                 | "\\geqslant"
+                 | "\\gg"
+                 | "\\h"
+                 | "\\hat"
+                 | "\\hbox"
+                 | "\\hfill"
+                 | "\\hline"
+                 | "\\holkeyword"
+                 | "\\href"
+                 | "\\hrulefill"
+                 | "\\hskip"
+                 | "\\hspace"
+                 | "\\ht"
+                 | "\\htmllink"
+                 | "\\huge"
+                 | "\\hyp"
+                 | "\\hyperlink"
+                 | "\\hypertarget"
+                 | "\\i"
+                 | "\\ie"
+                 | "\\iff"
+                 | "\\ifthenelse"
+                 | "\\immediate"
+                 | "\\imp"
+                 | "\\implies"
+                 | "\\in"
+                 | "\\includegraphics"
+                 | "\\indent"
+                 | "\\index"
+                 | "\\induced"
+                 | "\\inf"
+                 | "\\infer"
+                 | "\\inferrule"
+                 | "\\infty"
+                 | "\\inline"
+                 | "\\inlinebash"
+                 | "\\inlineisar"
+                 | "\\inlineltx"
+                 | "\\inlineocl"
+                 | "\\inlinetrac"
+                 | "\\input"
+                 | "\\inputpos"
+                 | "\\inst"
+                 | "\\institution"
+                 | "\\int"
+                 | "\\inv"
+                 | "\\iota"
+                 | "\\isa"
+                 | "\\isaDof"
+                 | "\\isaDofDOTlabel"
+                 | "\\isaDofDOTmacroDef"
+                 | "\\isaDofDOTmacroExp"
+                 | "\\isaDofDOTref"
+                 | "\\isaantiq"
+                 | "\\isacartoucheclose"
+                 | "\\isacartoucheopen"
+                 | "\\isachapter"
+                 | "\\isacharampersand"
+                 | "\\isacharbackquoteclose"
+                 | "\\isacharbackquoteopen"
+                 | "\\isacharbar"
+                 | "\\isacharbrackleft"
+                 | "\\isacharbrackright"
+                 | "\\isacharcolon"
+                 | "\\isachardot"
+                 | "\\isachardoublequoteclose"
+                 | "\\isachardoublequoteopen"
+                 | "\\isacharequal"
+                 | "\\isacharparenleft"
+                 | "\\isacharparenright"
+                 | "\\isacharprime"
+                 | "\\isacharquery"
+                 | "\\isacharsemicolon"
+                 | "\\isacharunderscore"
+                 | "\\isacommand"
+                 | "\\isactrlsub"
+                 | "\\isadigit"
+                 | "\\isadof"
+                 | "\\isafor"
                  | "\\isaheader"
+                 | "\\isaheader"
+                 | "\\isakeyword"
+                 | "\\isamarkupcancel"
+                 | "\\isamarkupcmt"
+                 | "\\isamarkupfalse"
+                 | "\\isamarkupsection"
+                 | "\\isamarkuptrue"
+                 | "\\isaname"
+                 | "\\isanewline"
+                 | "\\isasection"
+                 | "\\isastyle"
+                 | "\\isastyletext"
+                 | "\\isasymAnd"
+                 | "\\isasymLongrightarrow"
+                 | "\\isasymRightarrow"
+                 | "\\isasymS"
+                 | "\\isasymT"
+                 | "\\isasymequiv"
+                 | "\\isasymint"
+                 | "\\isasymlbrakk"
+                 | "\\isasymle"
+                 | "\\isasymmapsto"
+                 | "\\isasymnoteq"
+                 | "\\isasymparallel"
+                 | "\\isasymrbrakk"
+                 | "\\isasymrhd"
+                 | "\\isasymrho"
+                 | "\\isasymsigma"
+                 | "\\isasymstar"
+                 | "\\isasymtau"
+                 | "\\isasymupsilon"
+                 | "\\isatagafp"
+                 | "\\isatagannexa"
+                 | "\\isatext"
+                 | "\\isb"
+                 | "\\it"
                  | "\\item"
+                 | "\\item"
+                 | "\\jensenexample"
+                 | "\\jive"
+                 | "\\justif"
+                 | "\\kappa"
+                 | "\\kern"
+                 | "\\knows"
+                 | "\\lAct"
+                 | "\\lOut"
+                 | "\\lSact"
+                 | "\\lVert"
+                 | "\\labarrow"
                  | "\\label"
+                 | "\\label"
+                 | "\\lambda"
+                 | "\\land"
+                 | "\\langle"
+                 | "\\large"
+                 | "\\lbrace"
+                 | "\\lceil"
+                 | "\\lcomp"
+                 | "\\lcreate"
+                 | "\\ldots"
+                 | "\\le"
+                 | "\\leadsto"
+                 | "\\left"
+                 | "\\leftAct"
+                 | "\\leftSemimodule"
+                 | "\\leftadd"
+                 | "\\leftaddaux"
+                 | "\\leftarrow"
+                 | "\\leftmargin"
+                 | "\\leq"
+                 | "\\leqslant"
+                 | "\\let"
+                 | "\\lfloor"
+                 | "\\lfst"
+                 | "\\lg"
+                 | "\\lget"
+                 | "\\lhd"
+                 | "\\lim"
+                 | "\\liminf"
+                 | "\\limits"
+                 | "\\limsup"
+                 | "\\linebreak"
+                 | "\\linelabel"
+                 | "\\linewidth"
+                 | "\\llbracket"
+                 | "\\ln"
+                 | "\\lnot"
+                 | "\\lnotation"
+                 | "\\log"
+                 | "\\longleftrightarrow"
+                 | "\\longrightarrow"
+                 | "\\lor"
+                 | "\\lower"
+                 | "\\lowercase"
+                 | "\\lput"
+                 | "\\lquot"
+                 | "\\lsnd"
+                 | "\\lstinline"
+                 | "\\lstinputlisting"
+                 | "\\lt"
+                 | "\\ltimes"
+                 | "\\lto"
+                 | "\\lvert"
+                 | "\\maketitle"
+                 | "\\mapsto"
+                 | "\\mathbb"
+                 | "\\mathbf"
+                 | "\\mathbin"
+                 | "\\mathcal"
+                 | "\\mathfrak"
+                 | "\\mathit"
+                 | "\\mathop"
+                 | "\\mathrel"
+                 | "\\mathrm"
+                 | "\\mathscr"
+                 | "\\mathsf"
+                 | "\\mathtt"
+                 | "\\max"
+                 | "\\mbox"
+                 | "\\medskip"
+                 | "\\mid"
+                 | "\\middle"
+                 | "\\midrule"
+                 | "\\min"
+                 | "\\mod"
+                 | "\\models"
+                 | "\\mu"
+                 | "\\multicolumn"
+                 | "\\myboxi"
+                 | "\\myboxii"
+                 | "\\myboxiii"
+                 | "\\myboxiv"
+                 | "\\mycomment"
+                 | "\\mydimeni"
+                 | "\\mydimenii"
+                 | "\\myscale"
+                 | "\\myskip"
+                 | "\\myskipamount"
+                 | "\\myurl"
+                 | "\\n"
+                 | "\\nAUhiZshToFJJDerqQwxgQ"
+                 | "\\nAnd"
+                 | "\\nCNdKebOrUVtPL"
+                 | "\\nExpected"
+                 | "\\nFbP"
+                 | "\\nIn"
+                 | "\\nKSdw"
+                 | "\\nMCH"
+                 | "\\nMIIEpAIBAAKCAQEAwyzQ"
+                 | "\\nMaybe"
+                 | "\\nOTg"
+                 | "\\nOrJNHvAPjSFM"
+                 | "\\nOriginal"
+                 | "\\nPlease"
+                 | "\\nProbable"
+                 | "\\nPt"
+                 | "\\nS"
+                 | "\\nThe"
+                 | "\\nValid"
+                 | "\\nVmtx"
+                 | "\\nWVp"
+                 | "\\nX"
+                 | "\\nYHq"
+                 | "\\nYTgMu"
+                 | "\\nYplS"
+                 | "\\nabla"
+                 | "\\nat"
+                 | "\\nats"
+                 | "\\nbut"
+                 | "\\ncannot"
+                 | "\\ne"
+                 | "\\neDuZ"
+                 | "\\nec"
+                 | "\\needleangle"
+                 | "\\needlelength"
+                 | "\\needlethickness"
+                 | "\\neg"
+                 | "\\neq"
+                 | "\\newcommand"
+                 | "\\newcounter"
+                 | "\\newisadof"
+                 | "\\newkeycommand"
+                 | "\\newlength"
+                 | "\\newline"
+                 | "\\newpage"
+                 | "\\nfoo"
+                 | "\\nhas"
+                 | "\\nicefrac"
+                 | "\\nin"
+                 | "\\nkVaiMZMvZxslF"
+                 | "\\nksmYtg"
+                 | "\\nmid"
+                 | "\\node"
+                 | "\\noexpand"
                  | "\\noindent"
+                 | "\\noindent"
+                 | "\\nolimits"
+                 | "\\nolinkurl"
+                 | "\\nondet"
+                 | "\\nonumber"
+                 | "\\nopagebreak"
+                 | "\\normalfont"
+                 | "\\normalsize"
+                 | "\\not"
+                 | "\\notin"
+                 | "\\nrMgklhl"
+                 | "\\ns"
+                 | "\\nsAscPlcZCMm"
+                 | "\\nsim"
+                 | "\\nsubseteq"
+                 | "\\nt"
+                 | "\\ntN"
+                 | "\\nu"
+                 | "\\null"
+                 | "\\odot"
+                 | "\\oid"
+                 | "\\omega"
+                 | "\\ominus"
+                 | "\\omit"
+                 | "\\open"
+                 | "\\operatorname"
+                 | "\\oplus"
+                 | "\\orb"
+                 | "\\orbS"
+                 | "\\orcidID"
+                 | "\\ord"
+                 | "\\otimes"
+                 | "\\outOp"
+                 | "\\over"
+                 | "\\overbrace"
+                 | "\\overline"
+                 | "\\overrightarrow"
+                 | "\\overset"
+                 | "\\p"
+                 | "\\pagebreak"
+                 | "\\pageref"
+                 | "\\par"
                  | "\\paragraph"
+                 | "\\paragraph"
+                 | "\\parallel"
+                 | "\\parbox"
+                 | "\\parencite"
+                 | "\\parindent"
+                 | "\\part"
+                 | "\\partial"
+                 | "\\pat"
+                 | "\\path"
+                 | "\\pf"
+                 | "\\phantom"
+                 | "\\phi"
+                 | "\\pi"
+                 | "\\pm"
+                 | "\\pmod"
+                 | "\\polhk"
+                 | "\\pos"
+                 | "\\prec"
+                 | "\\preceq"
+                 | "\\precsim"
+                 | "\\prev"
+                 | "\\prime"
+                 | "\\prod"
+                 | "\\prompt"
+                 | "\\protect"
+                 | "\\protected"
+                 | "\\provideisadof"
+                 | "\\providekeycommand"
+                 | "\\psi"
+                 | "\\put"
+                 | "\\qed"
+                 | "\\qquad"
+                 | "\\qt"
+                 | "\\quad"
+                 | "\\quotient"
+                 | "\\r"
+                 | "\\rKact"
+                 | "\\rVert"
+                 | "\\raise"
+                 | "\\rangle"
+                 | "\\rats"
+                 | "\\ratsb"
+                 | "\\rbrace"
+                 | "\\rceil"
+                 | "\\reals"
+                 | "\\ref"
+                 | "\\ref"
+                 | "\\refl"
+                 | "\\refsto"
+                 | "\\renewcommand"
+                 | "\\renewisadof"
+                 | "\\renewkeycommand"
+                 | "\\resizebox"
+                 | "\\rfloor"
+                 | "\\rhd"
+                 | "\\rho"
+                 | "\\right"
+                 | "\\rightAct"
+                 | "\\rightSemimodule"
+                 | "\\rightarrow"
+                 | "\\rightarrowtail"
+                 | "\\rightharpoonup"
+                 | "\\rightsquigarrow"
+                 | "\\rm"
+                 | "\\rrbracket"
+                 | "\\rrtwocell"
+                 | "\\rulelen"
+                 | "\\rulenamelen"
+                 | "\\rvert"
+                 | "\\sc"
+                 | "\\scalebox"
+                 | "\\scriptsize"
+                 | "\\scriptstyle"
+                 | "\\secref"
+                 | "\\secref"
+                 | "\\section"
+                 | "\\set"
+                 | "\\setbox"
+                 | "\\setlength"
+                 | "\\setminus"
+                 | "\\sets"
+                 | "\\settoheight"
+                 | "\\settowidth"
+                 | "\\sf"
+                 | "\\sffamily"
+                 | "\\sharp"
+                 | "\\sigma"
+                 | "\\sim"
+                 | "\\sin"
+                 | "\\sinh"
+                 | "\\sl"
+                 | "\\sloppy"
+                 | "\\sloppypar"
+                 | "\\small"
+                 | "\\smallskip"
+                 | "\\smallskipamount"
+                 | "\\smash"
+                 | "\\smile"
                  | "\\snip"
+                 | "\\snip"
+                 | "\\spot"
+                 | "\\spray"
+                 | "\\sqcap"
+                 | "\\sqcup"
+                 | "\\sqrt"
+                 | "\\sqsubseteq"
+                 | "\\sqsupseteq"
+                 | "\\src"
+                 | "\\ss"
+                 | "\\stab"
+                 | "\\stackrel"
+                 | "\\star"
+                 | "\\state"
+                 | "\\stepcounter"
+                 | "\\stim"
+                 | "\\stop"
+                 | "\\store"
+                 | "\\string"
+                 | "\\strut"
+                 | "\\subfloat"
+                 | "\\subsection"
+                 | "\\subset"
+                 | "\\subseteq"
+                 | "\\substack"
+                 | "\\subsubsection"
+                 | "\\succ"
+                 | "\\succeq"
+                 | "\\sum"
+                 | "\\sup"
+                 | "\\supset"
+                 | "\\supseteq"
+                 | "\\t"
+                 | "\\table"
+                 | "\\tabto"
+                 | "\\tag"
+                 | "\\tan"
+                 | "\\tau"
+                 | "\\td"
+                 | "\\texorpdfstring"
+                 | "\\text"
+                 | "\\textbf"
+                 | "\\textdegree"
+                 | "\\textelp"
+                 | "\\textheight"
+                 | "\\textins"
+                 | "\\textit"
+                 | "\\textquote"
+                 | "\\textrm"
+                 | "\\textsc"
+                 | "\\textsection"
+                 | "\\textsf"
+                 | "\\textsl"
+                 | "\\textstyle"
+                 | "\\textsuperscript"
                  | "\\texttt"
+                 | "\\texttt"
+                 | "\\textwidth"
+                 | "\\tfrac"
+                 | "\\tfreeify"
+                 | "\\thedof"
+                 | "\\theta"
+                 | "\\thy"
+                 | "\\tikzset"
+                 | "\\tikzstyle"
+                 | "\\tilde"
+                 | "\\times"
+                 | "\\times"
+                 | "\\tiny"
+                 | "\\tlastar"
+                 | "\\tnote"
+                 | "\\to"
+                 | "\\todo"
+                 | "\\top"
+                 | "\\toprule"
+                 | "\\tp"
+                 | "\\triangle"
+                 | "\\triangleq"
+                 | "\\triangleright"
+                 | "\\tt"
+                 | "\\tv"
+                 | "\\twocolumn"
+                 | "\\ulcorner"
+                 | "\\uline"
+                 | "\\underbrace"
+                 | "\\underline"
+                 | "\\underset"
+                 | "\\unlhd"
+                 | "\\uparrow"
+                 | "\\uplambda"
+                 | "\\uplus"
                  | "\\upshape"
+                 | "\\upshape"
+                 | "\\urcorner"
+                 | "\\url"
+                 | "\\urtwocell"
+                 | "\\usepackage"
+                 | "\\ute"
+                 | "\\v"
+                 | "\\vDash"
+                 | "\\var"
+                 | "\\varepsilon"
+                 | "\\varnothing"
+                 | "\\varphi"
+                 | "\\vartheta"
+                 | "\\vcenter"
+                 | "\\vdash"
+                 | "\\vdots"
+                 | "\\vec"
+                 | "\\vee"
+                 | "\\verb"
+                 | "\\vfill"
+                 | "\\view"
+                 | "\\voelzer"
+                 | "\\vsep"
+                 | "\\vskip"
+                 | "\\vspace"
+                 | "\\vthinspace"
+                 | "\\wd"
+                 | "\\wedge"
+                 | "\\whitedot"
+                 | "\\widehat"
+                 | "\\write"
+                 | "\\www"
+                 | "\\x"
+                 | "\\xIc"
+                 | "\\xId"
+                 | "\\xa"
+                 | "\\xabacabad"
+                 | "\\xac"
+                 | "\\xad"
+                 | "\\xb"
+                 | "\\xc"
+                 | "\\xcod"
+                 | "\\xd"
+                 | "\\xdom"
+                 | "\\xe"
+                 | "\\xf"
+                 | "\\xi"
+                 | "\\xlc"
+                 | "\\xld"
+                 | "\\xldp"
+                 | "\\xlowertwocell"
+                 | "\\xrightarrow"
+                 | "\\xs"
+                 | "\\xtwocell"
+                 | "\\xuppertwocell"
+                 | "\\xy"
+                 | "\\xymatrix"
+                 | "\\xz"
+                 | "\\y"
+                 | "\\zeta"
+                 | "\\{"
+                 | "\\}"
 
-cartouche: CARTOUCHE_OPEN (cartouche_content | CARTOUCHE_SYMBOLS | cartouche)* CARTOUCHE_CLOSE
+cartouche: CARTOUCHE_OPEN (cartouche_content | CARTOUCHE_SYMBOLS | GREEK | cartouche)* CARTOUCHE_CLOSE
 
 cartouche_content: (CARTOUCHE_TEXT | cartouche)*
 
@@ -160,6 +1602,8 @@ theory: (goal proof_prove
 statement: abbreviation
          | axiomatization_block
          | bundle
+         | class
+         | class_instance
          | comment_block
          | consts
          | context
@@ -173,6 +1617,7 @@ statement: abbreviation
          | global_interpretation proof_prove
          | hide_declarations
          | inductive
+         | instantiation
          | instantiation
          | interpretation_block
          | lemmas
@@ -190,12 +1635,15 @@ statement: abbreviation
          | primrec
          | record
          | setup_lifting
+         | subclass
          | sublocale proof_prove
          | syntax
          | translations
          | type_synonym
          | typedecl
+         | typedef proof_prove
          | unbundle
+         | inductive_cases
 
 method_block: "method" name "=" instruction
 
@@ -247,6 +1695,7 @@ name: "case"
     | QUOTED_STRING
     | "*"
     | "**"
+    | "***"
     | SYM_IDENT
     | (ID | GREEK | "\\<^sub>" | ".")+ "'"*
     | "-"
@@ -257,8 +1706,7 @@ par_name: "(" name ")"
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.3
 #
 
-embedded: ID
-        | QUOTED_STRING
+embedded: QUOTED_STRING
         | cartouche
         | NAT
         | GREEK
@@ -270,7 +1718,7 @@ embedded: ID
         | SYM_IDENT
         | TERM_VAR
         | SYM_IDENT
-        | "?" ID "'"
+        | "?"? ID ("." ID)* "'"?
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.4
@@ -292,31 +1740,34 @@ inst: "_" | term
 
 insts: inst insts
 
-typespec: typeargs? ID
+named_inst: variable "=" (type | term)
+
+named_insts: named_inst ("and" named_inst)*
+
+variable: name | TERM_VAR | TYPE_IDENT | TYPE_VAR
+
+typespec: typeargs? name
 
 typearg: TYPE_IDENT | ID ("::" ID)?
 
 # moved empty case to p_typespec in order to avoid parsing error
-typeargs: typearg ("," typearg)* | "(" typeargs ")"
+typeargs: TYPE_IDENT
+        | "(" TYPE_IDENT ("," TYPE_IDENT)* ")"
 
-typeargs_sorts: type_ident_with_sort
-              | "(" type_ident_with_sort_list ")"
+typeargs_sorts: TYPE_IDENT ("::" sort)?
+              | "(" TYPE_IDENT ("::" sort)? ("," TYPE_IDENT ("::" sort)?)* ")"
 
-type_ident_with_sort : TYPE_IDENT ("::" sort)?
-
-type_ident_with_sort_list : type_ident_with_sort ("," type_ident_with_sort)*
-
-typespec_sorts : typeargs_sorts name
+typespec_sorts: typeargs_sorts name
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.6
 #
 
-sort : ID
+sort: ID
 
-sort_list_comma_sep : sort ("," sort)*
+sort_list_comma_sep: sort ("," sort)*
 
-arity : ("(" sort_list_comma_sep ")")? sort
+arity: ("(" sort_list_comma_sep ")")? sort
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.8
@@ -326,7 +1777,7 @@ vars: var ("and" var)*
 
 var: (name+ ("::" type)?) | (name ("::" type)? mixfix)
 
-props: thmdecl? (prop prop_pat?)+
+props: thmdecl? comment_block? (prop prop_pat?)+
 
 prop_list_with_pat: prop prop_pat? ("and"? prop prop_pat?)*
 
@@ -370,17 +1821,26 @@ method_arg: method_arg_atom
 method_args: (","? method_arg)*
 
 attributes: "[" (name args? ("," name args?)*)? "]"
+          | "[" attribute "]"
 
-attributes_list : attribute ("," attribute)*
-
-# TODO [OF assms(1)] should be handled separately
-attribute : name args
-             | name "?"
-             | name "!"
-             | name "=" ID
-             | ID "assms" "(" NAT ")"
-             | folded
-             | NAT
+attribute: "OF" thms
+         | "THEN" ("[" NAT "]")? thm
+         | "cong" ("add" | "del")?
+         | "folded" thms
+         | "of" insts ("concl" ":" insts)? for_fixes?
+         | "rotated" NAT?
+         | "rule" "del"
+         | "simp"
+         | "simp" ("add" | "del")?
+         | "split" ("!" | "del")?
+         | "symmetric"
+         | "tagged" name name
+         | "trans" ("add" | "del")?
+         | "unfolded" thms
+         | "untagged" name
+         | "where" named_insts for_fixes?
+         | ("intro" | "elim" | "dest") (("!" | "?")? NAT?)
+         | ("intro" | "elim" | "dest") ((("!" | "?")? NAT?) | "del") ":" thms
 
 args: arg*
 
@@ -408,7 +1868,8 @@ thm: (((name selection?) | cartouche) attributes?) | ("[" attributes "]")
 
 thms: thm+
 
-thmbind: name attributes?
+thmbind: name attributes
+       | name
        | attributes
 
 selection: "(" selection_list ")"
@@ -497,12 +1958,8 @@ atom : "(" ")"
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.2
 #
 
-context : "context" name "begin" local_theory "end"
-           | "context" name opening "begin" local_theory "end"
-           | "context" includes "begin" local_theory "end"
-           | "context" includes context_elem_list "begin" local_theory "end"
-           | "context" context_elem_list "begin" local_theory "end"
-           | "context" "begin" local_theory "end"
+context: "context" name opening? "begin" local_theory "end"
+       | "context" includes? context_elem* "begin" local_theory "end"
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.3
@@ -516,9 +1973,9 @@ include: "include" name*
 
 including: "including" name*
 
-includes :  "includes" name*
+includes:  "includes" name*
 
-opening : "opening" name*
+opening: "opening" name*
 
 unbundle: "unbundle" name*
 
@@ -526,7 +1983,7 @@ unbundle: "unbundle" name*
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.4
 #
 
-decl: name ("::" (ID | QUOTED_STRING))? mixfix? "where" comment_block?
+decl: name ("::" (ID | QUOTED_STRING | cartouche))? mixfix? "where" comment_block?
 
 definition: "definition" ("(" "in" ID ")")? decl? thmdecl? prop spec_prems? for_fixes?
 
@@ -590,21 +2047,14 @@ locale_block: "locale" name ("=" locale)? (comment_block)? ("begin" (local_theor
 
 # flattened locale_expr to avoid parsing conflict between instance_list
 # and "+" below due to PLY using LALR(1)
-locale: opening ("+" context_elem_list)?
-      | instance? for_fixes? opening? ("+" context_elem_list)?
-      | context_elem_list
-
-context_elem_list: context_elem+
+locale: context_elem+ | (locale_expr? opening? ("+" context_elem+)?)
 
 context_elem: "fixes" vars
-            | "constrains" name_type_list
+            | "constrains" (name "::" type ("and" name "::" type)*)
             | "assumes" props ("and" props)*
             | "defines" defines_list
             | "notes" notes_list
-
-name_type_list: ID "::" ID
-              | ID "::" ID "." ID
-              | ID "::" ID "and" name_type_list
+            | comment_block
 
 props_list_and_sep: props ("and" props)*
 
@@ -633,18 +2083,12 @@ definitions_item: thmdecl? name mixfix? "=" term
 definitions: "defines" definitions_item ("and" definitions_item)*
 
 #
-# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.9
-#
-
-consts: "consts" const_decls
-
-const_decls: const_decl+
-
-const_decl: name "::" type mixfix?
-
-#
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.8
 #
+
+class: "class" class_spec "begin" local_theory "end"
+
+class_spec: name "=" (name? opening? ("+" context_elem+)?)
 
 instantiation : "instantiation" name_list_and_sep "::" arity "begin" local_theory "end"
 
@@ -655,6 +2099,23 @@ class_instance: "instance"
               | "instance" name_list_and_sep "::" arity
               | "instance" name "<" name
               | "instance" name "\\<subseteq>" name
+
+subclass: "subclass" name
+
+class_deps: "class_deps" (class_bounds class_bounds?)?
+
+class_bounds: sort | ("(" sort ("|" sort)* ")")
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.9
+#
+
+consts: "consts" const_decls
+
+const_decls: const_decl+
+
+const_decl: name "::" type mixfix?
+
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.10
@@ -719,7 +2180,8 @@ let_statement: term ("and" term)* "=" term
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.2.3
 #
 
-proof_state: "also" proof_state
+proof_state: "also" ("(" thms ")")proof_state
+           | "defer" NAT? proof_state
            | "done"
            | "done" local_theory
            | "done" proof_state
@@ -736,6 +2198,7 @@ proof_state: "also" proof_state
            | consider proof_prove
            | doc_block proof_state
            | fix proof_state
+           | "finally" ("(" thms ")")? proof_chain
            | from proof_chain
            | have proof_prove
            | hence proof_prove
@@ -771,6 +2234,7 @@ proof_chain: consider proof_prove
            | obtain proof_prove
            | show proof_prove
            | subgoal proof_prove
+           | "defer" NAT? proof_chain
 
 note: "note" (thmdef? thms) ("and" thmdef? thms)*
 
@@ -797,6 +2261,7 @@ local_theory: goal proof_prove
 # "note" "also" proof_state here contradicts grammar in Isabelle/Isar
 proof_prove: "show" stmt cond_stmt
              | "also" proof_state
+             | "defer" NAT? proof_prove
              | "done"
              | "done" local_theory
              | "done" proof_state
@@ -876,10 +2341,9 @@ cond_stmt: ("if" | "when") stmt
 
 short_statement: stmt ("if" stmt)? for_fixes?
 
-long_statement: thmdecl? statement_context conclusion
+long_statement: thmdecl? comment_block? statement_context conclusion
 
-statement_context: includes context_elem_list?
-                 | context_elem_list
+statement_context: includes? context_elem*
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.3
@@ -893,12 +2357,26 @@ statement_context: includes context_elem_list?
 # TODO missing induct, induction, and coinduct
 method: (name | ("(" methods ")")) method_modifier? attributes?
       | cases
+      | "rule" thms
+      | "subst" ("(" "asm" ")")? ("(" NAT+ ")")? thm
+      | "split" thms
+      | ("simp" | "simp_all") opt? simpmod?
+      | "use" thms "in" method
+      | "case_tac" goal_spec? term rule?
+      | "induct_tac" goal_spec? (insts ("and" insts)*)? rule?
+      | "ind_cases" prop+ for_fixes?
+
+opt: "(" ("no_asm" | "no_asm_simp" | "no_asm_use" | "asm_lr") ")"
+
+simpmod: ("add" | "del" | "flip" | "only" | ("split" ("!" | "del")?) | ("cong" ("add" | "del")?)) ":" thms
 
 method_modifier: "?" | "+" | "[" NAT "]"
 
 method_name: name
 
-methods: (method | method_name method_args?) (("," | ";" | "|") (method | method_name method_args))*
+methods: (method | (method_name method_args?)) (("," | ";" | "|") (method | (method_name method_args?)))*
+
+goal_spec: "[" ((NAT ("-" NAT?)?) | "!") "]"
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.4.2
@@ -1045,27 +2523,16 @@ inductive : ("inductive" | "inductive_set" | "coinductive" | "coinductive_set") 
 
 primrec: "primrec" specification
 
-fun_block: ("fun" | "function") specification proof_prove?
+fun_block: "fun" opts? specification
+         | ("function" | "nominal_function") opts? specification proof_prove
 
-opts: "(" opt_list ")"
+opts: "(" ("sequential" | "domintros") ("," ("sequential" | "domintros"))* ")"
 
-opt_list: sequential
-        | domintros
-        | sequential "," opt_list
-        | domintros "," opt_list
-
-termination: "termination" term?
-
-# TODO: not spec'ed
-sequential : ID
-           | QUOTED_STRING
-
-# TODO: not spec'ed
-domintros : ID
-          | QUOTED_STRING
+termination: "termination" term? proof_prove
+           | "nominal_termination" ("(" name ")")? term? proof_prove
 
 # TODO generated from examples
-datatype : "datatype" generic_type "=" constructors
+datatype: "datatype" generic_type "=" constructors
 
 generic_type : type name
              | type
@@ -1073,42 +2540,43 @@ generic_type : type name
 constructors : constructor
              | constructor "|" constructors
 
-constructor : ID TYPE_IDENT comment_block
-            | ID TYPE_IDENT
-            | ID ID comment_block
-            | ID ID
-            | ID QUOTED_STRING comment_block
-            | ID QUOTED_STRING
-            | ID comment_block
-            | ID
+constructor : comment_block? ID TYPE_IDENT mixfix? comment_block?
+            | comment_block? (name | cartouche)+ mixfix? comment_block?
+            | comment_block? (name | cartouche) "(" cartouche ")" mixfix? comment_block?
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.2.2
 #
 
-partial_function : "partial_function" "(" name ")" specification
+partial_function: "partial_function" "(" name ")" specification
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.6.2
 #
 
-record : "record" overloaded typespec_sorts "=" type "+" constdecl_list
-       | "record" typespec_sorts "=" type "+" constdecl_list
-       | "record" overloaded typespec_sorts "=" constdecl_list
-       | "record" typespec_sorts "=" constdecl_list
+record: "record" overloaded typespec_sorts "=" type "+" constdecl_list
+      | "record" typespec_sorts "=" type "+" constdecl_list
+      | "record" overloaded typespec_sorts "=" constdecl_list
+      | "record" typespec_sorts "=" constdecl_list
 
-constdecl_list : constdecl
-               | constdecl constdecl_list
+constdecl_list: constdecl
+              | constdecl constdecl_list
 
-constdecl : name "::" type
-          | name "::" type comment_block
-          | name "::" type mixfix
+constdecl: name "::" type
+         | name "::" type comment_block
+         | name "::" type mixfix
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.7
 #
 
-overloaded : "(" "overloaded" ")"
+typedef: "typedef" overloaded? abs_type "=" rep_set
+
+overloaded: "(" "overloaded" ")"
+
+abs_type: typespec_sorts mixfix?
+
+rep_set: term ("morphisms"? name name)?
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.9.2
@@ -1132,6 +2600,12 @@ nitpick : "nitpick" "[" args "]" NAT
         | "nitpick" "[" args "]"
         | "nitpick" NAT
         | "nitpick"
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 12.9
+#
+
+inductive_cases: "inductive_cases" (thmdecl? prop+ ("and" thmdecl? prop+)*)
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 13
