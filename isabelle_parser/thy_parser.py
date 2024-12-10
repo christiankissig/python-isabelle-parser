@@ -21,6 +21,7 @@ CARTOUCHE_OPEN: "\\<open>"
 CARTOUCHE_TEXT: /[^\\]+/
 CARTOUCHE_CLOSE: "\\<close>"
 CARTOUCHE_SYMBOLS: "\<A>"
+                 | "\\-"
                  | "\<AA>"
                  | "\<B>"
                  | "\<BB>"
@@ -712,6 +713,7 @@ CARTOUCHE_SYMBOLS: "\<A>"
                  | "\\Vert"
                  | "\\ZF"
                  | "\\ZFC"
+                 | "\\\""
                  | "\\_"
                  | "\\a"
                  | "\\actOp"
@@ -1512,8 +1514,6 @@ EQUIV: "\\<equiv>"
 NEWLINE: "\\<newline>"
 COMMENT_CARTOUCHE: "\\<comment>"
 MARKER: "\\<^marker>"
-VAR_CASE: "\\?case"
-VAR_THESIS: "\\?thesis"
 
 // Greek symbols
 GREEK: "\\<alpha>"
@@ -1565,7 +1565,7 @@ LETTER: /[a-zA-Z]/
 LATIN: /[a-zA-Z]/
 
 // Numbers and variables
-NAT: /\d+/
+NAT: /-?\d+/
 SYM_FLOAT: /\d+(\.\d+)+|\.\d+/
 TERM_VAR: /\?[a-zA-Z](_?\d*[a-zA-Z]*)*\.?\d*/
 TYPE_VAR: /'[a-zA-Z](_?\d*[a-zA-Z]*)*\.?\d*/
@@ -1613,10 +1613,12 @@ statement: abbreviation
          | definition
          | doc_block
          | export_code
+         | find_unused_assms
          | fun_block
          | global_interpretation proof_prove
          | hide_declarations
          | inductive
+         | inductive_cases
          | instantiation
          | instantiation
          | interpretation_block
@@ -1629,10 +1631,14 @@ statement: abbreviation
          | method_block
          | ml
          | named_theorems
+         | nitpick_params
          | nonterminal
          | notation_block
+         | overloading
          | partial_function
          | primrec
+         | quickcheck_generator
+         | quickcheck_params
          | record
          | setup_lifting
          | subclass
@@ -1643,7 +1649,8 @@ statement: abbreviation
          | typedecl
          | typedef proof_prove
          | unbundle
-         | inductive_cases
+         | value
+         | values
 
 method_block: "method" name "=" instruction
 
@@ -1699,6 +1706,9 @@ name: "case"
     | SYM_IDENT
     | (ID | GREEK | "\\<^sub>" | ".")+ "'"*
     | "-"
+    | "\\<bottom>"
+    | "\\<A>"
+    | "\\<D>"
 
 par_name: "(" name ")"
 
@@ -1707,18 +1717,18 @@ par_name: "(" name ")"
 #
 
 embedded: QUOTED_STRING
-        | cartouche
-        | NAT
-        | GREEK
-        | "True"
+        | "?"? ID ("." ID)* "'"?
         | "False"
-        | VAR_CASE
-        | VAR_THESIS
-        | TYPE_IDENT
+        | "True"
+        | "false"
+        | "true"
+        | GREEK
+        | NAT
+        | SYM_IDENT
         | SYM_IDENT
         | TERM_VAR
-        | SYM_IDENT
-        | "?"? ID ("." ID)* "'"?
+        | TYPE_IDENT
+        | cartouche
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.4
@@ -1738,7 +1748,7 @@ prop: embedded
 
 inst: "_" | term
 
-insts: inst insts
+insts: inst*
 
 named_inst: variable "=" (type | term)
 
@@ -1775,7 +1785,8 @@ arity: ("(" sort_list_comma_sep ")")? sort
 
 vars: var ("and" var)*
 
-var: (name+ ("::" type)?) | (name ("::" type)? mixfix)
+var: name+ ("::" type)? comment_block?
+   | name ("::" type)? mixfix comment_block?
 
 props: thmdecl? comment_block? (prop prop_pat?)+
 
@@ -1821,7 +1832,7 @@ method_arg: method_arg_atom
 method_args: (","? method_arg)*
 
 attributes: "[" (name args? ("," name args?)*)? "]"
-          | "[" attribute "]"
+          | "[" attribute ("," attribute)* "]"
 
 attribute: "OF" thms
          | "THEN" ("[" NAT "]")? thm
@@ -1841,6 +1852,7 @@ attribute: "OF" thms
          | "where" named_insts for_fixes?
          | ("intro" | "elim" | "dest") (("!" | "?")? NAT?)
          | ("intro" | "elim" | "dest") ((("!" | "?")? NAT?) | "del") ":" thms
+         | code
 
 args: arg*
 
@@ -1864,7 +1876,8 @@ thmdecl: thmbind ":"
 thmdef: thmbind "="
 
 # TODO add altstring
-thm: (((name selection?) | cartouche) attributes?) | ("[" attributes "]")
+thm: ((name selection?) | cartouche) attributes?
+   | "[" attributes "]"
 
 thms: thm+
 
@@ -1985,7 +1998,7 @@ unbundle: "unbundle" name*
 
 decl: name ("::" (ID | QUOTED_STRING | cartouche))? mixfix? "where" comment_block?
 
-definition: "definition" ("(" "in" ID ")")? decl? thmdecl? prop spec_prems? for_fixes?
+definition: "definition" ("(" "in" name ")")? decl? thmdecl? prop spec_prems? for_fixes?
 
 abbreviation: "abbreviation" ("(" "in" ID ")")? mode? decl? prop for_fixes?
 
@@ -1995,9 +2008,9 @@ abbreviation: "abbreviation" ("(" "in" ID ")")? mode? decl? prop for_fixes?
 
 axiomatization_block: "axiomatization" vars? ("where" axiomatization)?
 
-axiomatization: axiomatization_header spec_prems for_fixes
+axiomatization: axiomatization_header spec_prems? for_fixes?
 
-axiomatization_header: thmdecl (ID | QUOTED_STRING) ("and" axiomatization_header)?
+axiomatization_header: thmdecl (ID | QUOTED_STRING) comment_block? ("and" comment_block? axiomatization_header)?
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.6
@@ -2110,12 +2123,11 @@ class_bounds: sort | ("(" sort ("|" sort)* ")")
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.9
 #
 
-consts: "consts" const_decls
+consts: "consts" (name "::" type comment_block? mixfix? comment_block?)+
 
-const_decls: const_decl+
+overloading: "overloading" spec+ "begin" local_theory "end"
 
-const_decl: name "::" type mixfix?
-
+spec: name ("\\<equiv>" | "==") term ("(" "unchecked" ")")?
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.10
@@ -2211,9 +2223,7 @@ proof_state: "also" ("(" thms ")")proof_state
            | prems proof_state
            | proof proof_state
            | qed
-           | qed local_theory
            | qed proof_state
-           | qed theory
            | show proof_prove
            | subgoal proof_prove
            | terminal_proof_steps
@@ -2236,15 +2246,15 @@ proof_chain: consider proof_prove
            | subgoal proof_prove
            | "defer" NAT? proof_chain
 
-note: "note" (thmdef? thms) ("and" thmdef? thms)*
+note: "note" (thmdef? thm+) ("and" thmdef? thm+)*
 
-from: "from" thms ("and" thms)*
+from: "from" thm ("and"? thm)*
 
-with: "with" thms ("and" thms)*
+with: "with" thm ("and"? thm)*
 
-using: "using" thms ("and" thms)*
+using: "using" thm ("and"? thm)*
 
-unfolding: "unfolding" thm+ ("and" thm+)*
+unfolding: "unfolding" thm ("and"? thm)*
 
 # TODO the first line is adhoc based on AFP, and doesn't match the grammar
 # "class_instance proof_prove" not allowed in Isabelle/Isar grammar, but found in AFP
@@ -2259,19 +2269,16 @@ local_theory: goal proof_prove
             | print_bundles context local_theory
 
 # "note" "also" proof_state here contradicts grammar in Isabelle/Isar
-proof_prove: "show" stmt cond_stmt
+proof_prove: "show" stmt cond_stmt?
              | "also" proof_state
              | "defer" NAT? proof_prove
              | "done"
              | "done" local_theory
              | "done" proof_state
              | "done" theory
-             | "hence" stmt cond_stmt
-             | "hence" stmt cond_stmt for_fixes
+             | "hence" stmt cond_stmt? for_fixes?
              | "oops"
-             | "oops" theory
-             | "show" stmt cond_stmt for_fixes
-             | apply
+             | "show" stmt cond_stmt? for_fixes?
              | apply proof_prove
              | by
              | by local_theory
@@ -2288,6 +2295,7 @@ proof_prove: "show" stmt cond_stmt
              | qed local_theory
              | qed proof_state
              | qed theory
+             | quickcheck proof_prove
              | subgoal proof_prove
              | supply_block
              | supply_block proof_prove
@@ -2296,6 +2304,7 @@ proof_prove: "show" stmt cond_stmt
              | terminal_proof_steps proof_state
              | terminal_proof_steps theory
              | termination proof_prove
+             | unfolding proof_prove
              | using
              | using proof_prove
              | with proof_chain
@@ -2325,7 +2334,7 @@ assms : "assms"
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.2.4
 #
 
-goal: ("lemma" | "theorem" | "corollary" | "proposition" | "schematic_goal") ("(" "in" ID ")")? (long_statement | short_statement)
+goal: ("lemma" | "theorem" | "corollary" | "proposition" | "schematic_goal") ("(" "in" name ")")? (long_statement | short_statement)
 
 have: "have" stmt cond_stmt? for_fixes?
 
@@ -2355,16 +2364,21 @@ statement_context: includes? context_elem*
 #
 
 # TODO missing induct, induction, and coinduct
-method: (name | ("(" methods ")")) method_modifier? attributes?
-      | cases
-      | "rule" thms
-      | "subst" ("(" "asm" ")")? ("(" NAT+ ")")? thm
-      | "split" thms
-      | ("simp" | "simp_all") opt? simpmod?
-      | "use" thms "in" method
+method: "(" methods ")" method_modifier? attributes?
+      | name method_modifier? attributes?
+      | "-"
       | "case_tac" goal_spec? term rule?
-      | "induct_tac" goal_spec? (insts ("and" insts)*)? rule?
+      | "fact" thms?
+      | "goal_cases" name*
       | "ind_cases" prop+ for_fixes?
+      | "induct_tac" goal_spec? (insts ("and" insts)*)? rule?
+      | "rule" thm*
+      | "split" thm*
+      | "subproofs" method
+      | "subst" ("(" "asm" ")")? ("(" NAT+ ")")? thm
+      | "use" thms+ "in" method
+      | ("simp" | "simp_all") opt? simpmod?
+      | cases
 
 opt: "(" ("no_asm" | "no_asm_simp" | "no_asm_use" | "asm_lr") ")"
 
@@ -2382,7 +2396,7 @@ goal_spec: "[" ((NAT ("-" NAT?)?) | "!") "]"
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.4.2
 #
 
-proof: "proof" SYM_IDENT? (method | "-")?
+proof: "proof" SYM_IDENT? method?
 
 qed: "qed" method?
 
@@ -2394,7 +2408,7 @@ terminal_proof_steps : "." | ".." | "sorry"
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.5.1
 
 
-case: "case" thmdecl? (name | ("(" name ("_" | name)? ")"))
+case: "case" thmdecl? (name | ("(" name ("_" | name)* ")"))
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.5.2
@@ -2515,7 +2529,7 @@ folded : "folded" thms
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.1
 #
 
-inductive : ("inductive" | "inductive_set" | "coinductive" | "coinductive_set") vars for_fixes? ("where" multi_specs)? ("monos" thms)?
+inductive : ("inductive" | "inductive_set" | "coinductive" | "coinductive_set") ("(" "in" name ")")? vars for_fixes? ("where" multi_specs)? ("monos" thms)?
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.2
@@ -2596,10 +2610,30 @@ lifting_restore: "lifting_restore" thm (thm thm)?
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 12.2
 #
 
-nitpick : "nitpick" "[" args "]" NAT
-        | "nitpick" "[" args "]"
-        | "nitpick" NAT
-        | "nitpick"
+value: "value" ("[" name "]")? modes? term
+
+values: "values" modes? NAT? term
+
+quickcheck: "quickcheck" ("[" args "]")? NAT?
+
+nitpick: "nitpick" ("[" args "]")? NAT?
+
+quickcheck_params: "quickcheck_params" ("[" param_args "]")?
+
+nitpick_params: "nitpick_params" ("[" param_args "]")?
+
+quickcheck_generator: "quickcheck_generator" name "operations:" term*
+
+find_unused_assms: "find_unused_assms" name?
+
+modes: "(" name* ")"
+
+param_args: param_arg ("," param_arg)*
+
+param_arg: name "=" param_arg_value
+         | "show_all"
+
+param_arg_value: embedded
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 12.9
@@ -2634,6 +2668,7 @@ target : "SML"
        | "Scala"
        | "Eval"
 
+code: "code" ("equation" | "nbe" | "abstype" | "abstract" |  "del" | "drop:" const+ | "abort:" const+)?
 
 #
 # Not covered the grammar
