@@ -1693,22 +1693,19 @@ subgoal_params: "for" "..."? ("_" | name)+
 name: "case"
     | "cases"
     | ID "." "cases"
-    | ID "\\<^sub>" NAT "'"?
-    | ID "\\<^sub>" name
     | "in"
     | "induct"
-    | NAT
     | "pred"
     | QUOTED_STRING
-    | "*"
-    | "**"
-    | "***"
+    | "*"+
     | SYM_IDENT
-    | (ID | GREEK | "\\<^sub>" | ".")+ "'"*
+    | (ID | GREEK | "\\<^sub>" | "." | "_" | NAT)+ "'"*
     | "-"
     | "\\<bottom>"
     | "\\<A>"
     | "\\<D>"
+    | "\\<a>"
+    | "\\<i>"
 
 par_name: "(" name ")"
 
@@ -1717,18 +1714,19 @@ par_name: "(" name ")"
 #
 
 embedded: QUOTED_STRING
+        | "?"? GREEK "'"?
         | "?"? ID ("." ID)* "'"?
         | "False"
         | "True"
         | "false"
         | "true"
-        | GREEK
         | NAT
         | SYM_IDENT
         | SYM_IDENT
         | TERM_VAR
         | TYPE_IDENT
         | cartouche
+        | (ID | "\\<a>" | "\\<i>") "\\<^sub>" ID
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.4
@@ -1767,7 +1765,7 @@ typeargs: TYPE_IDENT
 typeargs_sorts: TYPE_IDENT ("::" sort)?
               | "(" TYPE_IDENT ("::" sort)? ("," TYPE_IDENT ("::" sort)?)* ")"
 
-typespec_sorts: typeargs_sorts name
+typespec_sorts: typeargs_sorts? name
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.6
@@ -2016,7 +2014,7 @@ axiomatization_header: thmdecl (ID | QUOTED_STRING) comment_block? ("and" commen
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.6
 #
 
-declaration : ("declaration" | "syntax_declaration") ("(" "pervasive" ")")? cartouche
+declaration : ("declaration" | "syntax_declaration") ("(" "pervasive" ")")? (name | cartouche)
 
 declare : "declare" thms ("and" thms)*
 
@@ -2029,28 +2027,13 @@ locale_expr: instance_list for_fixes?
 instance_list: instance ("+" instance)*
 
 instance: name (pos_insts | name_insts)?
-        | qualifier ":" ID (pos_insts | name_insts)
+        | qualifier ":" name (pos_insts | name_insts)
 
-qualifier: ID
-         | QUOTED_STRING
-         | ID "?"
-         | QUOTED_STRING "?"
+qualifier: name "?"?
 
 pos_insts: ("_" | term)*
 
-name_insts : "where" name_insts_list
-
-name_insts_list : name "=" name
-                   | name "=" name "and" name_insts_list
-                   | name "=" NAT
-                   | name "=" NAT "and" name_insts_list
-                   | name "=" QUOTED_STRING
-                   | name "=" QUOTED_STRING "and" name_insts_list
-                   | name "=" SYM_IDENT
-                   | name "=" SYM_IDENT "and" name_insts_list
-                   | SYM_IDENT "=" ID
-                   | SYM_IDENT "=" ID "and" name_insts_list
-                   | SYM_IDENT "=" QUOTED_STRING
+name_insts : "where" name "=" term ("and" name "=" term)*
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.7.2
@@ -2058,9 +2041,9 @@ name_insts_list : name "=" name
 
 locale_block: "locale" name ("=" locale)? (comment_block)? ("begin" (local_theory)? "end")?
 
-# flattened locale_expr to avoid parsing conflict between instance_list
-# and "+" below due to PLY using LALR(1)
-locale: context_elem+ | (locale_expr? opening? ("+" context_elem+)?)
+locale: context_elem+
+      | opening ("+" context_elem+)?
+      | locale_expr opening? ("+" context_elem+)?
 
 context_elem: "fixes" vars
             | "constrains" (name "::" type ("and" name "::" type)*)
@@ -2133,7 +2116,7 @@ spec: name ("\\<equiv>" | "==") term ("(" "unchecked" ")")?
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.10
 #
 
-ml : ("ml" | "setup") cartouche
+ml : ("ml" | "setup") (name | cartouche)
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.12.2
@@ -2464,26 +2447,17 @@ prefer_block : "prefer" NAT
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 8.2
 #
 
-mixfix : "(" template ")"
-       | "(" template prios ")"
-       | "(" template NAT ")"
-       | "(" template prios NAT ")"
-       | "(" "infix" template NAT ")"
-       | "(" "infixl" template NAT ")"
-       | "(" "infixr" template NAT ")"
-       | "(" "binder" template NAT ")"
-       | "(" "binder" template prio NAT ")"
-       | "structure"
+mixfix: "(" template prios? NAT? ")"
+      | "(" ("infix" | "infixl" | "infixr") template NAT ")"
+      | "(" "binder" template prio? NAT ")"
+      | "(" "structure" ")"
 
 template : QUOTED_STRING
          | cartouche
 
-prios : "[" nat_list "]"
+prios : "[" NAT ("," NAT)* "]"
 
 prio : "[" NAT "]"
-
-nat_list : NAT
-         | NAT "," nat_list
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 8.3
