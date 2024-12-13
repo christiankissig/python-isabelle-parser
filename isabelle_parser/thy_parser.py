@@ -23,6 +23,7 @@ CARTOUCHE_CLOSE: "\\<close>"
 CARTOUCHE_SYMBOLS: "\<A>"
                  | "\\-"
                  | "\\,"
+                 | "\\\\"
                  | "\<AA>"
                  | "\<B>"
                  | "\<BB>"
@@ -1630,10 +1631,11 @@ statement: abbreviation
          | notation_block
          | overloading
          | partial_function
-         | primrec
          | primcorec
+         | primrec
          | quickcheck_generator
          | quickcheck_params
+         | quotient_type proof_prove
          | record
          | setup_lifting
          | subclass
@@ -1692,7 +1694,11 @@ name: "case"
     | "induct"
     | "pred"
     | QUOTED_STRING
-    | "*"+
+    | "*"
+    | "**"
+    | "***"
+    | "++"
+    | "+++"
     | SYM_IDENT
     | (ID | GREEK | "\\<^sub>" | "." | "_" | NAT)+ "'"*
     | "-"
@@ -1701,6 +1707,7 @@ name: "case"
     | "\\<D>"
     | "\\<a>"
     | "\\<i>"
+    | "\\<S>"
 
 par_name: "(" name ")"
 
@@ -2251,14 +2258,14 @@ unfolding: "unfolding" thm ("and"? thm)*
 
 # TODO the first line is adhoc based on AFP, and doesn't match the grammar
 # "class_instance proof_prove" not allowed in Isabelle/Isar grammar, but found in AFP
-local_theory: (   goal proof_prove
-                | statement
-                | declare
-                | doc_block
-                | class_instance
-                | class_instance proof_prove
-                | termination proof_prove
-                | print_bundles context )*
+local_theory: (("private" | "qualified")? (   goal proof_prove
+                                            | statement
+                                            | declare
+                                            | doc_block
+                                            | class_instance
+                                            | class_instance proof_prove
+                                            | termination proof_prove
+                                            | print_bundles context ))*
 
 # "note" "also" proof_state here contradicts grammar in Isabelle/Isar
 proof_prove: "show" stmt cond_stmt?
@@ -2566,6 +2573,18 @@ overloaded: "(" "overloaded" ")"
 abs_type: typespec_sorts mixfix?
 
 rep_set: term ("morphisms"? name name)?
+
+#
+# https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.9.1
+#
+
+quotient_type: "quotient_type" overloaded? typespec mixfix? "=" quot_type quot_morphisms? quot_parametric?
+
+quot_type: type "/" ("partial" ":")? term
+
+quot_morphisms: "morphisms" name name
+
+quot_parametric: "parametric" thm
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.9.2
