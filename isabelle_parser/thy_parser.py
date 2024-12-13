@@ -22,6 +22,7 @@ CARTOUCHE_TEXT: /[^\\]+/
 CARTOUCHE_CLOSE: "\\<close>"
 CARTOUCHE_SYMBOLS: "\<A>"
                  | "\\-"
+                 | "\\,"
                  | "\<AA>"
                  | "\<B>"
                  | "\<BB>"
@@ -1577,27 +1578,20 @@ TYPE_IDENT: /'[a-zA-Z](_?\d*[a-zA-Z_\']*)*/
 start: theory_file
 
 // Top-level rule
-theory_file: theory_block
-           | doc_block theory_file
-           | marker theory_file
+theory_file: (doc_block | marker)* theory_block (doc_block | marker)*
 
 theory_block: "theory" name imports_opt "begin" theory "end"
 
 imports_opt: "imports" import_list
 
-import_list: QUOTED_STRING import_list
-           | comment_block import_list
-           | NAME import_list
-           | NAME "." NAME import_list
-           | NAME "." NAME
-           | NAME
-           | QUOTED_STRING
-           | comment_block
+import_list: (   QUOTED_STRING
+               | name
+               | comment_block )*
 
-theory: (goal proof_prove
-      | statement
-      | class_instance proof_prove
-      | derive)*
+theory: (   goal proof_prove
+          | statement
+          | class_instance proof_prove
+          | derive )*
 
 statement: abbreviation
          | axiomatization_block
@@ -1637,6 +1631,7 @@ statement: abbreviation
          | overloading
          | partial_function
          | primrec
+         | primcorec
          | quickcheck_generator
          | quickcheck_params
          | record
@@ -1834,9 +1829,14 @@ attributes: "[" (name args? ("," name args?)*)? "]"
 
 attribute: "OF" thms
          | "THEN" ("[" NAT "]")? thm
+         | "case" thmdecl? (name | ("(" name ("_" | name)* ")"))
+         | "case_conclusion" name name*
+         | "case_names" (name ("[" ("_" | name)*)"]")+
          | "cong" ("add" | "del")?
+         | "consumes" NAT?
          | "folded" thms
          | "of" insts ("concl" ":" insts)? for_fixes?
+         | "params" ("and" | name)*
          | "rotated" NAT?
          | "rule" "del"
          | "simp"
@@ -1848,6 +1848,7 @@ attribute: "OF" thms
          | "unfolded" thms
          | "untagged" name
          | "where" named_insts for_fixes?
+         | ("cases" | "induct" | "coinduct") ("del" | (("type" | "pred" | "set") ":" name))
          | ("intro" | "elim" | "dest") (("!" | "?")? NAT?)
          | ("intro" | "elim" | "dest") ((("!" | "?")? NAT?) | "del") ":" thms
          | code
@@ -1912,7 +1913,16 @@ antiquotation_body : ID
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 4.1
 #
 
-doc_block: ("chapter" | "section" | "subsection" | "subsubsection" | "paragraph" | "text" | "txt" | "text_raw" | COMMENT_CARTOUCHE) (cartouche | QUOTED_STRING | ID)
+doc_block: (   "chapter"
+             | "paragraph"
+             | "section"
+             | "subparagraph"
+             | "subsection"
+             | "subsubsection"
+             | "text"
+             | "text_raw"
+             | "txt"
+             | COMMENT_CARTOUCHE) (cartouche | QUOTED_STRING | ID)
 
 comment_block: COMMENT_CARTOUCHE cartouche
 
@@ -2175,7 +2185,7 @@ let_statement: term ("and" term)* "=" term
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.2.3
 #
 
-proof_state: "also" ("(" thms ")")proof_state
+proof_state: "also" ("(" thms ")")? proof_state
            | "defer" NAT? proof_state
            | "done"
            | "done" local_theory
@@ -2241,56 +2251,47 @@ unfolding: "unfolding" thm ("and"? thm)*
 
 # TODO the first line is adhoc based on AFP, and doesn't match the grammar
 # "class_instance proof_prove" not allowed in Isabelle/Isar grammar, but found in AFP
-local_theory: goal proof_prove
-            | statement local_theory
-            | statement
-            | declare local_theory
-            | doc_block local_theory
-            | class_instance local_theory
-            | class_instance proof_prove
-            | termination proof_prove
-            | print_bundles context local_theory
+local_theory: (   goal proof_prove
+                | statement
+                | declare
+                | doc_block
+                | class_instance
+                | class_instance proof_prove
+                | termination proof_prove
+                | print_bundles context )*
 
 # "note" "also" proof_state here contradicts grammar in Isabelle/Isar
 proof_prove: "show" stmt cond_stmt?
-             | "also" proof_state
-             | "defer" NAT? proof_prove
-             | "done"
-             | "done" local_theory
-             | "done" proof_state
-             | "done" theory
-             | "hence" stmt cond_stmt? for_fixes?
-             | "oops"
-             | "show" stmt cond_stmt? for_fixes?
-             | apply proof_prove
-             | by
-             | by local_theory
-             | by proof_state
-             | by theory
-             | doc_block proof_prove
-             | including proof_prove
-             | nitpick proof_prove
-             | prefer_block
-             | prefer_block proof_prove
-             | proof
-             | proof proof_state
-             | qed
-             | qed local_theory
-             | qed proof_state
-             | qed theory
-             | quickcheck proof_prove
-             | subgoal proof_prove
-             | supply_block
-             | supply_block proof_prove
-             | terminal_proof_steps
-             | terminal_proof_steps local_theory
-             | terminal_proof_steps proof_state
-             | terminal_proof_steps theory
-             | termination proof_prove
-             | unfolding proof_prove
-             | using
-             | using proof_prove
-             | with proof_chain
+           | "also" proof_state
+           | "defer" NAT? proof_prove
+           | "done"
+           | "done" proof_state
+           | "hence" stmt cond_stmt? for_fixes?
+           | "oops"
+           | "show" stmt cond_stmt? for_fixes?
+           | apply proof_prove
+           | by
+           | by proof_state
+           | doc_block proof_prove
+           | including proof_prove
+           | nitpick proof_prove
+           | prefer_block
+           | prefer_block proof_prove
+           | proof
+           | proof proof_state
+           | qed
+           | qed proof_state
+           | quickcheck proof_prove
+           | subgoal proof_prove
+           | supply_block
+           | supply_block proof_prove
+           | terminal_proof_steps
+           | terminal_proof_steps proof_state
+           | termination proof_prove
+           | unfolding proof_prove
+           | using
+           | using proof_prove
+           | with proof_chain
 
 # QUOTED_STRING only found in AFP, not in Isabelle/Isar grammar
 conclusion: "shows" stmt
@@ -2385,7 +2386,7 @@ qed: "qed" method?
 
 by: "by" method method?
 
-terminal_proof_steps : "." | ".." | "sorry"
+terminal_proof_steps: "." | ".." | "sorry"
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.5.1
@@ -2397,16 +2398,16 @@ case: "case" thmdecl? (name | ("(" name ("_" | name)* ")"))
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.5.2
 #
 
-cases : "cases" no_simp_block insts_list_and_sep rule
-      | "cases" no_simp_block rule
-      | "cases" no_simp_block insts_list_and_sep
-      | "cases" no_simp_block
-      | "cases" insts_list_and_sep rule
-      | "cases" insts_list_and_sep
-      | "cases" QUOTED_STRING rule
-      | "cases" QUOTED_STRING
-      | "cases" rule
-      | "cases"
+cases: "cases" no_simp_block insts_list_and_sep rule
+     | "cases" no_simp_block rule
+     | "cases" no_simp_block insts_list_and_sep
+     | "cases" no_simp_block
+     | "cases" insts_list_and_sep rule
+     | "cases" insts_list_and_sep
+     | "cases" QUOTED_STRING rule
+     | "cases" QUOTED_STRING
+     | "cases" rule
+     | "cases"
 
 insts_list_and_sep : insts "and" insts_list_and_sep
                       | insts
@@ -2509,7 +2510,9 @@ inductive : ("inductive" | "inductive_set" | "coinductive" | "coinductive_set") 
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.2
 #
 
-primrec: "primrec" specification
+primrec: "primrec" ("(" "transfer" ")")? specification
+
+primcorec: "primcorec" ("(" "transfer" ")")? specification
 
 fun_block: "fun" opts? specification
          | ("function" | "nominal_function") opts? specification proof_prove
@@ -2522,11 +2525,9 @@ termination: "termination" term? proof_prove
 # TODO generated from examples
 datatype: "datatype" generic_type "=" constructors
 
-generic_type : type name
-             | type
+generic_type : (type | ("(" type ("," type)*")")) name?
 
-constructors : constructor
-             | constructor "|" constructors
+constructors : constructor ("|" constructor)*
 
 constructor : comment_block? ID TYPE_IDENT mixfix? comment_block?
             | comment_block? (name | cartouche)+ mixfix? comment_block?
