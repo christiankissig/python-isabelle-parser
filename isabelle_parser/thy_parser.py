@@ -16,7 +16,6 @@ grammar = r"""
 QUOTED_STRING: "\"" /[\s\S]*?/ "\""
              | "`" /[\s\S]*?/ "`"
 
-
 // Tokens for cartouche
 CARTOUCHE_OPEN: "\\<open>"
 CARTOUCHE_TEXT: /[^\\]+/
@@ -1568,8 +1567,9 @@ SYM_IDENT: /[-!#$%&*+\/<>?@^_`|~]+[a-zA-Z][a-zA-Z0-9]*/
 ID: /[a-zA-Z_][a-zA-Z_0-9\']*(\\<\\^sub>[a-zA-Z0-9_]*)?/
 ALTSTRING: /`[^`]*`/
 VERBATIM: /{\*.*\*}/
-LETTER: /[a-zA-Z]/
+
 LATIN: /[a-zA-Z]/
+letter: LATIN | GREEK | "\<" LATIN LATIN? ">"
 
 // Numbers and variables
 NAT: /-?\d+/
@@ -1580,6 +1580,8 @@ TYPE_VAR: /'[a-zA-Z](_?\d*[a-zA-Z]*)*\.?\d*/
 
 // Other predefined tokens
 TYPE_IDENT: /\'[a-zA-Z](_?\d*[a-zA-Z_\']*)*/
+
+SUBSCRIPT: "\\<^sub>"
 
 // Define start rule
 start: toplevel
@@ -1702,22 +1704,14 @@ subgoal_params: "for" "..."? ("_" | name)+
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.1
 #
 
-name: "case"
-    | "cases"
-    | ID "." "cases"
-    | "in"
-    | "induct"
-    | "pred"
+name:
     | QUOTED_STRING
     | /[*]+/
     | /[+]+/
     | SYM_IDENT
-    | (ID | GREEK | "\\<^sub>" | "." | "_" | NAT | "'" | MATH_LETTERS)+
+    | (ID | GREEK | SUBSCRIPT | "." | "_" | NAT | "'" | letter)+
     | "-"
     | "\\<bottom>"
-
-MATH_LETTERS: /\\<[a-zA-Z]>/
-    | /\\<[a-zA-Z][a-zA-Z]>/
 
 par_name: "(" name ")"
 
@@ -1732,16 +1726,12 @@ embedded: QUOTED_STRING
         | "True"
         | "false"
         | "true"
+        | (ID | letter) SUBSCRIPT (ID | letter)
         | NAT
-        | SYM_IDENT
         | SYM_IDENT
         | TERM_VAR
         | TYPE_IDENT
         | cartouche
-        | (ID | "\\<a>" | "\\<i>") "\\<^sub>" ID
-        | "\\<CC>"
-        | "\\<aa>"
-        | "\\<bb>"
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.4
@@ -1756,7 +1746,7 @@ text: embedded
 type: embedded
 
 term: embedded
-    | "?"? (GREEK | ID)+ ("\\<^sub>" (FLOAT | ID))* "'"?
+    | "?"? (GREEK | ID)+ (SUBSCRIPT (FLOAT | ID))* "'"?
     | "\\<bottom>"
     | "\\<true>"
     | "\\<false>"
@@ -1775,9 +1765,9 @@ variable: name
         | TERM_VAR
         | TYPE_IDENT
         | TYPE_VAR
-        | "?" GREEK ID? "\\<^sub>" FLOAT
-        | "?" GREEK ID? "\\<^sub>" NAT
-        | "?" ID "\\<^sub>" FLOAT
+        | "?" GREEK ID? SUBSCRIPT FLOAT
+        | "?" GREEK ID? SUBSCRIPT NAT
+        | "?" ID SUBSCRIPT FLOAT
 
 typespec: typeargs? name
 
@@ -1832,15 +1822,8 @@ prop_pat: "(" ("is" prop)+ ")"
 method_arg_atom: name
                | NAT
                | cartouche
-               | "assms"
-               | "*"
                | name ":"
-               | "arbitrary" ":"
-               | "rule" ":"
                | ID "!" ":"
-               | name "." "cases"
-               | name "." "induct"
-               | name ("\\<^sub>" name)*
                | name "(" NAT ")"
                | name "(" NAT "," NAT ")" ":"
                | name "=" name
