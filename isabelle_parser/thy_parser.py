@@ -1712,10 +1712,11 @@ name: "case"
     | /[*]+/
     | /[+]+/
     | SYM_IDENT
-    | (ID | GREEK | "\\<^sub>" | "." | "_" | NAT | "'")+
+    | (ID | GREEK | "\\<^sub>" | "." | "_" | NAT | "'" | MATH_LETTERS)+
     | "-"
     | "\\<bottom>"
-    | /\\<[a-zA-Z]>/
+
+MATH_LETTERS: /\\<[a-zA-Z]>/
     | /\\<[a-zA-Z][a-zA-Z]>/
 
 par_name: "(" name ")"
@@ -1810,7 +1811,7 @@ vars: var ("and" var)*
 var: name+ ("::" type)? comment_block?
    | name ("::" type)? mixfix comment_block?
 
-props: comment_block* thmdecl? comment_block* (prop prop_pat? is_syntax?)+
+props: comment_block* thmdecl? comment_block* (prop prop_pat? is_syntax?)+ comment_block*
 
 prop_list_with_pat: prop prop_pat? is_syntax? ("and"? prop prop_pat? is_syntax?)*
 
@@ -2234,7 +2235,7 @@ fix : "fix" vars
 assume: "assume" concl (prems)? (for_fixes)?
       | "presume" concl (prems)? (for_fixes)?
 
-concl : props ("and" props)*
+concl: props ("and" props)*
 
 # TODO should be props'_list in first line instead, but don't find
 prems: "if" (props ("and" props)*)
@@ -2479,7 +2480,7 @@ taking: "taking" ":" insts
 
 consider: "consider" obtain_clauses
 
-obtain: "obtain" (vars "where")? (par_name)? concl (prems)? (for_fixes)?
+obtain: "obtain" (vars "where")? par_name? concl prems? for_fixes?
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 7.1
@@ -2593,9 +2594,9 @@ generic_type : (type | ("(" type ("," type)*")")) name?
 constructors : constructor ("|" constructor)*
 
 constructor : comment_block? ID TYPE_IDENT mixfix? comment_block?
-            | comment_block? (name | cartouche)+ mixfix? comment_block?
-            | comment_block? (name | cartouche) "(" cartouche ")" mixfix? comment_block?
-            | comment_block? (name | cartouche) "(" name ":" name ")" mixfix? comment_block?
+            | comment_block? (   name
+                               | cartouche
+                               | ("(" (cartouche | (name ":" name) | (name ":" QUOTED_STRING)) ")") )+ mixfix? comment_block?
 
 free_constructors: "free_constructors" name "for" name ("|" name)*
 
