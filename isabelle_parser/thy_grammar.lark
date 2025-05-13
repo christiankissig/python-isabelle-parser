@@ -1695,13 +1695,11 @@ subgoal_params: "for" "..."? ("_" | name)+
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.1
 #
 
-name:
-    | QUOTED_STRING
+name: QUOTED_STRING
     | /[*]+/
     | /[+]+/
     | SYM_IDENT
     | (ID | GREEK | SUBSCRIPT | "." | "_" | NAT | "'" | letter)+
-    | "-"
     | "\\<bottom>"
 
 par_name: "(" name ")"
@@ -1989,7 +1987,7 @@ atom : "(" ")"
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.1
 #
 
-theory_block: "theory" system_name "imports" (system_name | comment_block)+ keywords? abbrevs? "begin" theory "end"
+theory_block: "theory" name "imports" (name | comment_block)+ keywords? abbrevs? "begin" theory "end"
 
 # TODO exclude whitespaces and make adhere to file name conventions
 system_name: name
