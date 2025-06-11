@@ -4,20 +4,16 @@ import sys
 from .error import ParsingError
 from .thy_parser import parse
 
-
 # Increase the recursion limit if needed
 
-def main():
+
+def main() -> None:
     # Set up argument parser
     arg_parser = argparse.ArgumentParser(description="Parse input using PLY")
+    arg_parser.add_argument("input", type=str, help="Input file or string to parse")
     arg_parser.add_argument(
-            'input',
-            type=str,
-            help="Input file or string to parse")
-    arg_parser.add_argument(
-            '-f', '--file',
-            action='store_true',
-            help="Interpret input as a filename")
+        "-f", "--file", action="store_true", help="Interpret input as a filename"
+    )
 
     # Parse arguments
     args = arg_parser.parse_args()
@@ -25,7 +21,7 @@ def main():
     # Read input
     if args.file:
         try:
-            with open(args.input, 'r') as file:
+            with open(args.input, "r") as file:
                 data = file.read()
         except FileNotFoundError:
             print(f"File '{args.input}' not found.")

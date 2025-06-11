@@ -1,17 +1,24 @@
-import json
 import pytest
 
-from isabelle_parser import parse, ParsingError
+from isabelle_parser import ParsingError, parse
 
 
-@pytest.mark.parametrize("name,test_input, expected", [
-    ('parse_theory', """
+@pytest.mark.parametrize(
+    "name,test_input, expected",
+    [
+        (
+            "parse_theory",
+            """
     theory Consensus
     imports RDR
     begin
     end
-    """, True),
-    ('parse_theory_docs', """
+    """,
+            True,
+        ),
+        (
+            "parse_theory_docs",
+            """
 section \\<open>The Consensus Data Type\\<close>
 
 theory Consensus
@@ -22,8 +29,11 @@ text \\<open>This theory provides a model for the RDR locale, thus showing
   that the assumption of the RDR locale are consistent.\\<close>
 
 end""",
-     True),
-    ('parse_theory_typedecl', """
+            True,
+        ),
+        (
+            "parse_theory_typedecl",
+            """
 theory Consensus
 imports RDR
 begin
@@ -33,8 +43,11 @@ typedecl val
 
 end
 """,
-     True),
-    ('parse_theory_locale', """
+            True,
+        ),
+        (
+            "parse_theory_locale",
+            """
 theory Consensus
 imports RDR
 begin
@@ -44,8 +57,11 @@ locale Consensus
 begin
 end
 end""",
-     True),
-    ('parse_theory_fun', """
+            True,
+        ),
+        (
+            "parse_theory_fun",
+            """
 theory Consensus
 imports RDR
 begin
@@ -55,8 +71,11 @@ fun \\<delta>::"val option \\<Rightarrow> (proc \\<times> val) \\<Rightarrow> va
 | "\\<delta> (Some v) r = Some v"
 
 end""",
-     True),
-    ('parse_theory_interpretation', """
+            True,
+        ),
+        (
+            "parse_theory_interpretation",
+            """
 theory Consensus
 imports RDR
 begin
@@ -64,8 +83,11 @@ begin
 interpretation pre_RDR \\<delta> \\<gamma> None .
 
 end""",
-     True),
-    ('parse_theory_notation', """
+            True,
+        ),
+        (
+            "parse_theory_notation",
+            """
 theory Consensus
 imports RDR
 begin
@@ -75,8 +97,11 @@ notation less_eq (infix "\\<preceq>" 50 )
 notation None ("\\<bottom>")
 
 end""",
-     True),
-    ('parse_theory_lemma_fixes', """
+            True,
+        ),
+        (
+            "parse_theory_lemma_fixes",
+            """
 theory Consensus
 imports RDR
 begin
@@ -93,8 +118,11 @@ next
 qed
 
 end""",
-     True),
-    ('parse_theory_lemma_obtain', """
+            True,
+        ),
+        (
+            "parse_theory_lemma_obtain",
+            """
 theory Consensus
 imports RDR
 begin
@@ -110,8 +138,11 @@ next
   thus ?thesis using Some by metis
 qed
  end""",
-     True),
-    ('parse_theory_lemma_obtains', """
+            True,
+        ),
+        (
+            "parse_theory_lemma_obtains",
+            """
 theory Consensus
 imports RDR
 begin
@@ -134,15 +165,20 @@ proof -
   thus ?thesis by blast
 qed
 end""",
-     True),
-    ('parse_theory_nested_comments', """
+            True,
+        ),
+        (
+            "parse_theory_nested_comments",
+            """
 theory NestedComments
      imports Main
 begin
 \\<comment> \\<open> some text \\<open> inner text \\<close> final text \\<close>
 end""",
-     True),
-])
+            True,
+        ),
+    ],
+)
 def test_parse(name, test_input, expected):
     source_code = test_input.strip()
     try:
@@ -156,4 +192,3 @@ def test_parse(name, test_input, expected):
     except ParsingError as e:
         print(e.with_source_code(source_code))
         assert not expected, f"{name}: Expected {expected}, got False"
-

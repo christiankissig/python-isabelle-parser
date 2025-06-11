@@ -1,27 +1,27 @@
-from lark import Lark, Transformer, Tree, Token, v_args
-
 import logging
 import os
+from typing import Any, List
 
+from lark import Lark, Transformer, Tree
+from lark.tree import Meta
 
 logger = logging.getLogger(__name__)
 
 
-def _load_parser():
+def _load_parser() -> Lark:
     # Construct the path to the .lark file
-    grammar_path = os.path.join(os.path.dirname(__file__), 'thy_grammar.lark')
+    grammar_path = os.path.join(os.path.dirname(__file__), "thy_grammar.lark")
 
     # Load the grammar file and create a Lark parser
     with open(grammar_path) as grammar_file:
-        parser = Lark(grammar_file,
-                      start='start',
-                      parser='earley',
-                      propagate_positions=True)
+        parser = Lark(
+            grammar_file, start="start", parser="earley", propagate_positions=True
+        )
 
     return parser
 
 
-def parse(input_text):
+def parse(input_text: str) -> Any | None:
     parser = _load_parser()
     try:
         tree = parser.parse(input_text)
@@ -29,46 +29,65 @@ def parse(input_text):
         return transformer.transform(tree)
     except Exception as e:
         print(f"Error parsing input: {e}")
+        return None
 
 
 class PositionPrinter(Transformer):
+    def name(self, items: Any) -> Tree:
+        concatenated = concatenate(items)
+        return with_position(Tree("name", [concatenated], Meta()), *get_position(items))
 
-    def name(self, items):
-        concatenated = ''
-        for item in items:
-            if hasattr(item, 'value'):
-                concatenated += item.value
-            elif 'value' in item:
-                concatenated += item['value']
-            elif isinstance(item, str):
-                concatenated += item
-            else:
-                concatenated += str(item)
+    def embedded(self, items: Any) -> Tree:
+        concatenated = concatenate(items)
+        return with_position(
+            Tree("embedded", [concatenated], Meta()), *get_position(items)
+        )
 
-        if items and len(items) > 0:
-            return with_position('name', concatenated, items[0])
+    def letter(self, items: Any) -> Tree:
+        token = items[0]
+        if hasattr(token, "value"):
+            value = token.value
         else:
-            return concatenated
-
-    def letter(self, items):
-        if items and len(items) > 0:
-            token = items[0]
-            if hasattr(token, 'value'):
-                letter_value = token.value
-                return with_position('letter', letter_value, token)
-
-        return ''.join(str(item) for item in items)
+            value = "".join(str(item) for item in items)
+        return with_position(Tree("letter", [value], Meta()), *get_position(items))
 
 
-def with_position(rule, value, token):
-    line = column = None
-    if hasattr(token, 'line'):
-        line = token.line
-        column = token.column
-    elif hasattr(token, 'meta'):  # Tree with meta
-        line = token.meta.line
-        column = token.meta.column
-    elif 'line' in token and 'column' in token:
-        line = token['line']
-        column = token['column']
-    return {'rule': rule, 'value': value, 'line': line, 'column': column}
+def with_position(tree: Tree, line: int | None, column: int | None) -> Tree:
+    if line is not None and column is not None:
+        if not hasattr(tree.meta, "line") or not tree.meta.line:
+            tree.meta.line = line
+            tree.meta.column = column
+    return tree
+
+
+def get_position(items: List[Any]) -> tuple[int | None, int | None]:
+    if items and len(items) > 0:
+        token = items[0]
+        line = column = None
+        if hasattr(token, "line"):
+            line = token.line
+            column = token.column
+        elif hasattr(token, "meta"):  # Tree with meta
+            line = token.meta.line
+            column = token.meta.column
+        elif isinstance(token, dict) and "line" in token and "column" in token:
+            line = token["line"]
+            column = token["column"]
+        return (line, column)
+    return (None, None)
+
+
+def concatenate(items: List[Any]) -> str:
+    concatenated = ""
+    for item in items:
+        if hasattr(item, "value"):
+            concatenated += item.value
+        elif isinstance(item, dict) and "value" in item:
+            concatenated += item["value"]
+        elif isinstance(item, str):
+            concatenated += item
+        elif isinstance(item, Tree):
+            concatenated += "".join(str(child) for child in item.children)
+        else:
+            concatenated += str(item)
+    return concatenated
