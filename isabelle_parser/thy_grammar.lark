@@ -1633,6 +1633,8 @@ statement: abbreviation
          | ml
          | named_theorems
          | nitpick_params
+         | no_syntax
+         | no_translations
          | nonterminal
          | notation_block
          | notepad
@@ -1649,6 +1651,9 @@ statement: abbreviation
          | subclass
          | sublocale proof_prove
          | syntax
+         | syntax
+         | syntax_consts
+         | syntax_types
          | translations
          | type_synonym
          | typedecl
@@ -1699,7 +1704,8 @@ name: QUOTED_STRING
     | /[*]+/
     | /[+]+/
     | SYM_IDENT
-    | (ID | GREEK | SUBSCRIPT | "." | "_" | NAT | "'" | letter)+
+    // | (ID | GREEK | SUBSCRIPT | "." | "_" | NAT | "'" | letter)+
+    | /(([a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[a-zA-Z0-9_]*)?)|(\\<((alpha)|(beta)|(gamma)|(delta)|(epsilon)|(zeta)|(eta)|(theta)|(iota)|(kappa)|(mu)|(nu)|(xi)|(pi)|(rho)|(sigma)|(tau)|(upsilon)|(phi)|(chi)|(psi)|(omega)|(Gamma)|(Delta)|(Theta)|(Lambda)|(Xi)|(Pi)|(Sigma)|(Upsilon)|(Phi)|(Psi)|(Omega))>)|(\\<\\^sub>)|([._'])|([0-9])|([a-zA-Z]+)|(<[a-zA-Z]+>))+/
     | "\\<bottom>"
 
 par_name: "(" name ")"
@@ -1709,13 +1715,16 @@ par_name: "(" name ")"
 #
 
 embedded: QUOTED_STRING
-        | "?"? GREEK ID? "'"?
-        | "?"? ID ("." ID)* "'"?
+        | /(\?)?(\\<(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega)>)([a-zA-Z_][a-zA-Z_0-9\']*(\\<\\^sub>[a-zA-Z0-9_]*)?)?(')?/
+        // | "?"? GREEK ID? "'"?
+        | /(\?)?([a-zA-Z_][a-zA-Z_0-9\']*(\\<\\^sub>[a-zA-Z0-9_]*)?)(\.[a-zA-Z_][a-zA-Z_0-9\']*(\\<\\^sub>[a-zA-Z0-9_]*)?)*(')?/
+        // | "?"? ID ("." ID)* "'"?
         | "False"
         | "True"
         | "false"
         | "true"
-        | (ID | letter) SUBSCRIPT (ID | letter)
+        | /(([a-zA-Z_][a-zA-Z_0-9\']*(\\<\\^sub>[a-zA-Z0-9_]*)?)|([a-zA-Z]))(\\<\\^sub>)(([a-zA-Z_][a-zA-Z_0-9\']*(\\<\\^sub>[a-zA-Z0-9_]*)?)|([a-zA-Z]))/
+        # | (ID | letter) SUBSCRIPT (ID | letter)
         | NAT
         | SYM_IDENT
         | TERM_VAR
@@ -2033,7 +2042,7 @@ unbundle: "unbundle" name*
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.4
 #
 
-decl: name ("::" (ID | QUOTED_STRING | cartouche))? mixfix? "where" comment_block?
+decl: name ("::" (ID | QUOTED_STRING | cartouche))? comment_block? mixfix? comment_block? "where" comment_block?
 
 definition: "definition" local_theory_target? decl? thmdecl? prop spec_prems? for_fixes?
 
@@ -2289,12 +2298,12 @@ unfolding: "unfolding" thm ("and"? thm)*
 # TODO the first line is adhoc based on AFP, and doesn't match the grammar
 # "class_instance proof_prove" not allowed in Isabelle/Isar grammar, but found in AFP
 local_theory: (("private" | "qualified")? (   goal proof_prove
-                                            | statement
+                                            | class_instance
+                                            | class_instance proof_prove
                                             | context
                                             | declare
                                             | doc_block
-                                            | class_instance
-                                            | class_instance proof_prove
+                                            | statement
                                             | termination proof_prove ))+
 
 # "note" "also" proof_state here contradicts grammar in Isabelle/Isar
@@ -2524,9 +2533,18 @@ mode: ID
 nonterminal: "nonterminal" name ("and" name)*
 
 syntax: "syntax" mode? constdecl+
-      | "no_syntax" mode? constdecl+
 
-translations: ("translations" | "no_translations") (transpat ("==" | "=>" | "<=" | "\\<rightleftharpoons>" | "\\<leftharpoon>" | "\\<rightharpoonup>") transpat)*
+no_syntax: "no_syntax" mode? constdecl+
+
+syntax_types: "syntax_types" syntaxdeps ("and" syntaxdeps)*
+
+syntax_consts: "syntax_consts" syntaxdeps ("and" syntaxdeps)*
+
+translations: "translations" (transpat ("==" | "=>" | "<=" | "\<rightleftharpoons>" | "\<leftharpoon>" | "\<rightharpoonup>") transpat)*
+
+no_translations: "no_translations" (transpat ("==" | "=>" | "<=" | "\<rightleftharpoons>" | "\<leftharpoon>" | "\<rightharpoonup>") transpat)*
+
+syntaxdeps: name+ ("==" | "\<rightleftharpoons>") name+
 
 transpat: ("(" name ")")? QUOTED_STRING
 
