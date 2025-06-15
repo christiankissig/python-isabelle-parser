@@ -1,4 +1,4 @@
-class ParsingError(Exception):
+class ParsingError(BaseException):
     source_code: str | None = None
 
     def __init__(

@@ -8,28 +8,25 @@ from lark.tree import Meta
 logger = logging.getLogger(__name__)
 
 
-def _load_parser() -> Lark:
+def load_parser(start: str="start") -> Lark:
     # Construct the path to the .lark file
     grammar_path = os.path.join(os.path.dirname(__file__), "thy_grammar.lark")
 
     # Load the grammar file and create a Lark parser
     with open(grammar_path) as grammar_file:
         parser = Lark(
-            grammar_file, start="start", parser="earley", propagate_positions=True
+            grammar_file, start=start, parser="earley", propagate_positions=True
         )
 
     return parser
 
 
-def parse(input_text: str) -> Any | None:
-    parser = _load_parser()
-    try:
-        tree = parser.parse(input_text)
-        transformer = PositionPrinter()
-        return transformer.transform(tree)
-    except Exception as e:
-        print(f"Error parsing input: {e}")
-        return None
+def parse(input_text: str, parser: Lark | None=None) -> Any | None:
+    if parser is None:
+        parser = load_parser()
+    tree = parser.parse(input_text)
+    transformer = PositionPrinter()
+    return transformer.transform(tree)
 
 
 class PositionPrinter(Transformer):
@@ -50,7 +47,6 @@ class PositionPrinter(Transformer):
         else:
             value = "".join(str(item) for item in items)
         return with_position(Tree("letter", [value], Meta()), *get_position(items))
-
 
 def with_position(tree: Tree, line: int | None, column: int | None) -> Tree:
     if line is not None and column is not None:

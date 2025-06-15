@@ -32,8 +32,6 @@ def main() -> None:
     # Lex and parse
     try:
         result = parse(data)
-        if not result:
-            raise ParsingError("No result returned.")
     except ParsingError as e:
         print("Parsing failed due to errors.")
         print(f"Error: {e.with_source_code(data)}")
