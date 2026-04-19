@@ -180,7 +180,6 @@ begin
 end""",
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Theory header variants
         # -----------------------------------------------------------------------
@@ -204,7 +203,6 @@ end""",
             "theory T imports Main begin end",
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Documentation blocks
         # -----------------------------------------------------------------------
@@ -240,7 +238,7 @@ end""",
         ),
         (
             "doc_cartouche_in_definition",
-            "theory T imports Main begin\ndefinition mydef :: \"nat\" where \\<open>mydef = 0\\<close>\nend",
+            'theory T imports Main begin\ndefinition mydef :: "nat" where \\<open>mydef = 0\\<close>\nend',
             True,
         ),
         (
@@ -248,7 +246,6 @@ end""",
             "theory T imports Main begin\ntext \\<open>outer \\<open>inner\\<close> outer\\<close>\nend",
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Type declarations
         # -----------------------------------------------------------------------
@@ -267,7 +264,6 @@ end""",
             "theory T imports Main begin\ntype_synonym 'a mylist = \"'a list\"\nend",
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Constant declarations
         # -----------------------------------------------------------------------
@@ -286,7 +282,6 @@ end""",
             'theory T imports Main begin\nconsts myop :: "nat \\<Rightarrow> nat" ("op _" 50)\nend',
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Definition & abbreviation
         # -----------------------------------------------------------------------
@@ -305,7 +300,6 @@ end""",
             'theory T imports Main begin\nabbreviation myabbrev :: "bool" where "myabbrev \\<equiv> True"\nend',
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Goals (lemma/theorem/corollary/proposition)
         # -----------------------------------------------------------------------
@@ -359,7 +353,6 @@ end""",
             'theory T imports Main begin\nlemma foo:\n  assumes "P"\n  shows "P"\n  using assms by simp\nend',
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Proof tactics
         # -----------------------------------------------------------------------
@@ -398,7 +391,6 @@ end""",
             'theory T imports Main begin\nlemma prec_eq:\n  fixes s1 s2\n  shows "True"\nproof -\n  { assume 1:"True"\n    have "True" by simp }\n  thus ?thesis by blast\nqed\nend',
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Inductive / coinductive
         # -----------------------------------------------------------------------
@@ -412,7 +404,6 @@ end""",
             'theory T imports Main begin\ncoinductive inf_stream :: "nat \\<Rightarrow> bool" where\n  "inf_stream n"\nend',
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Datatype
         # -----------------------------------------------------------------------
@@ -426,7 +417,6 @@ end""",
             "theory T imports Main begin\ndatatype mybool = MyTrue | MyFalse\nend",
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Locale structural variants
         # -----------------------------------------------------------------------
@@ -450,7 +440,6 @@ end""",
             'theory T imports Main begin\nlocale my_locale = fixes f :: "nat \\<Rightarrow> nat"\nbegin\nlemma "True" by simp\nend\nend',
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Sublocale
         # -----------------------------------------------------------------------
@@ -459,7 +448,6 @@ end""",
             "theory T imports Main begin\nsublocale A < B by simp\nend",
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Notation
         # -----------------------------------------------------------------------
@@ -468,7 +456,6 @@ end""",
             'theory T imports Main begin\nno_notation myop ("_ \\<oplus> _" [70,71] 70)\nend',
             True,
         ),
-
         # -----------------------------------------------------------------------
         # ML / setup
         # -----------------------------------------------------------------------
@@ -482,7 +469,6 @@ end""",
             "theory T imports Main begin\nsetup \\<open>fn _ => ()\\<close>\nend",
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Axiomatization
         # -----------------------------------------------------------------------
@@ -496,7 +482,6 @@ end""",
             'theory T imports Main begin\naxiomatization\n  myax :: "nat"\n  where ax1: "myax > 0"\nend',
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Context blocks
         # -----------------------------------------------------------------------
@@ -510,7 +495,6 @@ end""",
             'theory T imports Main begin\ncontext my_locale begin\nlemma "True" by simp\nend\nend',
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Hide declarations
         # -----------------------------------------------------------------------
@@ -529,7 +513,6 @@ end""",
             "theory T imports Main begin\nhide_fact myfact\nend",
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Declare & lemmas
         # -----------------------------------------------------------------------
@@ -543,13 +526,12 @@ end""",
             "theory T imports Main begin\nlemmas my_lemmas = conjI disjI1\nend",
             True,
         ),
-
         # -----------------------------------------------------------------------
         # Edge cases
         # -----------------------------------------------------------------------
         (
             "outer_comment_ignored",
-            "theory T imports Main begin\n(* outer comment *)\nlemma \"True\" by simp\nend",
+            'theory T imports Main begin\n(* outer comment *)\nlemma "True" by simp\nend',
             True,
         ),
         (

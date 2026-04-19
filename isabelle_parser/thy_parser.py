@@ -8,7 +8,7 @@ from lark.tree import Meta
 logger = logging.getLogger(__name__)
 
 
-def load_parser(start: str="start") -> Lark:
+def load_parser(start: str = "start") -> Lark:
     # Construct the path to the .lark file
     grammar_path = os.path.join(os.path.dirname(__file__), "thy_grammar.lark")
 
@@ -21,7 +21,7 @@ def load_parser(start: str="start") -> Lark:
     return parser
 
 
-def parse(input_text: str, parser: Lark | None=None) -> Any | None:
+def parse(input_text: str, parser: Lark | None = None) -> Any | None:
     if parser is None:
         parser = load_parser()
     tree = parser.parse(input_text)
@@ -47,6 +47,7 @@ class PositionPrinter(Transformer):
         else:
             value = "".join(str(item) for item in items)
         return with_position(Tree("letter", [value], Meta()), *get_position(items))
+
 
 def with_position(tree: Tree, line: int | None, column: int | None) -> Tree:
     if line is not None and column is not None:

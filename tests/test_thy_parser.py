@@ -43,19 +43,23 @@ class TestParserInternals:
         assert result is not None
 
 
-@pytest.mark.parametrize("src", [
-    "theory T imports Main end",       # missing begin
-    "theory T imports Main begin",     # missing end
-    "theory T begin end",              # missing imports
-    "",                                # empty string
-    "THIS IS NOT VALID ISABELLE",      # garbage
-], ids=[
-    "missing_begin",
-    "missing_end",
-    "missing_imports",
-    "empty_string",
-    "garbage",
-])
+@pytest.mark.parametrize(
+    "src",
+    [
+        "theory T imports Main end",  # missing begin
+        "theory T imports Main begin",  # missing end
+        "theory T begin end",  # missing imports
+        "",  # empty string
+        "THIS IS NOT VALID ISABELLE",  # garbage
+    ],
+    ids=[
+        "missing_begin",
+        "missing_end",
+        "missing_imports",
+        "empty_string",
+        "garbage",
+    ],
+)
 def test_invalid_input_raises(src):
     """Invalid theory inputs must raise rather than return a result."""
     with pytest.raises(Exception):
