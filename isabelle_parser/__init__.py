@@ -1,5 +1,5 @@
 from .error import ParsingError
-from .thy_parser import parse, load_parser
+from .thy_parser import load_parser, parse
 
 __all__ = [
     "ParsingError",

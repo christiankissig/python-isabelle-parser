@@ -1,6 +1,7 @@
 import pytest
 from lark import ParseError
-from isabelle_parser import parse, load_parser
+
+from isabelle_parser import load_parser, parse
 
 
 class GrammerTester:
