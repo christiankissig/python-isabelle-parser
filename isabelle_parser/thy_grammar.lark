@@ -15,8 +15,10 @@ CARTOUCHE_SYMBOLS: "\<A>"
                  | "\\ "
                  | "\\#"
                  | "\\,"
-                 | "\\;"
                  | "\\-"
+                 | "\\;"
+                 | "\\\""
+                 | "\\<A>"
                  | "\\<AA>"
                  | "\\<And>"
                  | "\\<B>"
@@ -1505,7 +1507,7 @@ cartouche: CARTOUCHE_OPEN (cartouche_content | CARTOUCHE_SYMBOLS | GREEK | carto
 cartouche_content: (CARTOUCHE_TEXT | cartouche)*
 
 // General Isabelle tokens
-OUTER_COMMENT: /\(\*[\s\S]*?\*\)/   // Multiline comments
+OUTER_COMMENT: /\(\*[\s\S]*\*\)/   // Multiline/nested comments (greedy: matches outermost (* *))
 BOTTOM: "\\<bottom>"
 EQUIV: "\\<equiv>"
 NEWLINE: "\\<newline>"
@@ -1560,7 +1562,8 @@ ALTSTRING: /`[^`]*`/
 VERBATIM: /{\*.*\*}/
 
 LATIN: /[a-zA-Z]/
-letter: LATIN | GREEK | "\<" LATIN LATIN? ">"
+letter: LATIN | GREEK | /\\<[a-zA-Z][a-zA-Z]?>/
+
 
 // Numbers and variables
 NAT: /-?\d+/
@@ -1705,7 +1708,7 @@ name: QUOTED_STRING
     | /[+]+/
     | SYM_IDENT
     // | (ID | GREEK | SUBSCRIPT | "." | "_" | NAT | "'" | letter)+
-    | /(([a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[a-zA-Z0-9_]*)?)|(\\<((alpha)|(beta)|(gamma)|(delta)|(epsilon)|(zeta)|(eta)|(theta)|(iota)|(kappa)|(mu)|(nu)|(xi)|(pi)|(rho)|(sigma)|(tau)|(upsilon)|(phi)|(chi)|(psi)|(omega)|(Gamma)|(Delta)|(Theta)|(Lambda)|(Xi)|(Pi)|(Sigma)|(Upsilon)|(Phi)|(Psi)|(Omega))>)|(\\<\\^sub>)|([._'])|([0-9])|([a-zA-Z]+)|(<[a-zA-Z]+>))+/
+    | /(([a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[a-zA-Z0-9_]*)?)|(\\<((alpha)|(beta)|(gamma)|(delta)|(epsilon)|(zeta)|(eta)|(theta)|(iota)|(kappa)|(mu)|(nu)|(xi)|(pi)|(rho)|(sigma)|(tau)|(upsilon)|(phi)|(chi)|(psi)|(omega)|(Gamma)|(Delta)|(Theta)|(Lambda)|(Xi)|(Pi)|(Sigma)|(Upsilon)|(Phi)|(Psi)|(Omega))>)|(\\<\\^sub>)|([._'])|([0-9])|([a-zA-Z]+)|(\\?<[a-zA-Z]+>))+/
     | "\\<bottom>"
 
 par_name: "(" name ")"
@@ -2015,8 +2018,8 @@ thy_bounds: name | ("(" name ("|" name)* ")")
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.2
 #
 
-locale_theory_context: "context" name opening? "begin" local_theory "end"
-                     | "context" includes? context_elem* "begin" local_theory "end"
+locale_theory_context: "context" comment_block? name opening? "begin" local_theory "end"
+                     | "context" comment_block? includes? context_elem* "begin" local_theory "end"
 
 local_theory_target: "(" "in" name ")"
 
@@ -2258,7 +2261,7 @@ proof_state: (   "also" ("(" thms ")")?
                | interpret proof_prove
                | let
                | note
-               | obtain
+               | obtain proof_prove
                | prems
                | proof
                | qed
@@ -2393,16 +2396,22 @@ method: "%invisible"? "(" methods ")" method_modifier? attributes?
       | "goal_cases" name*
       | "ind_cases" prop+ for_fixes?
       | "induct_tac" goal_spec? (insts ("and" insts)*)? rule?
+      | "rename_tac" goal_spec? name+
+      | "rotate_tac" goal_spec? NAT?
       | "rule" thm*
       | "sleep" FLOAT
       | "split" thm*
+      | "subgoal_tac" goal_spec? prop+ for_fixes?
       | "subproofs" method
       | "subst" ("(" "asm" ")")? ("(" NAT+ ")")? thm
+      | "thin_tac" goal_spec? prop for_fixes?
       | "use" thms+ "in" method
       | ("erule" | "drule" | "frule") ("(" NAT ")")? thm+
       | ("fold" | "unfold" | "insert") thm+
       | ("intro" | "elim") thms*
+      | ("rule_tac" | "erule_tac" | "drule_tac" | "frule_tac" | "cut_tac") goal_spec? ((named_insts for_fixes? "in" thm) | thms)
       | ("simp" | "simp_all") opt? simpmod?
+      | ("tactic" | "raw_tactic") text
       | cases
       | name method_modifier? attributes?
 
@@ -2426,7 +2435,7 @@ proof: "proof" SYM_IDENT? method?
 
 qed: "qed" method?
 
-by: "by" "%invisible"? method method?
+by: "by" method method?
 
 terminal_proof_steps: "." | ".." | "sorry"
 
