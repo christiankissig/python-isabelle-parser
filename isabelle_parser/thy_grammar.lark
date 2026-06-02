@@ -1670,7 +1670,7 @@ statement: abbreviation
          | value
          | values
 
-method_block: "method" name "=" instruction
+method_block: "method" name for_fixes? "=" instruction
 
 instruction: single_instruction
            | single_instruction instruction_modifier
