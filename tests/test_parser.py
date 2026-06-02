@@ -762,6 +762,55 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # code_printing
+        # -----------------------------------------------------------------------
+        (
+            "code_printing_constant",
+            "theory T imports Main begin\n"
+            'code_printing constant the \\<rightharpoonup> (Haskell) "MaybeExt.fromJust"\n'
+            "end",
+            True,
+        ),
+        (
+            "code_printing_multi_entry",
+            "theory T imports Main begin\n"
+            "code_printing\n"
+            '  type_constructor bool \\<rightharpoonup> (Go) "bool"\n'
+            '| constant "True::bool" \\<rightharpoonup> (Go) "true"\n'
+            "end",
+            True,
+        ),
+        (
+            "code_printing_infixl",
+            "theory T imports Main begin\n"
+            'code_printing constant HOL.conj \\<rightharpoonup> (Go) infixl 1 "&&"\n'
+            "end",
+            True,
+        ),
+        (
+            "code_printing_ascii_arrow_and_erase",
+            "theory T imports Main begin\n"
+            'code_printing class_instance bit :: "HOL.equal" => (Haskell) -\n'
+            "end",
+            True,
+        ),
+        (
+            "code_printing_module_cartouche",
+            "theory T imports Main begin\n"
+            "code_printing code_module MaybeExt \\<rightharpoonup> (Haskell)\n"
+            "  \\<open>module MaybeExt(fromJust) where\n\n"
+            "     import Data.Maybe(fromJust);\\<close>\n"
+            "end",
+            True,
+        ),
+        (
+            "code_printing_multi_target",
+            "theory T imports Main begin\n"
+            'code_printing constant c \\<rightharpoonup> (Haskell) "a" and (OCaml) "b"\n'
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
