@@ -2601,7 +2601,7 @@ termination: "termination" term? proof_prove
            | "nominal_termination" ("(" name ")")? term? proof_prove
 
 # TODO generated from examples
-datatype: "datatype" spec_opts? dt_typespec "=" constructors
+datatype: ("datatype" | "nominal_datatype") spec_opts? dt_typespec "=" constructors
 
 # Type specification for datatype left-hand sides. Beyond plain and
 # sort-annotated type variables it allows the BNF annotations `dead 'a` and
