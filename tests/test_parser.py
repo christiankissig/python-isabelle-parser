@@ -829,6 +829,23 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # class with multiple superclasses
+        # -----------------------------------------------------------------------
+        (
+            "class_multiple_superclasses",
+            "theory T imports Main begin\n"
+            "class c = ordered_ab_semigroup_add + comm_monoid_add + linorder\n"
+            "end",
+            True,
+        ),
+        (
+            "class_superclasses_then_assumes",
+            "theory T imports Main begin\n"
+            'class c = foo + bar + assumes le: "x \\<le> x"\n'
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
