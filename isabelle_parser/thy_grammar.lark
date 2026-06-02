@@ -2601,7 +2601,7 @@ termination: "termination" term? proof_prove
            | "nominal_termination" ("(" name ")")? term? proof_prove
 
 # TODO generated from examples
-datatype: "datatype" spec_opts? generic_type "=" constructors
+datatype: "datatype" spec_opts? typespec_sorts "=" constructors
 
 # Option block for spec commands, e.g. (plugins del: size), (nonexhaustive),
 # (transfer). The excluded apostrophe keeps this from matching a leading type
