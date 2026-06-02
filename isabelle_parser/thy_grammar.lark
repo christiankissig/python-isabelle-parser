@@ -1573,7 +1573,7 @@ TERM_VAR: /\?[a-zA-Z](_?\d*[a-zA-Z]*)*\.?\d*/
 TYPE_VAR: /'[a-zA-Z](_?\d*[a-zA-Z]*)*\.?\d*/
 
 // Other predefined tokens
-TYPE_IDENT: /\'[a-zA-Z](_?\d*[a-zA-Z_\']*)*/
+TYPE_IDENT: /\'(\\<[A-Za-z]+>|[a-zA-Z])(_?\d*[a-zA-Z_\']*)*/
 
 SUBSCRIPT: "\\<^sub>"
 
@@ -2146,8 +2146,7 @@ definitions: "defines" definitions_item ("and" definitions_item)*
 
 class: "class" class_spec ("begin" local_theory "end")?
 
-class_spec: name "=" (   (name opening? "+" context_elem+)
-                       | (name opening?)
+class_spec: name "=" (   (name ("+" name)* opening? ("+" context_elem+)?)
                        | (opening? "+" context_elem+)
                        | context_elem+ ) instantiation?
 
@@ -2602,7 +2601,7 @@ termination: "termination" term? proof_prove
            | "nominal_termination" ("(" name ")")? term? proof_prove
 
 # TODO generated from examples
-datatype: "datatype" spec_opts? generic_type "=" constructors
+datatype: "datatype" spec_opts? typespec_sorts "=" constructors
 
 # Option block for spec commands, e.g. (plugins del: size), (nonexhaustive),
 # (transfer). The excluded apostrophe keeps this from matching a leading type
