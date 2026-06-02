@@ -1594,7 +1594,6 @@ context: (   print_locale
            | print_state )*
 
 theory: (   goal proof_prove
-          | context
           | statement
           | class_instance proof_prove
           | derive )*
