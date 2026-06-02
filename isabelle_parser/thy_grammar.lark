@@ -1634,6 +1634,7 @@ statement: abbreviation
          | attribute_setup
          | marker
          | method_block
+         | ml_translation
          | simproc_setup
          | method_setup
          | ml
@@ -2452,6 +2453,10 @@ method_setup: "method_setup" name "=" text text?
 attribute_setup: "attribute_setup" name "=" text text?
 
 simproc_setup: "simproc_setup" name "(" term ("|" term)* ")" "=" text
+
+ml_translation: ( "parse_translation" | "print_translation"
+                | "typed_print_translation" | "parse_ast_translation"
+                | "print_ast_translation" ) text
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.5.1
