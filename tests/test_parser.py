@@ -691,6 +691,26 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # syntax/AST translation commands (ML body)
+        # -----------------------------------------------------------------------
+        (
+            "parse_translation",
+            "theory T imports Main begin\nparse_translation \\<open>[]\\<close>\nend",
+            True,
+        ),
+        (
+            "print_translation",
+            "theory T imports Main begin\nprint_translation \\<open>[]\\<close>\nend",
+            True,
+        ),
+        (
+            "typed_print_translation",
+            "theory T imports Main begin\n"
+            "typed_print_translation \\<open>[]\\<close>\n"
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
