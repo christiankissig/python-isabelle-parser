@@ -1573,7 +1573,7 @@ TERM_VAR: /\?[a-zA-Z](_?\d*[a-zA-Z]*)*\.?\d*/
 TYPE_VAR: /'[a-zA-Z](_?\d*[a-zA-Z]*)*\.?\d*/
 
 // Other predefined tokens
-TYPE_IDENT: /\'[a-zA-Z](_?\d*[a-zA-Z_\']*)*/
+TYPE_IDENT: /\'(\\<[A-Za-z]+>|[a-zA-Z])(_?\d*[a-zA-Z_\']*)*/
 
 SUBSCRIPT: "\\<^sub>"
 

@@ -811,6 +811,24 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # Greek type variables (e.g. '\<alpha>)
+        # -----------------------------------------------------------------------
+        (
+            "type_synonym_greek_tvars",
+            "theory T imports Main begin\n"
+            "type_synonym ('\\<alpha>, '\\<beta>) psubst = "
+            "\"'\\<alpha> \\<Rightarrow> '\\<beta>\"\n"
+            "end",
+            True,
+        ),
+        (
+            "datatype_greek_tvar",
+            "theory T imports Main begin\n"
+            "datatype '\\<alpha> wrap = Wrap '\\<alpha>\n"
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
