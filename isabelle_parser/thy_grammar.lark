@@ -2044,7 +2044,7 @@ includes:  "includes" name*
 
 opening: "opening" name*
 
-unbundle: "unbundle" name*
+unbundle: "unbundle" ("(" "in" name ")")? name*
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.4

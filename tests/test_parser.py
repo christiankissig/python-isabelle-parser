@@ -905,6 +905,14 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # unbundle with an (in target) qualifier
+        # -----------------------------------------------------------------------
+        (
+            "unbundle_in_target",
+            "theory T imports Main begin\nunbundle (in foo) no funcset_syntax\nend",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
