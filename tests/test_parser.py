@@ -861,6 +861,23 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # datatype BNF type-argument annotations (dead / selectors)
+        # -----------------------------------------------------------------------
+        (
+            "datatype_dead_tvars",
+            "theory T imports Main begin\n"
+            "datatype ('s, dead 'p, dead 'f) t = A 's\n"
+            "end",
+            True,
+        ),
+        (
+            "datatype_selector_tvars",
+            "theory T imports Main begin\n"
+            "datatype (dverts: 'a, darcs: 'b) graph = G\n"
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
