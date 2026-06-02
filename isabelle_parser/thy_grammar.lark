@@ -1787,7 +1787,7 @@ typespec_sorts: typeargs_sorts? name
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.6
 #
 
-sort: ID
+sort: ID | QUOTED_STRING
 
 sort_list_comma_sep: sort ("," sort)*
 
