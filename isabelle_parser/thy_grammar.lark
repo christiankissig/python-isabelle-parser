@@ -2576,9 +2576,9 @@ inductive: ("inductive" | "inductive_set" | "coinductive" | "coinductive_set") (
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.2
 #
 
-primrec: "primrec" ("(" "transfer" ")")? specification
+primrec: "primrec" spec_opts? specification
 
-primcorec: "primcorec" ("(" "transfer" ")")? specification
+primcorec: "primcorec" spec_opts? specification
 
 fun_block: "fun" opts? specification
          | ("function" | "nominal_function") opts? specification proof_prove
@@ -2589,7 +2589,12 @@ termination: "termination" term? proof_prove
            | "nominal_termination" ("(" name ")")? term? proof_prove
 
 # TODO generated from examples
-datatype: "datatype" generic_type "=" constructors
+datatype: "datatype" spec_opts? generic_type "=" constructors
+
+# Option block for spec commands, e.g. (plugins del: size), (nonexhaustive),
+# (transfer). The excluded apostrophe keeps this from matching a leading type
+# argument list such as ('a, 'b), which would otherwise be ambiguous.
+spec_opts: "(" /[^()']+/ ")"
 
 generic_type : (type | ("(" type ("," type)*")")) name?
 
