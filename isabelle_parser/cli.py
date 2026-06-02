@@ -14,6 +14,14 @@ def main() -> None:
     arg_parser.add_argument(
         "-f", "--file", action="store_true", help="Interpret input as a filename"
     )
+    arg_parser.add_argument(
+        "-t",
+        "--timeout",
+        type=float,
+        default=None,
+        help="Abort the parse after this many seconds (guards against "
+        "pathological inputs that grow the Earley chart super-linearly)",
+    )
 
     # Parse arguments
     args = arg_parser.parse_args()
@@ -31,7 +39,7 @@ def main() -> None:
 
     # Lex and parse
     try:
-        result = parse(data)
+        result = parse(data, timeout=args.timeout)
     except ParsingError as e:
         print("Parsing failed due to errors.")
         print(f"Error: {e.with_source_code(data)}")

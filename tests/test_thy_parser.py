@@ -14,10 +14,14 @@ Grammar coverage for valid inputs lives in test_parser.py and
 test_thy_grammer.py.
 """
 
+import signal
+import threading
+import time
+
 import pytest
 from lark import Lark, Tree
 
-from isabelle_parser import load_parser
+from isabelle_parser import ParsingError, load_parser
 from isabelle_parser.thy_parser import parse as _raw_parse
 
 
@@ -64,3 +68,57 @@ def test_invalid_input_raises(src):
     """Invalid theory inputs must raise rather than return a result."""
     with pytest.raises(Exception):
         _raw_parse(src, None)
+
+
+class _SlowParser:
+    """Stand-in Lark parser whose parse() sleeps, to test the timeout path
+    deterministically without depending on a real pathological input."""
+
+    def __init__(self, seconds: float) -> None:
+        self.seconds = seconds
+
+    def parse(self, _text: str):
+        time.sleep(self.seconds)
+        return Tree("start", [])
+
+
+class TestParseTimeout:
+    def test_timeout_not_hit_returns_tree(self):
+        result = _raw_parse(
+            "theory T imports Main begin end", load_parser(), timeout=30
+        )
+        assert isinstance(result, Tree)
+
+    def test_timeout_none_is_default(self):
+        result = _raw_parse("theory T imports Main begin end", load_parser())
+        assert isinstance(result, Tree)
+
+    def test_timeout_exceeded_raises_parsing_error(self):
+        with pytest.raises(ParsingError):
+            _raw_parse("ignored", _SlowParser(5), timeout=0.2)
+
+    def test_timeout_exceeded_is_fast(self):
+        start = time.time()
+        with pytest.raises(ParsingError):
+            _raw_parse("ignored", _SlowParser(10), timeout=0.2)
+        assert time.time() - start < 2  # aborted promptly, not after 10s
+
+    def test_sigalrm_handler_restored_after_parse(self):
+        sentinel = signal.getsignal(signal.SIGALRM)
+        _raw_parse("theory T imports Main begin end", load_parser(), timeout=30)
+        assert signal.getsignal(signal.SIGALRM) is sentinel
+
+    def test_timeout_ignored_off_main_thread(self):
+        # SIGALRM is main-thread only; off-thread the limit is skipped and a
+        # normal (fast) parse still succeeds rather than erroring.
+        results = {}
+
+        def run():
+            results["tree"] = _raw_parse(
+                "theory T imports Main begin end", load_parser(), timeout=30
+            )
+
+        t = threading.Thread(target=run)
+        t.start()
+        t.join()
+        assert isinstance(results["tree"], Tree)

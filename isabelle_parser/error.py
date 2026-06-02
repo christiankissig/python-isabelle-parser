@@ -26,7 +26,7 @@ class ParsingError(BaseException):
                 print(line)
                 underline = " " * (self.column - 1) + "^" * len(self.token)
                 return f"\n\n{line}\n{underline}\n"
-        return "source_hint"
+        return ""
 
     def __str__(self) -> str:
         location_info = ""

@@ -1,11 +1,50 @@
 import logging
 import os
-from typing import Any, List
+import signal
+import threading
+from contextlib import contextmanager
+from typing import Any, Iterator, List
 
 from lark import Lark, Transformer, Tree
 from lark.tree import Meta
 
+from .error import ParsingError
+
 logger = logging.getLogger(__name__)
+
+
+class _ParseTimeout(Exception):
+    """Internal signal that a parse exceeded its time budget."""
+
+
+@contextmanager
+def _time_limit(seconds: float | None) -> Iterator[None]:
+    """Abort the wrapped block after ``seconds`` using SIGALRM.
+
+    The Earley parser can grow its chart super-linearly with input size, so a
+    large/ambiguous theory file can take minutes. SIGALRM interrupts the
+    pure-Python parse loop cleanly. It is only available on the main thread of a
+    Unix process; in any other context (worker threads, platforms without
+    SIGALRM) the limit is silently skipped and parsing proceeds without a bound.
+    """
+    if (
+        not seconds
+        or not hasattr(signal, "SIGALRM")
+        or threading.current_thread() is not threading.main_thread()
+    ):
+        yield
+        return
+
+    def _handler(signum: int, frame: Any) -> None:
+        raise _ParseTimeout()
+
+    previous = signal.signal(signal.SIGALRM, _handler)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)
 
 
 def load_parser(start: str = "start") -> Lark:
@@ -21,10 +60,22 @@ def load_parser(start: str = "start") -> Lark:
     return parser
 
 
-def parse(input_text: str, parser: Lark | None = None) -> Any | None:
+def parse(
+    input_text: str, parser: Lark | None = None, timeout: float | None = None
+) -> Any | None:
+    """Parse ``input_text`` into a tree.
+
+    ``timeout`` (seconds) bounds the parse: if it is exceeded a
+    :class:`ParsingError` is raised instead of letting a pathological file hang
+    the caller. See :func:`_time_limit` for its limitations.
+    """
     if parser is None:
         parser = load_parser()
-    tree = parser.parse(input_text)
+    try:
+        with _time_limit(timeout):
+            tree = parser.parse(input_text)
+    except _ParseTimeout:
+        raise ParsingError(f"parsing timed out after {timeout}s")
     transformer = PositionPrinter()
     return transformer.transform(tree)
 
