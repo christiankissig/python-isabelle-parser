@@ -611,6 +611,16 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # abbreviation with an (output) print mode
+        # -----------------------------------------------------------------------
+        (
+            "abbreviation_output_mode",
+            "theory T imports Main begin\n"
+            'abbreviation (output) foo where "foo = x"\n'
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):

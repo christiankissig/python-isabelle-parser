@@ -2534,6 +2534,7 @@ notation: name mixfix
 # TODO
 mode: ID
     | "(" "input" ")"
+    | "(" "output" ")"
     | "(" "ASCII" ")"
 
 #
