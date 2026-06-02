@@ -888,6 +888,23 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # method definition with `for` parameters
+        # -----------------------------------------------------------------------
+        (
+            "method_with_for_param",
+            "theory T imports Main begin\n"
+            'method interval_split for x :: "nat" = (rule x)\n'
+            "end",
+            True,
+        ),
+        (
+            "method_with_for_and",
+            "theory T imports Main begin\n"
+            'method m for a :: "\'a" and b :: "\'b" = (simp)\n'
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
