@@ -1611,6 +1611,7 @@ statement: abbreviation
          | declaration
          | declare
          | definition
+         | code_printing
          | doc_block
          | experiment
          | export_code
@@ -2730,6 +2731,29 @@ inductive_simps: "inductive_simps" (thmdecl? prop+ ("and" thmdecl? prop+)*)
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 13
 #
+
+code_printing: "code_printing" code_print_decl ("|" code_print_decl)*
+
+code_print_decl: code_symbol (code_arrow code_printings?)?
+
+code_arrow: "\<rightharpoonup>" | "\<rightleftharpoons>" | "=>"
+
+code_symbol: "constant" (name | QUOTED_STRING)
+           | "type_constructor" (name | QUOTED_STRING)
+           | "type_class" (name | QUOTED_STRING)
+           | "class_relation" (name | QUOTED_STRING)
+           | "class_instance" (name | QUOTED_STRING) "::" (name | QUOTED_STRING)
+           | "code_module" (name | QUOTED_STRING)
+
+code_printings: code_target_print ("and" code_target_print)*
+
+code_target_print: "(" name ")" code_template?
+
+# A printing is a template string/cartouche, an optional infix declaration, or
+# "-" to erase the printing for that target.
+code_template: ("infix" | "infixl" | "infixr") NAT (QUOTED_STRING | cartouche)
+             | (QUOTED_STRING | cartouche)
+             | "-"
 
 export_code : "open" const_expr_list export_target_list
             | const_expr_list export_target_list
