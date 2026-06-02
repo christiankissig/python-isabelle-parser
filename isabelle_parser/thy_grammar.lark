@@ -1621,6 +1621,7 @@ statement: abbreviation
          | hide_declarations
          | inductive
          | inductive_cases
+         | inductive_simps
          | instantiation
          | instantiation
          | interpretation_block
@@ -1787,7 +1788,7 @@ typespec_sorts: typeargs_sorts? name
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.6
 #
 
-sort: ID
+sort: ID | QUOTED_STRING
 
 sort_list_comma_sep: sort ("," sort)*
 
@@ -2139,7 +2140,7 @@ definitions: "defines" definitions_item ("and" definitions_item)*
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.8
 #
 
-class: "class" class_spec "begin" local_theory "end"
+class: "class" class_spec ("begin" local_theory "end")?
 
 class_spec: name "=" (   (name opening? "+" context_elem+)
                        | (name opening?)
@@ -2176,7 +2177,8 @@ spec: name ("\\<equiv>" | "==") term ("(" "unchecked" ")")?
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.10
 #
 
-ml : ("ml" | "setup") (name | cartouche)
+ml : ( "ML" | "ml" | "ML_file" | "ML_val" | "ML_prf" | "ML_command"
+     | "SML_file" | "setup" | "local_setup" ) (name | cartouche | QUOTED_STRING)
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.12.2
@@ -2533,6 +2535,7 @@ notation: name mixfix
 # TODO
 mode: ID
     | "(" "input" ")"
+    | "(" "output" ")"
     | "(" "ASCII" ")"
 
 #
@@ -2573,9 +2576,9 @@ inductive: ("inductive" | "inductive_set" | "coinductive" | "coinductive_set") (
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 11.2
 #
 
-primrec: "primrec" ("(" "transfer" ")")? specification
+primrec: "primrec" spec_opts? specification
 
-primcorec: "primcorec" ("(" "transfer" ")")? specification
+primcorec: "primcorec" spec_opts? specification
 
 fun_block: "fun" opts? specification
          | ("function" | "nominal_function") opts? specification proof_prove
@@ -2586,7 +2589,12 @@ termination: "termination" term? proof_prove
            | "nominal_termination" ("(" name ")")? term? proof_prove
 
 # TODO generated from examples
-datatype: "datatype" generic_type "=" constructors
+datatype: "datatype" spec_opts? generic_type "=" constructors
+
+# Option block for spec commands, e.g. (plugins del: size), (nonexhaustive),
+# (transfer). The excluded apostrophe keeps this from matching a leading type
+# argument list such as ('a, 'b), which would otherwise be ambiguous.
+spec_opts: "(" /[^()']+/ ")"
 
 generic_type : (type | ("(" type ("," type)*")")) name?
 
@@ -2702,6 +2710,8 @@ param_arg_value: embedded
 #
 
 inductive_cases: "inductive_cases" (thmdecl? prop+ ("and" thmdecl? prop+)*)
+
+inductive_simps: "inductive_simps" (thmdecl? prop+ ("and" thmdecl? prop+)*)
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 13

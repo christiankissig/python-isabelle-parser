@@ -548,6 +548,115 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # ML / FFI commands (ML body delimited by a cartouche)
+        # -----------------------------------------------------------------------
+        (
+            "ml_block",
+            "theory T imports Main begin\nML \\<open>val x = 1\\<close>\nend",
+            True,
+        ),
+        (
+            "ml_val_block",
+            'theory T imports Main begin\nML_val \\<open>writeln "hi"\\<close>\nend',
+            True,
+        ),
+        (
+            "ml_file_cartouche",
+            "theory T imports Main begin\nML_file \\<open>foo.ML\\<close>\nend",
+            True,
+        ),
+        (
+            "ml_file_quoted",
+            'theory T imports Main begin\nML_file "foo.ML"\nend',
+            True,
+        ),
+        (
+            "setup_block",
+            "theory T imports Main begin\nsetup \\<open>Foo.bar\\<close>\nend",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # class definitions without a begin..end body
+        # -----------------------------------------------------------------------
+        (
+            "class_no_body",
+            "theory T imports Main begin\n"
+            'class c = ord + assumes le: "x \\<le> x"\n'
+            "end",
+            True,
+        ),
+        (
+            "class_with_body",
+            "theory T imports Main begin\nclass c = ord\nbegin\nend\nend",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # quoted sort/class names in arities
+        # -----------------------------------------------------------------------
+        (
+            "instantiation_quoted_sort",
+            "theory T imports Main begin\n"
+            'instantiation vec :: ("show") "show"\nbegin\ninstance sorry\nend\n'
+            "end",
+            True,
+        ),
+        (
+            "instantiation_quoted_multi_sort",
+            "theory T imports Main begin\n"
+            'instantiation sq_matrix :: ("semiring_0", finite) semiring_0\n'
+            "begin\ninstance sorry\nend\n"
+            "end",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # abbreviation with an (output) print mode
+        # -----------------------------------------------------------------------
+        (
+            "abbreviation_output_mode",
+            "theory T imports Main begin\n"
+            'abbreviation (output) foo where "foo = x"\n'
+            "end",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # inductive_simps command
+        # -----------------------------------------------------------------------
+        (
+            "inductive_simps",
+            'theory T imports Main begin\ninductive_simps foo: "P x"\nend',
+            True,
+        ),
+        (
+            "inductive_simps_and",
+            "theory T imports Main begin\n"
+            'inductive_simps bar: "P x" and baz: "Q y"\n'
+            "end",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # datatype / primrec option blocks
+        # -----------------------------------------------------------------------
+        (
+            "datatype_plugins_option",
+            "theory T imports Main begin\n"
+            "datatype (plugins del: size) 'a t = A 'a\n"
+            "end",
+            True,
+        ),
+        (
+            "datatype_type_args_not_options",
+            "theory T imports Main begin\ndatatype ('a, 'b) pair = Pair 'a 'b\nend",
+            True,
+        ),
+        (
+            "primrec_nonexhaustive_option",
+            "theory T imports Main begin\n"
+            "datatype t = A | B\n"
+            'primrec (nonexhaustive) f where "f A = A"\n'
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
