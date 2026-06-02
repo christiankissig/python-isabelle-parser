@@ -747,6 +747,21 @@ end""",
             "end",
             True,
         ),
+        (
+            "marker_on_definition_after_keyword",
+            "theory T imports Main begin\n"
+            "definition\\<^marker>\\<open>tag value\\<close> foo "
+            'where "foo = (0::nat)"\n'
+            "end",
+            True,
+        ),
+        (
+            "marker_on_definition_after_where",
+            "theory T imports Main begin\n"
+            'definition foo where \\<^marker>\\<open>tag value\\<close> "foo = (0::nat)"\n'
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
