@@ -878,6 +878,16 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # nominal_datatype (same shape as datatype)
+        # -----------------------------------------------------------------------
+        (
+            "nominal_datatype",
+            "theory T imports Main begin\n"
+            "nominal_datatype pi = PiNil | Tau pi | Sum pi pi\n"
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
