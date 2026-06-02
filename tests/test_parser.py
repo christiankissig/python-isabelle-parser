@@ -811,6 +811,56 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # Greek type variables (e.g. '\<alpha>)
+        # -----------------------------------------------------------------------
+        (
+            "type_synonym_greek_tvars",
+            "theory T imports Main begin\n"
+            "type_synonym ('\\<alpha>, '\\<beta>) psubst = "
+            "\"'\\<alpha> \\<Rightarrow> '\\<beta>\"\n"
+            "end",
+            True,
+        ),
+        (
+            "datatype_greek_tvar",
+            "theory T imports Main begin\n"
+            "datatype '\\<alpha> wrap = Wrap '\\<alpha>\n"
+            "end",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # class with multiple superclasses
+        # -----------------------------------------------------------------------
+        (
+            "class_multiple_superclasses",
+            "theory T imports Main begin\n"
+            "class c = ordered_ab_semigroup_add + comm_monoid_add + linorder\n"
+            "end",
+            True,
+        ),
+        (
+            "class_superclasses_then_assumes",
+            "theory T imports Main begin\n"
+            'class c = foo + bar + assumes le: "x \\<le> x"\n'
+            "end",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # datatype with sort-annotated type variables
+        # -----------------------------------------------------------------------
+        (
+            "datatype_sort_annotated_tvar",
+            "theory T imports Main begin\ndatatype ('a::type) box = Box 'a\nend",
+            True,
+        ),
+        (
+            "datatype_multi_sort_annotated_tvars",
+            "theory T imports Main begin\n"
+            "datatype ('a::type, 'b::finite) pair = Pair 'a 'b\n"
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
