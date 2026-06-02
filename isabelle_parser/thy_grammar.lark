@@ -2052,7 +2052,7 @@ unbundle: "unbundle" name*
 
 decl: name ("::" (ID | QUOTED_STRING | cartouche))? comment_block? mixfix? comment_block? "where" comment_block?
 
-definition: "definition" local_theory_target? decl? thmdecl? prop spec_prems? for_fixes?
+definition: "definition" marker? local_theory_target? decl? thmdecl? marker? prop spec_prems? for_fixes?
 
 abbreviation: "abbreviation" local_theory_target? mode? decl? prop for_fixes?
 
