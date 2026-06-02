@@ -593,6 +593,24 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # quoted sort/class names in arities
+        # -----------------------------------------------------------------------
+        (
+            "instantiation_quoted_sort",
+            "theory T imports Main begin\n"
+            'instantiation vec :: ("show") "show"\nbegin\ninstance sorry\nend\n'
+            "end",
+            True,
+        ),
+        (
+            "instantiation_quoted_multi_sort",
+            "theory T imports Main begin\n"
+            'instantiation sq_matrix :: ("semiring_0", finite) semiring_0\n'
+            "begin\ninstance sorry\nend\n"
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
