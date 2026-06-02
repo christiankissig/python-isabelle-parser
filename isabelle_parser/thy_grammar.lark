@@ -2146,8 +2146,7 @@ definitions: "defines" definitions_item ("and" definitions_item)*
 
 class: "class" class_spec ("begin" local_theory "end")?
 
-class_spec: name "=" (   (name opening? "+" context_elem+)
-                       | (name opening?)
+class_spec: name "=" (   (name ("+" name)* opening? ("+" context_elem+)?)
                        | (opening? "+" context_elem+)
                        | context_elem+ ) instantiation?
 
