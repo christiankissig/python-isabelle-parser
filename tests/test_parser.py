@@ -721,6 +721,32 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # \<^marker> attached to goal commands
+        # -----------------------------------------------------------------------
+        (
+            "marker_after_thmdecl",
+            "theory T imports Main begin\n"
+            "lemma foo: \\<^marker>\\<open>contributor \\<open>A Name\\<close>\\<close>\n"
+            '  "x = x" by simp\n'
+            "end",
+            True,
+        ),
+        (
+            "marker_after_thmdecl_with_attrs",
+            "theory T imports Main begin\n"
+            "lemma foo[simp]: \\<^marker>\\<open>tag value\\<close> "
+            '"x = x" by simp\n'
+            "end",
+            True,
+        ),
+        (
+            "marker_after_keyword",
+            "theory T imports Main begin\n"
+            'lemma \\<^marker>\\<open>tag value\\<close> foo: "x = x" by simp\n'
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):

@@ -1807,7 +1807,7 @@ vars: var ("and" var)*
 var: name+ ("::" type)? comment_block?
    | name ("::" type)? mixfix comment_block?
 
-props: comment_block* thmdecl? comment_block* (prop prop_pat? is_syntax?)+ comment_block*
+props: comment_block* thmdecl? marker? comment_block* (prop prop_pat? is_syntax?)+ comment_block*
 
 prop_list_with_pat: prop prop_pat? is_syntax? ("and"? prop prop_pat? is_syntax?)*
 
@@ -2365,7 +2365,7 @@ assms : "assms"
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.2.4
 #
 
-goal: ("lemma" | "theorem" | "corollary" | "proposition" | "schematic_goal") ("(" "in" name ")")? "%invisible"? (long_statement | short_statement)
+goal: ("lemma" | "theorem" | "corollary" | "proposition" | "schematic_goal") ("(" "in" name ")")? "%invisible"? marker? (long_statement | short_statement)
 
 have: "have" stmt cond_stmt? for_fixes?
 
@@ -2381,7 +2381,7 @@ cond_stmt: ("if" | "when") stmt
 
 short_statement: stmt ("if" stmt)? for_fixes?
 
-long_statement: thmdecl? comment_block? statement_context conclusion
+long_statement: thmdecl? marker? comment_block? statement_context conclusion
 
 statement_context: includes? context_elem*
 
