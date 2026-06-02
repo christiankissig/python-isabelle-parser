@@ -657,6 +657,70 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # attribute_setup (ML body delimited by a cartouche)
+        # -----------------------------------------------------------------------
+        (
+            "attribute_setup",
+            "theory T imports Main begin\n"
+            "attribute_setup foo = \\<open>Attrib.thms\\<close>\n"
+            "end",
+            True,
+        ),
+        (
+            "attribute_setup_with_description",
+            "theory T imports Main begin\n"
+            'attribute_setup foo = \\<open>Attrib.thms\\<close> "a description"\n'
+            "end",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # simproc_setup (pattern list + ML body)
+        # -----------------------------------------------------------------------
+        (
+            "simproc_setup",
+            "theory T imports Main begin\n"
+            'simproc_setup foo ("x + y") = \\<open>K (K (K NONE))\\<close>\n'
+            "end",
+            True,
+        ),
+        (
+            "simproc_setup_multi_pattern",
+            "theory T imports Main begin\n"
+            'simproc_setup foo ("x + y" | "x * y") = \\<open>K (K (K NONE))\\<close>\n'
+            "end",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # syntax/AST translation commands (ML body)
+        # -----------------------------------------------------------------------
+        (
+            "parse_translation",
+            "theory T imports Main begin\nparse_translation \\<open>[]\\<close>\nend",
+            True,
+        ),
+        (
+            "print_translation",
+            "theory T imports Main begin\nprint_translation \\<open>[]\\<close>\nend",
+            True,
+        ),
+        (
+            "typed_print_translation",
+            "theory T imports Main begin\n"
+            "typed_print_translation \\<open>[]\\<close>\n"
+            "end",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # oracle (ML body)
+        # -----------------------------------------------------------------------
+        (
+            "oracle",
+            "theory T imports Main begin\n"
+            "oracle myoracle = \\<open>fn _ => @{cterm True}\\<close>\n"
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
