@@ -558,7 +558,7 @@ end""",
         ),
         (
             "ml_val_block",
-            "theory T imports Main begin\nML_val \\<open>writeln \"hi\"\\<close>\nend",
+            'theory T imports Main begin\nML_val \\<open>writeln "hi"\\<close>\nend',
             True,
         ),
         (
@@ -588,9 +588,7 @@ end""",
         ),
         (
             "class_with_body",
-            "theory T imports Main begin\n"
-            "class c = ord\nbegin\nend\n"
-            "end",
+            "theory T imports Main begin\nclass c = ord\nbegin\nend\nend",
             True,
         ),
         # -----------------------------------------------------------------------
@@ -626,9 +624,7 @@ end""",
         # -----------------------------------------------------------------------
         (
             "inductive_simps",
-            "theory T imports Main begin\n"
-            'inductive_simps foo: "P x"\n'
-            "end",
+            'theory T imports Main begin\ninductive_simps foo: "P x"\nend',
             True,
         ),
         (
@@ -650,9 +646,7 @@ end""",
         ),
         (
             "datatype_type_args_not_options",
-            "theory T imports Main begin\n"
-            "datatype ('a, 'b) pair = Pair 'a 'b\n"
-            "end",
+            "theory T imports Main begin\ndatatype ('a, 'b) pair = Pair 'a 'b\nend",
             True,
         ),
         (
