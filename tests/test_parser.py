@@ -711,6 +711,16 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # oracle (ML body)
+        # -----------------------------------------------------------------------
+        (
+            "oracle",
+            "theory T imports Main begin\n"
+            "oracle myoracle = \\<open>fn _ => @{cterm True}\\<close>\n"
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
