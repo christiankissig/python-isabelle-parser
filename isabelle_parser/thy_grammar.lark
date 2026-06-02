@@ -2337,8 +2337,7 @@ proof_prove: (   show
                | with proof_chain )* (   terminal_proof_steps
                                        | qed
                                        | "oops"
-                                       | "done"
-                                       | by)? doc_block?
+                                       | "done")? doc_block?
 
 # QUOTED_STRING only found in AFP, not in Isabelle/Isar grammar
 conclusion: "shows" stmt
