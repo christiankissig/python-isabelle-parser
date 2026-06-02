@@ -2601,7 +2601,15 @@ termination: "termination" term? proof_prove
            | "nominal_termination" ("(" name ")")? term? proof_prove
 
 # TODO generated from examples
-datatype: "datatype" spec_opts? typespec_sorts "=" constructors
+datatype: "datatype" spec_opts? dt_typespec "=" constructors
+
+# Type specification for datatype left-hand sides. Beyond plain and
+# sort-annotated type variables it allows the BNF annotations `dead 'a` and
+# selector-style `name: 'a`.
+dt_typespec: dt_typeargs? name
+dt_typeargs: dt_typearg
+           | "(" dt_typearg ("," dt_typearg)* ")"
+dt_typearg: "dead"? (name ":")? TYPE_IDENT ("::" sort)?
 
 # Option block for spec commands, e.g. (plugins del: size), (nonexhaustive),
 # (transfer). The excluded apostrophe keeps this from matching a leading type
