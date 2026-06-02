@@ -621,6 +621,23 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # inductive_simps command
+        # -----------------------------------------------------------------------
+        (
+            "inductive_simps",
+            "theory T imports Main begin\n"
+            'inductive_simps foo: "P x"\n'
+            "end",
+            True,
+        ),
+        (
+            "inductive_simps_and",
+            "theory T imports Main begin\n"
+            'inductive_simps bar: "P x" and baz: "Q y"\n'
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):

@@ -1621,6 +1621,7 @@ statement: abbreviation
          | hide_declarations
          | inductive
          | inductive_cases
+         | inductive_simps
          | instantiation
          | instantiation
          | interpretation_block
@@ -2704,6 +2705,8 @@ param_arg_value: embedded
 #
 
 inductive_cases: "inductive_cases" (thmdecl? prop+ ("and" thmdecl? prop+)*)
+
+inductive_simps: "inductive_simps" (thmdecl? prop+ ("and" thmdecl? prop+)*)
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 13
