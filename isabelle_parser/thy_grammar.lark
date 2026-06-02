@@ -2139,7 +2139,7 @@ definitions: "defines" definitions_item ("and" definitions_item)*
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.8
 #
 
-class: "class" class_spec "begin" local_theory "end"
+class: "class" class_spec ("begin" local_theory "end")?
 
 class_spec: name "=" (   (name opening? "+" context_elem+)
                        | (name opening?)

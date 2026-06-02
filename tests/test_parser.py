@@ -576,6 +576,23 @@ end""",
             "theory T imports Main begin\nsetup \\<open>Foo.bar\\<close>\nend",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # class definitions without a begin..end body
+        # -----------------------------------------------------------------------
+        (
+            "class_no_body",
+            "theory T imports Main begin\n"
+            'class c = ord + assumes le: "x \\<le> x"\n'
+            "end",
+            True,
+        ),
+        (
+            "class_with_body",
+            "theory T imports Main begin\n"
+            "class c = ord\nbegin\nend\n"
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
