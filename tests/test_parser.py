@@ -674,6 +674,23 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # simproc_setup (pattern list + ML body)
+        # -----------------------------------------------------------------------
+        (
+            "simproc_setup",
+            "theory T imports Main begin\n"
+            'simproc_setup foo ("x + y") = \\<open>K (K (K NONE))\\<close>\n'
+            "end",
+            True,
+        ),
+        (
+            "simproc_setup_multi_pattern",
+            "theory T imports Main begin\n"
+            'simproc_setup foo ("x + y" | "x * y") = \\<open>K (K (K NONE))\\<close>\n'
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
