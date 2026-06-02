@@ -1634,6 +1634,7 @@ statement: abbreviation
          | attribute_setup
          | marker
          | method_block
+         | simproc_setup
          | method_setup
          | ml
          | named_theorems
@@ -2449,6 +2450,8 @@ terminal_proof_steps: "." | ".." | "sorry"
 method_setup: "method_setup" name "=" text text?
 
 attribute_setup: "attribute_setup" name "=" text text?
+
+simproc_setup: "simproc_setup" name "(" term ("|" term)* ")" "=" text
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 6.5.1
