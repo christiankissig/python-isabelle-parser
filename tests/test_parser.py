@@ -638,6 +638,31 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # datatype / primrec option blocks
+        # -----------------------------------------------------------------------
+        (
+            "datatype_plugins_option",
+            "theory T imports Main begin\n"
+            "datatype (plugins del: size) 'a t = A 'a\n"
+            "end",
+            True,
+        ),
+        (
+            "datatype_type_args_not_options",
+            "theory T imports Main begin\n"
+            "datatype ('a, 'b) pair = Pair 'a 'b\n"
+            "end",
+            True,
+        ),
+        (
+            "primrec_nonexhaustive_option",
+            "theory T imports Main begin\n"
+            "datatype t = A | B\n"
+            'primrec (nonexhaustive) f where "f A = A"\n'
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
