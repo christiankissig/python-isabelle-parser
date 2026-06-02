@@ -657,6 +657,23 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # attribute_setup (ML body delimited by a cartouche)
+        # -----------------------------------------------------------------------
+        (
+            "attribute_setup",
+            "theory T imports Main begin\n"
+            "attribute_setup foo = \\<open>Attrib.thms\\<close>\n"
+            "end",
+            True,
+        ),
+        (
+            "attribute_setup_with_description",
+            "theory T imports Main begin\n"
+            'attribute_setup foo = \\<open>Attrib.thms\\<close> "a description"\n'
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
