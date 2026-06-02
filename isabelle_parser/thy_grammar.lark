@@ -2176,7 +2176,8 @@ spec: name ("\\<equiv>" | "==") term ("(" "unchecked" ")")?
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.10
 #
 
-ml : ("ml" | "setup") (name | cartouche)
+ml : ( "ML" | "ml" | "ML_file" | "ML_val" | "ML_prf" | "ML_command"
+     | "SML_file" | "setup" | "local_setup" ) (name | cartouche | QUOTED_STRING)
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.12.2

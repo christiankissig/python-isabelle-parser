@@ -548,6 +548,34 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # ML / FFI commands (ML body delimited by a cartouche)
+        # -----------------------------------------------------------------------
+        (
+            "ml_block",
+            "theory T imports Main begin\nML \\<open>val x = 1\\<close>\nend",
+            True,
+        ),
+        (
+            "ml_val_block",
+            "theory T imports Main begin\nML_val \\<open>writeln \"hi\"\\<close>\nend",
+            True,
+        ),
+        (
+            "ml_file_cartouche",
+            "theory T imports Main begin\nML_file \\<open>foo.ML\\<close>\nend",
+            True,
+        ),
+        (
+            "ml_file_quoted",
+            'theory T imports Main begin\nML_file "foo.ML"\nend',
+            True,
+        ),
+        (
+            "setup_block",
+            "theory T imports Main begin\nsetup \\<open>Foo.bar\\<close>\nend",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
