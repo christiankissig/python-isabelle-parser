@@ -72,4 +72,12 @@ jobs:
           # Pushing with the default GITHUB_TOKEN does not retrigger workflows;
           # [skip ci] is belt-and-suspenders. No-op stays green.
           git commit -m "chore: update AFP metrics [skip ci]" || { echo "no changes"; exit 0; }
-          git push
+          # master may have advanced during the (multi-minute) run, which would
+          # reject the push; rebase onto the latest and retry a few times.
+          for attempt in 1 2 3 4 5; do
+            if git push; then exit 0; fi
+            echo "push rejected (attempt $attempt) - rebasing on origin/master ..."
+            git pull --rebase --autostash origin master
+          done
+          echo "failed to push metrics after retries" >&2
+          exit 1
