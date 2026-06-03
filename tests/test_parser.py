@@ -284,6 +284,12 @@ end""",
             True,
         ),
         (
+            "type_synonym_qualified_rhs",
+            "theory T imports Main begin\n"
+            "type_synonym error = String.literal\nend",
+            True,
+        ),
+        (
             "qualified_toplevel_definition",
             "theory T imports Main begin\n"
             'qualified definition bar :: nat where "bar = 0"\nend',
