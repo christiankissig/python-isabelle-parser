@@ -264,6 +264,12 @@ end""",
             "theory T imports Main begin\ntype_synonym 'a mylist = \"'a list\"\nend",
             True,
         ),
+        (
+            "type_synonym_cartouche",
+            "theory T imports Main begin\n"
+            "type_synonym int_poly = \\<open>int mpoly\\<close>\nend",
+            True,
+        ),
         # -----------------------------------------------------------------------
         # Constant declarations
         # -----------------------------------------------------------------------

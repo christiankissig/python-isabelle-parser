@@ -2193,7 +2193,7 @@ ml : ( "ML" | "ml" | "ML_file" | "ML_val" | "ML_prf" | "ML_command"
 
 typedecl : "typedecl" typespec mixfix?
 
-type_synonym : "type_synonym" ("(" "in" name ")")? typespec "=" (ID | QUOTED_STRING) mixfix?
+type_synonym : "type_synonym" ("(" "in" name ")")? typespec "=" (ID | QUOTED_STRING | cartouche) mixfix?
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.13
