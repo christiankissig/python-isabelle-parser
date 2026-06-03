@@ -1879,6 +1879,7 @@ attribute: "OF" thms
 args: arg*
 
 arg: ID
+   | LONG_IDENT
    | cartouche
    | "False"
    | "for"
@@ -2030,7 +2031,7 @@ thy_bounds: name | ("(" name ("|" name)* ")")
 locale_theory_context: "context" comment_block? name opening? "begin" local_theory "end"
                      | "context" comment_block? includes? context_elem* "begin" local_theory "end"
 
-local_theory_target: "(" "in" name ")"
+local_theory_target: "(" "in" (name | "-") ")"
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.3
@@ -2624,8 +2625,8 @@ generic_type : (type | ("(" type ("," type)*")")) name?
 
 constructors : constructor ("|" constructor)*
 
-constructor : comment_block? ID TYPE_IDENT mixfix? comment_block?
-            | comment_block? (   name
+constructor : comment_block? (name ":")? ID TYPE_IDENT mixfix? comment_block?
+            | comment_block? (name ":")? (   name
                                | cartouche
                                | ("(" (cartouche | (name ":" name) | (name ":" QUOTED_STRING)) ")") )+ mixfix? comment_block?
 

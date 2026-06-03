@@ -644,6 +644,18 @@ end""",
             "theory T imports Main begin\ninstance unit :: heap.rep ..\nend",
             True,
         ),
+        (
+            "definition_global_target_dash",
+            "theory T imports Main begin\n"
+            'definition (in -) foo :: nat where "foo = 0"\nend',
+            True,
+        ),
+        (
+            "inductive_cases_qualified_attribute_arg",
+            "theory T imports Main begin\n"
+            'inductive_cases fooCases[simplified bar.inject]: "P x"\nend',
+            True,
+        ),
         # -----------------------------------------------------------------------
         # abbreviation with an (output) print mode
         # -----------------------------------------------------------------------
@@ -903,6 +915,12 @@ end""",
         (
             "datatype_sort_annotated_tvar",
             "theory T imports Main begin\ndatatype ('a::type) box = Box 'a\nend",
+            True,
+        ),
+        (
+            "datatype_constructor_discriminators",
+            "theory T imports Main begin\n"
+            "datatype pr_op = is_PUSH: PUSH | is_RELABEL: RELABEL\nend",
             True,
         ),
         (
