@@ -271,6 +271,19 @@ end""",
             True,
         ),
         (
+            "type_synonym_subscripted_type_vars",
+            "theory T imports Main begin\n"
+            "type_synonym ('a\\<^sub>h, 'b\\<^sub>h) sum\\<^sub>h = "
+            '"\'a\\<^sub>h + \'b\\<^sub>h"\nend',
+            True,
+        ),
+        (
+            "type_synonym_type_var_rhs",
+            "theory T imports Main begin\n"
+            "type_synonym 'a blindable = 'a\nend",
+            True,
+        ),
+        (
             "qualified_toplevel_definition",
             "theory T imports Main begin\n"
             'qualified definition bar :: nat where "bar = 0"\nend',
@@ -875,6 +888,13 @@ end""",
             "datatype_multi_sort_annotated_tvars",
             "theory T imports Main begin\n"
             "datatype ('a::type, 'b::finite) pair = Pair 'a 'b\n"
+            "end",
+            True,
+        ),
+        (
+            "datatype_subscripted_type_var_and_constructor",
+            "theory T imports Main begin\n"
+            "datatype 'a\\<^sub>h blindable\\<^sub>h = Content 'a\\<^sub>h\n"
             "end",
             True,
         ),
