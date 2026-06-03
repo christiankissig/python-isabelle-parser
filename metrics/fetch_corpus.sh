@@ -16,11 +16,12 @@ echo "Downloading $URL ..."
 tmp="$(mktemp --suffix=.tar.gz)"
 curl -fsSL "$URL" -o "$tmp"
 
-# Record the release name (the tarball's top-level directory, e.g. afp-2026-06-01).
-version="$(tar -tzf "$tmp" | head -1 | cut -d/ -f1)"
-echo "Extracting $version ..."
-tar -xzf "$tmp" -C "$DEST" --strip-components=1
+echo "Extracting ..."
+tar -xzf "$tmp" -C "$DEST"
 rm -f "$tmp"
-echo "$version" > "$DEST/AFP_VERSION"
 
-echo "Extracted $(find "$DEST" -name '*.thy' | wc -l) .thy files from $version."
+# Record the release name: the extracted top-level directory (e.g. afp-2026-06-01).
+version="$(find "$DEST" -maxdepth 1 -mindepth 1 -type d -name 'afp-*' -printf '%f\n' | head -1 || true)"
+[ -n "$version" ] && echo "$version" > "$DEST/AFP_VERSION"
+
+echo "Extracted $(find "$DEST" -name '*.thy' | wc -l) .thy files (${version:-unknown})."
