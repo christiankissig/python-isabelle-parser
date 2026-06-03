@@ -1,0 +1,75 @@
+name: metrics
+
+on:
+  workflow_dispatch:
+    inputs:
+      sample:
+        description: "Number of AFP files to sample"
+        default: "500"
+  schedule:
+    - cron: '0 4 * * 1'   # 04:00 UTC every Monday
+
+# Allow the job to commit the refreshed README back to the repo.
+permissions:
+  contents: write
+
+concurrency:
+  group: metrics
+  cancel-in-progress: false
+
+jobs:
+  metrics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: poetry install --all-extras --no-interaction
+
+      - name: Compute cache week
+        id: week
+        run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache AFP corpus
+        uses: actions/cache@v4
+        with:
+          path: corpus
+          # Weekly key: refreshes the corpus each ISO week, reused within the
+          # week (e.g. for manual re-runs). No restore-keys, so a new week is a
+          # genuine miss and the fetch script downloads the latest release.
+          key: afp-corpus-${{ steps.week.outputs.week }}
+
+      - name: Fetch AFP corpus
+        run: bash metrics/fetch_corpus.sh corpus
+
+      - name: Measure coverage and performance
+        env:
+          METRICS_SAMPLE: ${{ github.event.inputs.sample || '500' }}
+        run: poetry run python metrics/measure.py
+
+      - name: Update README
+        run: poetry run python metrics/update_readme.py
+
+      - name: Commit refreshed metrics
+        run: |
+          git config user.name  "metrics-bot"
+          git config user.email "metrics-bot@users.noreply.github.com"
+          git add README.rst metrics/metrics.json
+          # Pushing with the default GITHUB_TOKEN does not retrigger workflows;
+          # [skip ci] is belt-and-suspenders. No-op stays green.
+          git commit -m "chore: update AFP metrics [skip ci]" || { echo "no changes"; exit 0; }
+          git push
