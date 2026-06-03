@@ -1,0 +1,17 @@
+{
+  "afp_version": "afp-2026-06-01",
+  "sample_size": 500,
+  "workers": 4,
+  "timeout_budget_s": 15,
+  "ok": 168,
+  "fail": 226,
+  "timeout": 106,
+  "error": 0,
+  "coverage_pct": 33.6,
+  "timeout_pct": 21.2,
+  "wall_seconds": 614.6,
+  "files_per_sec": 0.81,
+  "mb_per_sec": 0.024,
+  "median_ok_parse_s": 2.785,
+  "measured_at": "2026-06-03 09:58 UTC"
+}
