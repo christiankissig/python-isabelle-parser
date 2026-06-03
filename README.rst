@@ -2,6 +2,18 @@
 isabelle_parser
 ================
 
+.. image:: https://github.com/christiankissig/python-isabelle-parser/actions/workflows/ci.yml/badge.svg?branch=master
+   :target: https://github.com/christiankissig/python-isabelle-parser/actions/workflows/ci.yml
+   :alt: CI/CD status
+
+.. image:: https://img.shields.io/badge/python-3.10%2B-blue.svg
+   :target: https://www.python.org/downloads/
+   :alt: Python 3.10+
+
+.. image:: https://img.shields.io/badge/license-MIT-green.svg
+   :target: https://github.com/christiankissig/python-isabelle-parser/blob/master/LICENSE
+   :alt: License: MIT
+
 A parser for `Isabelle/Isar <https://isabelle.in.tum.de/>`_ theory (``.thy``)
 artifacts, implemented in pure Python on top of `Lark <https://lark-parser.org/>`_
 using an Earley grammar.
