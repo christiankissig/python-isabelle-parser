@@ -264,6 +264,40 @@ end""",
             "theory T imports Main begin\ntype_synonym 'a mylist = \"'a list\"\nend",
             True,
         ),
+        (
+            "type_synonym_cartouche",
+            "theory T imports Main begin\n"
+            "type_synonym int_poly = \\<open>int mpoly\\<close>\nend",
+            True,
+        ),
+        (
+            "type_synonym_subscripted_type_vars",
+            "theory T imports Main begin\n"
+            "type_synonym ('a\\<^sub>h, 'b\\<^sub>h) sum\\<^sub>h = "
+            "\"'a\\<^sub>h + 'b\\<^sub>h\"\nend",
+            True,
+        ),
+        (
+            "type_synonym_type_var_rhs",
+            "theory T imports Main begin\ntype_synonym 'a blindable = 'a\nend",
+            True,
+        ),
+        (
+            "type_synonym_qualified_rhs",
+            "theory T imports Main begin\ntype_synonym error = String.literal\nend",
+            True,
+        ),
+        (
+            "qualified_toplevel_definition",
+            "theory T imports Main begin\n"
+            'qualified definition bar :: nat where "bar = 0"\nend',
+            True,
+        ),
+        (
+            "private_toplevel_lemma",
+            'theory T imports Main begin\nprivate lemma l: "x = x" by simp\nend',
+            True,
+        ),
         # -----------------------------------------------------------------------
         # Constant declarations
         # -----------------------------------------------------------------------
@@ -609,6 +643,23 @@ end""",
             "end",
             True,
         ),
+        (
+            "instance_qualified_class_name",
+            "theory T imports Main begin\ninstance unit :: heap.rep ..\nend",
+            True,
+        ),
+        (
+            "definition_global_target_dash",
+            "theory T imports Main begin\n"
+            'definition (in -) foo :: nat where "foo = 0"\nend',
+            True,
+        ),
+        (
+            "inductive_cases_qualified_attribute_arg",
+            "theory T imports Main begin\n"
+            'inductive_cases fooCases[simplified bar.inject]: "P x"\nend',
+            True,
+        ),
         # -----------------------------------------------------------------------
         # abbreviation with an (output) print mode
         # -----------------------------------------------------------------------
@@ -617,6 +668,25 @@ end""",
             "theory T imports Main begin\n"
             'abbreviation (output) foo where "foo = x"\n'
             "end",
+            True,
+        ),
+        (
+            "abbreviation_custom_print_mode",
+            "theory T imports Main begin\n"
+            'abbreviation (latex) foo where "foo = x"\n'
+            "end",
+            True,
+        ),
+        (
+            "legacy_verbatim_doc_markup",
+            "theory T imports Main begin\n"
+            "subsubsection {* Monotonicity *}\n"
+            "text {* some legacy text *}\nend",
+            True,
+        ),
+        (
+            "legacy_verbatim_ml_block",
+            "theory T imports Main begin\nML {* val x = 1; fun f y = y + x *}\nend",
             True,
         ),
         # -----------------------------------------------------------------------
@@ -830,6 +900,22 @@ end""",
             True,
         ),
         # -----------------------------------------------------------------------
+        # identifiers with repeated / symbol subscripts in name position
+        # -----------------------------------------------------------------------
+        (
+            "definition_repeated_subscript_name",
+            "theory T imports Main begin\n"
+            "definition lang\\<^sub>M\\<^sub>2\\<^sub>L :: nat where "
+            '"lang\\<^sub>M\\<^sub>2\\<^sub>L = 0"\nend',
+            True,
+        ),
+        (
+            "lemmas_greek_symbol_subscript_name",
+            "theory T imports Main begin\n"
+            "lemmas \\<Delta>\\<^sub>\\<epsilon>_cong = foo\nend",
+            True,
+        ),
+        # -----------------------------------------------------------------------
         # class with multiple superclasses
         # -----------------------------------------------------------------------
         (
@@ -855,9 +941,22 @@ end""",
             True,
         ),
         (
+            "datatype_constructor_discriminators",
+            "theory T imports Main begin\n"
+            "datatype pr_op = is_PUSH: PUSH | is_RELABEL: RELABEL\nend",
+            True,
+        ),
+        (
             "datatype_multi_sort_annotated_tvars",
             "theory T imports Main begin\n"
             "datatype ('a::type, 'b::finite) pair = Pair 'a 'b\n"
+            "end",
+            True,
+        ),
+        (
+            "datatype_subscripted_type_var_and_constructor",
+            "theory T imports Main begin\n"
+            "datatype 'a\\<^sub>h blindable\\<^sub>h = Content 'a\\<^sub>h\n"
             "end",
             True,
         ),

@@ -7,6 +7,9 @@
 QUOTED_STRING: "\"" /[\s\S]*?/ "\""
              | "`" /[\s\S]*?/ "`"
 
+// Legacy (pre-2016) verbatim document/source text: {* ... *}
+VERBATIM_TEXT: /\{\*[\s\S]*?\*\}/
+
 // Tokens for cartouche
 CARTOUCHE_OPEN: "\\<open>"
 CARTOUCHE_TEXT: /[^\\]+/
@@ -1574,7 +1577,7 @@ TERM_VAR: /\?[a-zA-Z](_?\d*[a-zA-Z]*)*\.?\d*/
 TYPE_VAR: /'[a-zA-Z](_?\d*[a-zA-Z]*)*\.?\d*/
 
 // Other predefined tokens
-TYPE_IDENT: /\'(\\<[A-Za-z]+>|[a-zA-Z])(_?\d*[a-zA-Z_\']*)*/
+TYPE_IDENT: /\'(\\<[A-Za-z]+>|[a-zA-Z])(\\<\^sub>[a-zA-Z0-9_\']*|_?\d*[a-zA-Z_\']*)*/
 
 SUBSCRIPT: "\\<^sub>"
 
@@ -1594,8 +1597,8 @@ context: (   print_locale
            | print_locales
            | print_state )*
 
-theory: (   goal proof_prove
-          | statement
+theory: (   ("private" | "qualified")? goal proof_prove
+          | ("private" | "qualified")? statement
           | class_instance proof_prove
           | derive )*
 
@@ -1715,7 +1718,7 @@ name: QUOTED_STRING
     | /[+]+/
     | SYM_IDENT
     // | (ID | GREEK | SUBSCRIPT | "." | "_" | NAT | "'" | letter)+
-    | /(([a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[a-zA-Z0-9_]*)?)|(\\<((alpha)|(beta)|(gamma)|(delta)|(epsilon)|(zeta)|(eta)|(theta)|(iota)|(kappa)|(mu)|(nu)|(xi)|(pi)|(rho)|(sigma)|(tau)|(upsilon)|(phi)|(chi)|(psi)|(omega)|(Gamma)|(Delta)|(Theta)|(Lambda)|(Xi)|(Pi)|(Sigma)|(Upsilon)|(Phi)|(Psi)|(Omega))>)|(\\<\\^sub>)|([._'])|([0-9])|([a-zA-Z]+)|(\\?<[a-zA-Z]+>))+/
+    | /(([a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[a-zA-Z0-9_]*)*)|(\\<((alpha)|(beta)|(gamma)|(delta)|(epsilon)|(zeta)|(eta)|(theta)|(iota)|(kappa)|(mu)|(nu)|(xi)|(pi)|(rho)|(sigma)|(tau)|(upsilon)|(phi)|(chi)|(psi)|(omega)|(Gamma)|(Delta)|(Theta)|(Lambda)|(Xi)|(Pi)|(Sigma)|(Upsilon)|(Phi)|(Psi)|(Omega))>)|(\\<\^sub>)|([._'])|([0-9])|([a-zA-Z]+)|(\\?<[a-zA-Z]+>))+/
     | "\\<bottom>"
 
 par_name: "(" name ")"
@@ -1796,7 +1799,7 @@ typespec_sorts: typeargs_sorts? name
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 3.3.6
 #
 
-sort: ID | QUOTED_STRING
+sort: ID | LONG_IDENT | QUOTED_STRING
 
 sort_list_comma_sep: sort ("," sort)*
 
@@ -1879,6 +1882,7 @@ attribute: "OF" thms
 args: arg*
 
 arg: ID
+   | LONG_IDENT
    | cartouche
    | "False"
    | "for"
@@ -1945,7 +1949,7 @@ doc_block: (   "chapter"
              | "text"
              | "text_raw"
              | "txt"
-             | COMMENT_CARTOUCHE) ("(" "in" name ")")? (cartouche | QUOTED_STRING | ID)
+             | COMMENT_CARTOUCHE) ("(" "in" name ")")? (cartouche | QUOTED_STRING | VERBATIM_TEXT | ID)
 
 comment_block: COMMENT_CARTOUCHE cartouche
 
@@ -2030,7 +2034,7 @@ thy_bounds: name | ("(" name ("|" name)* ")")
 locale_theory_context: "context" comment_block? name opening? "begin" local_theory "end"
                      | "context" comment_block? includes? context_elem* "begin" local_theory "end"
 
-local_theory_target: "(" "in" name ")"
+local_theory_target: "(" "in" (name | "-") ")"
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.3
@@ -2185,7 +2189,7 @@ spec: name ("\\<equiv>" | "==") term ("(" "unchecked" ")")?
 #
 
 ml : ( "ML" | "ml" | "ML_file" | "ML_val" | "ML_prf" | "ML_command"
-     | "SML_file" | "setup" | "local_setup" ) (name | cartouche | QUOTED_STRING)
+     | "SML_file" | "setup" | "local_setup" ) (name | cartouche | VERBATIM_TEXT | QUOTED_STRING)
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.12.2
@@ -2193,7 +2197,7 @@ ml : ( "ML" | "ml" | "ML_file" | "ML_val" | "ML_prf" | "ML_command"
 
 typedecl : "typedecl" typespec mixfix?
 
-type_synonym : "type_synonym" ("(" "in" name ")")? typespec "=" (ID | QUOTED_STRING) mixfix?
+type_synonym : "type_synonym" ("(" "in" name ")")? typespec "=" (ID | LONG_IDENT | TYPE_IDENT | QUOTED_STRING | cartouche) mixfix?
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.13
@@ -2553,6 +2557,7 @@ mode: ID
     | "(" "input" ")"
     | "(" "output" ")"
     | "(" "ASCII" ")"
+    | "(" name ")"
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 8.5.2
@@ -2624,8 +2629,8 @@ generic_type : (type | ("(" type ("," type)*")")) name?
 
 constructors : constructor ("|" constructor)*
 
-constructor : comment_block? ID TYPE_IDENT mixfix? comment_block?
-            | comment_block? (   name
+constructor : comment_block? (name ":")? ID TYPE_IDENT mixfix? comment_block?
+            | comment_block? (name ":")? (   name
                                | cartouche
                                | ("(" (cartouche | (name ":" name) | (name ":" QUOTED_STRING)) ")") )+ mixfix? comment_block?
 
