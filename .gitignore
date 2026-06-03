@@ -46,3 +46,4 @@ pip-wheel-metadata/
 pytestdebug.log
 scripts/
 src/_pytest/_version.py
+corpus/

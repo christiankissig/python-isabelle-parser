@@ -33,6 +33,19 @@ methods, and a few rarely-used commands are still rejected. Treat a successful
 parse as authoritative and a failure as "not yet supported" rather than "invalid
 Isabelle".
 
+Metrics
+=======
+
+Parser coverage and performance against the latest `Archive of Formal Proofs
+<https://www.isa-afp.org/>`_ release, refreshed weekly by the ``metrics``
+workflow (and on demand via *Run workflow*):
+
+.. METRICS:START
+
+*Not measured yet — the* ``metrics`` *workflow populates this on its first run.*
+
+.. METRICS:END
+
 Requirements
 ============
 
