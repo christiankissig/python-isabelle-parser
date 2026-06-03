@@ -1515,6 +1515,7 @@ COMMENT_CARTOUCHE: "\\<comment>"
 MARKER: "\\<^marker>"
 
 // Greek symbols
+SYMBOL: /\\<(?!open>)(?!close>)(?!comment>)(?!\^)[A-Za-z][A-Za-z0-9]*>(\\<\^sub>[A-Za-z0-9_\x27]*)?/
 GREEK: "\\<alpha>"
      | "\\<beta>"
      | "\\<gamma>"
@@ -1709,6 +1710,7 @@ subgoal_params: "for" "..."? ("_" | name)+
 #
 
 name: QUOTED_STRING
+    | SYMBOL
     | /[*]+/
     | /[+]+/
     | SYM_IDENT
@@ -1737,6 +1739,7 @@ embedded: QUOTED_STRING
         | SYM_IDENT
         | TERM_VAR
         | TYPE_IDENT
+        | SYMBOL
         | cartouche
 
 #
@@ -1752,7 +1755,8 @@ text: embedded
 type: embedded
 
 term: embedded
-    | "?"? (GREEK | ID)+ (SUBSCRIPT (FLOAT | ID))* "'"?
+    | SYMBOL
+    | "?"? (GREEK | ID | SYMBOL)+ (SUBSCRIPT (FLOAT | ID))* "'"?
     | "\\<bottom>"
     | "\\<true>"
     | "\\<false>"
