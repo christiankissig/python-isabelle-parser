@@ -2554,6 +2554,7 @@ mode: ID
     | "(" "input" ")"
     | "(" "output" ")"
     | "(" "ASCII" ")"
+    | "(" name ")"
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 8.5.2

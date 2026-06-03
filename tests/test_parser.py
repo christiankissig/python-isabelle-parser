@@ -666,6 +666,13 @@ end""",
             "end",
             True,
         ),
+        (
+            "abbreviation_custom_print_mode",
+            "theory T imports Main begin\n"
+            'abbreviation (latex) foo where "foo = x"\n'
+            "end",
+            True,
+        ),
         # -----------------------------------------------------------------------
         # inductive_simps command
         # -----------------------------------------------------------------------
