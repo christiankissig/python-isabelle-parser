@@ -1715,7 +1715,7 @@ name: QUOTED_STRING
     | /[+]+/
     | SYM_IDENT
     // | (ID | GREEK | SUBSCRIPT | "." | "_" | NAT | "'" | letter)+
-    | /(([a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[a-zA-Z0-9_]*)?)|(\\<((alpha)|(beta)|(gamma)|(delta)|(epsilon)|(zeta)|(eta)|(theta)|(iota)|(kappa)|(mu)|(nu)|(xi)|(pi)|(rho)|(sigma)|(tau)|(upsilon)|(phi)|(chi)|(psi)|(omega)|(Gamma)|(Delta)|(Theta)|(Lambda)|(Xi)|(Pi)|(Sigma)|(Upsilon)|(Phi)|(Psi)|(Omega))>)|(\\<\\^sub>)|([._'])|([0-9])|([a-zA-Z]+)|(\\?<[a-zA-Z]+>))+/
+    | /(([a-zA-Z_][a-zA-Z_0-9\']*(\\<\^sub>[a-zA-Z0-9_]*)*)|(\\<((alpha)|(beta)|(gamma)|(delta)|(epsilon)|(zeta)|(eta)|(theta)|(iota)|(kappa)|(mu)|(nu)|(xi)|(pi)|(rho)|(sigma)|(tau)|(upsilon)|(phi)|(chi)|(psi)|(omega)|(Gamma)|(Delta)|(Theta)|(Lambda)|(Xi)|(Pi)|(Sigma)|(Upsilon)|(Phi)|(Psi)|(Omega))>)|(\\<\^sub>)|([._'])|([0-9])|([a-zA-Z]+)|(\\?<[a-zA-Z]+>))+/
     | "\\<bottom>"
 
 par_name: "(" name ")"

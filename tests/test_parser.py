@@ -860,6 +860,22 @@ end""",
             True,
         ),
         # -----------------------------------------------------------------------
+        # identifiers with repeated / symbol subscripts in name position
+        # -----------------------------------------------------------------------
+        (
+            "definition_repeated_subscript_name",
+            "theory T imports Main begin\n"
+            "definition lang\\<^sub>M\\<^sub>2\\<^sub>L :: nat where "
+            '"lang\\<^sub>M\\<^sub>2\\<^sub>L = 0"\nend',
+            True,
+        ),
+        (
+            "lemmas_greek_symbol_subscript_name",
+            "theory T imports Main begin\n"
+            "lemmas \\<Delta>\\<^sub>\\<epsilon>_cong = foo\nend",
+            True,
+        ),
+        # -----------------------------------------------------------------------
         # class with multiple superclasses
         # -----------------------------------------------------------------------
         (
