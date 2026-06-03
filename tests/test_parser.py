@@ -639,6 +639,11 @@ end""",
             "end",
             True,
         ),
+        (
+            "instance_qualified_class_name",
+            "theory T imports Main begin\ninstance unit :: heap.rep ..\nend",
+            True,
+        ),
         # -----------------------------------------------------------------------
         # abbreviation with an (output) print mode
         # -----------------------------------------------------------------------
