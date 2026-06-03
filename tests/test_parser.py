@@ -274,19 +274,17 @@ end""",
             "type_synonym_subscripted_type_vars",
             "theory T imports Main begin\n"
             "type_synonym ('a\\<^sub>h, 'b\\<^sub>h) sum\\<^sub>h = "
-            '"\'a\\<^sub>h + \'b\\<^sub>h"\nend',
+            "\"'a\\<^sub>h + 'b\\<^sub>h\"\nend",
             True,
         ),
         (
             "type_synonym_type_var_rhs",
-            "theory T imports Main begin\n"
-            "type_synonym 'a blindable = 'a\nend",
+            "theory T imports Main begin\ntype_synonym 'a blindable = 'a\nend",
             True,
         ),
         (
             "type_synonym_qualified_rhs",
-            "theory T imports Main begin\n"
-            "type_synonym error = String.literal\nend",
+            "theory T imports Main begin\ntype_synonym error = String.literal\nend",
             True,
         ),
         (
@@ -688,8 +686,7 @@ end""",
         ),
         (
             "legacy_verbatim_ml_block",
-            "theory T imports Main begin\n"
-            "ML {* val x = 1; fun f y = y + x *}\nend",
+            "theory T imports Main begin\nML {* val x = 1; fun f y = y + x *}\nend",
             True,
         ),
         # -----------------------------------------------------------------------
