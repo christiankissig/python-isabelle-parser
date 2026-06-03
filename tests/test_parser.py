@@ -270,6 +270,17 @@ end""",
             "type_synonym int_poly = \\<open>int mpoly\\<close>\nend",
             True,
         ),
+        (
+            "qualified_toplevel_definition",
+            "theory T imports Main begin\n"
+            'qualified definition bar :: nat where "bar = 0"\nend',
+            True,
+        ),
+        (
+            "private_toplevel_lemma",
+            'theory T imports Main begin\nprivate lemma l: "x = x" by simp\nend',
+            True,
+        ),
         # -----------------------------------------------------------------------
         # Constant declarations
         # -----------------------------------------------------------------------

@@ -1594,8 +1594,8 @@ context: (   print_locale
            | print_locales
            | print_state )*
 
-theory: (   goal proof_prove
-          | statement
+theory: (   ("private" | "qualified")? goal proof_prove
+          | ("private" | "qualified")? statement
           | class_instance proof_prove
           | derive )*
 
