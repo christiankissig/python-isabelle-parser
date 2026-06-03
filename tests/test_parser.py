@@ -913,6 +913,31 @@ end""",
             "theory T imports Main begin\nunbundle (in foo) no funcset_syntax\nend",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # Isabelle symbol identifiers (\<sym>) in term/name positions
+        # -----------------------------------------------------------------------
+        (
+            "symbol_term",
+            'theory T imports Main begin\ndefinition "u = \\<one>"\nend',
+            True,
+        ),
+        (
+            "symbol_interpretation_args",
+            "theory T imports Main begin\n"
+            "interpretation g: foo \\<bbbP> leq \\<one> .\n"
+            "end",
+            True,
+        ),
+        (
+            "symbol_case_vars",
+            "theory T imports Main begin\n"
+            'lemma "x = x"\n'
+            "proof (induct x)\n"
+            "  case (step \\<P> \\<rho>) then show ?case by simp\n"
+            "qed\n"
+            "end",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
