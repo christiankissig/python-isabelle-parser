@@ -7,6 +7,9 @@
 QUOTED_STRING: "\"" /[\s\S]*?/ "\""
              | "`" /[\s\S]*?/ "`"
 
+// Legacy (pre-2016) verbatim document/source text: {* ... *}
+VERBATIM_TEXT: /\{\*[\s\S]*?\*\}/
+
 // Tokens for cartouche
 CARTOUCHE_OPEN: "\\<open>"
 CARTOUCHE_TEXT: /[^\\]+/
@@ -1946,7 +1949,7 @@ doc_block: (   "chapter"
              | "text"
              | "text_raw"
              | "txt"
-             | COMMENT_CARTOUCHE) ("(" "in" name ")")? (cartouche | QUOTED_STRING | ID)
+             | COMMENT_CARTOUCHE) ("(" "in" name ")")? (cartouche | QUOTED_STRING | VERBATIM_TEXT | ID)
 
 comment_block: COMMENT_CARTOUCHE cartouche
 
@@ -2186,7 +2189,7 @@ spec: name ("\\<equiv>" | "==") term ("(" "unchecked" ")")?
 #
 
 ml : ( "ML" | "ml" | "ML_file" | "ML_val" | "ML_prf" | "ML_command"
-     | "SML_file" | "setup" | "local_setup" ) (name | cartouche | QUOTED_STRING)
+     | "SML_file" | "setup" | "local_setup" ) (name | cartouche | VERBATIM_TEXT | QUOTED_STRING)
 
 #
 # https://isabelle.in.tum.de/doc/isar-ref.pdf Section 5.12.2

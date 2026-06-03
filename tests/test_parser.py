@@ -679,6 +679,19 @@ end""",
             "end",
             True,
         ),
+        (
+            "legacy_verbatim_doc_markup",
+            "theory T imports Main begin\n"
+            "subsubsection {* Monotonicity *}\n"
+            "text {* some legacy text *}\nend",
+            True,
+        ),
+        (
+            "legacy_verbatim_ml_block",
+            "theory T imports Main begin\n"
+            "ML {* val x = 1; fun f y = y + x *}\nend",
+            True,
+        ),
         # -----------------------------------------------------------------------
         # inductive_simps command
         # -----------------------------------------------------------------------
