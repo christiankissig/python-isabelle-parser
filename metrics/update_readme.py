@@ -6,7 +6,6 @@ Reads metrics/metrics.json and rewrites the block delimited by
 
 import json
 import os
-import re
 from typing import Any
 
 README = os.environ.get("README", "README.rst")
@@ -51,19 +50,17 @@ def main() -> None:
     m = json.load(open(METRICS))
     text = open(README).read()
     block = build_table(m)
-    new, n = re.subn(
-        r"(\.\. METRICS:START\n).*?(\n\.\. METRICS:END)",
-        lambda mo: mo.group(1) + "\n" + block + mo.group(2),
-        text,
-        flags=re.S,
-    )
-    if n == 0:
+    start, end = ".. METRICS:START", ".. METRICS:END"
+    i = text.find(start)
+    j = text.find(end)
+    if i == -1 or j == -1 or j < i:
         raise SystemExit(
             "METRICS markers not found in README; expected "
             "'.. METRICS:START' and '.. METRICS:END'."
         )
+    new = text[: i + len(start)] + "\n\n" + block + "\n" + text[j:]
     open(README, "w").write(new)
-    print(f"Updated {README} ({n} block).")
+    print(f"Updated {README}.")
 
 
 if __name__ == "__main__":
