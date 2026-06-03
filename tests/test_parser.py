@@ -861,6 +861,58 @@ end""",
             "end",
             True,
         ),
+        # -----------------------------------------------------------------------
+        # datatype BNF type-argument annotations (dead / selectors)
+        # -----------------------------------------------------------------------
+        (
+            "datatype_dead_tvars",
+            "theory T imports Main begin\n"
+            "datatype ('s, dead 'p, dead 'f) t = A 's\n"
+            "end",
+            True,
+        ),
+        (
+            "datatype_selector_tvars",
+            "theory T imports Main begin\n"
+            "datatype (dverts: 'a, darcs: 'b) graph = G\n"
+            "end",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # nominal_datatype (same shape as datatype)
+        # -----------------------------------------------------------------------
+        (
+            "nominal_datatype",
+            "theory T imports Main begin\n"
+            "nominal_datatype pi = PiNil | Tau pi | Sum pi pi\n"
+            "end",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # method definition with `for` parameters
+        # -----------------------------------------------------------------------
+        (
+            "method_with_for_param",
+            "theory T imports Main begin\n"
+            'method interval_split for x :: "nat" = (rule x)\n'
+            "end",
+            True,
+        ),
+        (
+            "method_with_for_and",
+            "theory T imports Main begin\n"
+            'method m for a :: "\'a" and b :: "\'b" = (simp)\n'
+            "end",
+            True,
+        ),
+        # -----------------------------------------------------------------------
+        # unbundle with an (in target) qualifier
+        # -----------------------------------------------------------------------
+        (
+            "unbundle_in_target",
+            "theory T imports Main begin\nunbundle (in foo) no funcset_syntax\nend",
+            True,
+        ),
     ],
 )
 def test_parse(name, test_input, expected):
