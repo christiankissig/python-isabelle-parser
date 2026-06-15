@@ -49,19 +49,19 @@ workflow (and on demand via *Run workflow*):
    * - Metric
      - Value
    * - AFP snapshot
-     - afp-2026-06-05
+     - afp-2026-06-14
    * - Files sampled
      - 500
    * - Parse coverage
-     - 28.0% (140 parsed)
+     - 33.8% (169 parsed)
    * - Timeouts (> 15s)
-     - 24.4% (122)
+     - 26.0% (130)
    * - Throughput
-     - 0.76 files/s · 0.022 MB/s (×4 workers)
+     - 0.68 files/s · 0.018 MB/s (×4 workers)
    * - Median parse time (parsed files)
-     - 2.806 s
+     - 3.282 s
    * - Measured
-     - 2026-06-08 05:54 UTC
+     - 2026-06-15 06:09 UTC
 
 *Coverage is the share of a seeded random sample of AFP theory files that parse within the timeout; a whole file counts as failed if any statement fails. Updated weekly by the metrics workflow.*
 
