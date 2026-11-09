@@ -1,17 +1,17 @@
 {
-  "afp_version": "afp-2026-10-29",
+  "afp_version": "afp-2026-11-06",
   "sample_size": 500,
   "workers": 4,
   "timeout_budget_s": 15,
-  "ok": 139,
-  "fail": 223,
-  "timeout": 138,
+  "ok": 135,
+  "fail": 234,
+  "timeout": 131,
   "error": 0,
-  "coverage_pct": 27.8,
-  "timeout_pct": 27.6,
-  "wall_seconds": 708.7,
-  "files_per_sec": 0.71,
-  "mb_per_sec": 0.025,
-  "median_ok_parse_s": 2.297,
-  "measured_at": "2026-11-02 12:19 UTC"
+  "coverage_pct": 27.0,
+  "timeout_pct": 26.2,
+  "wall_seconds": 671.0,
+  "files_per_sec": 0.75,
+  "mb_per_sec": 0.023,
+  "median_ok_parse_s": 1.871,
+  "measured_at": "2026-11-09 12:50 UTC"
 }
